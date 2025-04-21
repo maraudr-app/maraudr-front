@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Input } from '../../common/input/input';
 
 interface NavLink {
     name: string;
@@ -24,6 +25,22 @@ const Header = () => {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <div className="text-xl font-bold text-blue-600">maraudr</div>
+
+                    {/* Search Bar */}
+                    <div className="w-1/2 hidden md:block"> {/* Changed from w-1/3 to w-1/2 */}
+                        <div className="relative">
+                            <Input
+                                type="search"
+                                placeholder="Rechercher..."
+                                className="w-full"
+                                onChange={(e) => {
+                                    // TODO: Implement search functionality 
+                                    console.log(e.target.value);
+                                }}
+                            />
+                            <MagnifyingGlassIcon className="h-5 w-5 absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        </div>
+                    </div>
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex gap-6 items-center">
