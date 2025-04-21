@@ -88,17 +88,6 @@ mauraudr-front/
 └── .gitignore                   # Fichiers ignorés par Git
 ```
 
-##  Bibliothèque de composants
-
-- [Chakra UI](https://chakra-ui.com/) : Une bibliothèque de composants React qui facilite la création d'interfaces utilisateur accessibles et réactives.
-- [React Router](https://reactrouter.com/) : Une bibliothèque pour la gestion des routes dans les applications React.
-- [React Query](https://react-query.tanstack.com/) : Une bibliothèque pour la gestion des requêtes et de la mise en cache des données dans les applications React.
-- [Formik](https://formik.org/) : Une bibliothèque pour la gestion des formulaires dans les applications React.
-- [React Hook Form](https://react-hook-form.com/) : Une autre bibliothèque pour la gestion des formulaires, plus légère que Formik.
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) : Une bibliothèque pour tester les composants React de manière simple et efficace.
-- [Axios](https://axios-http.com/) : Une bibliothèque pour effectuer des requêtes HTTP.
-- [React Icons](https://react-icons.github.io/react-icons/) : Une bibliothèque d'icônes pour React, qui regroupe plusieurs bibliothèques d'icônes populaires.
-- [Heroicons](https://heroicons.com/) : Une bibliothèque d'icônes SVG gratuites et personnalisables.
 
 
 
@@ -139,3 +128,72 @@ Constantes et valeurs de configuration.
 
 ### `/tests`
 Tests organisés par catégories.
+
+##  Bibliothèque de composants
+
+- [Chakra UI](https://chakra-ui.com/) : Une bibliothèque de composants React qui facilite la création d'interfaces utilisateur accessibles et réactives.
+- [React Router](https://reactrouter.com/) : Une bibliothèque pour la gestion des routes dans les applications React.
+- [React Query](https://react-query.tanstack.com/) : Une bibliothèque pour la gestion des requêtes et de la mise en cache des données dans les applications React.
+- [Formik](https://formik.org/) : Une bibliothèque pour la gestion des formulaires dans les applications React.
+- [React Hook Form](https://react-hook-form.com/) : Une autre bibliothèque pour la gestion des formulaires, plus légère que Formik.
+- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) : Une bibliothèque pour tester les composants React de manière simple et efficace.
+- [Axios](https://axios-http.com/) : Une bibliothèque pour effectuer des requêtes HTTP.
+- [React Icons](https://react-icons.github.io/react-icons/) : Une bibliothèque d'icônes pour React, qui regroupe plusieurs bibliothèques d'icônes populaires.
+- [Heroicons](https://heroicons.com/) : Une bibliothèque d'icônes SVG gratuites et personnalisables.
+
+
+## 🛠️ Stratégie Git & Workflow de Développement
+
+Afin de garantir un code maintenable, une bonne collaboration en équipe et une future intégration continue (CI/CD) fluide, nous adoptons une architecture Git structurée et professionnelle.
+
+### 🌿 Branches principales
+
+- **`main`** : Contient la version stable et prête à être déployée. Aucune modification directe n’est autorisée.
+- **`develop`** : Branche d’intégration où toutes les fonctionnalités terminées sont mergées avant validation.
+
+### 🌱 Branches secondaires
+
+| Préfixe        | Utilisation                         | Exemple                    |
+|----------------|-------------------------------------|----------------------------|
+| `feature/*`    | Développement de nouvelles features | `feature/login-page`      |
+| `fix/*`        | Corrections de bugs                 | `fix/input-validation`    |
+| `chore/*`      | Refactoring, linting, docs, etc.    | `chore/update-readme`     |
+| `hotfix/*`     | Correctif urgent en production      | `hotfix/fix-broken-build` |
+
+---
+
+### 🚀 Workflow 
+
+1. Se baser sur la dernière version de `develop` :
+   ```bash
+   git checkout develop
+   git pull origin develop
+
+2. Créer une branche de fonctionnalité :
+   ```bash
+   git checkout -b feature/ma-fonctionnalite
+
+
+3. Committer avec des messages clairs (voir conventions ci-dessous) :
+   ```bash
+   git commit -m "feat: ajoute le composant de connexion"
+
+5. Pousser la branche sur le dépôt distant :
+   ```bash
+   git push origin feature/ma-fonctionnalite
+
+
+## ✍️ Conventions de commit (Conventional Commits)
+
+Utilisez les préfixes suivants pour vos messages de commit :
+
+| Type       | Signification                                        |
+|------------|------------------------------------------------------|
+| `feat:`    | Nouvelle fonctionnalité                              |
+| `fix:`     | Correction de bug                                    |
+| `chore:`   | Maintenance, configuration, nettoyage                |
+| `refactor:`| Refactor sans ajout ni correction de bug             |
+| `docs:`    | Mise à jour de la documentation                      |
+| `test:`    | Ajout ou mise à jour des tests                       |
+| `style:`   | Changement de format (indentation, lint…)           |
+
