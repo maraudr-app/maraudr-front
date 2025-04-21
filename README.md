@@ -88,6 +88,20 @@ mauraudr-front/
 └── .gitignore                   # Fichiers ignorés par Git
 ```
 
+##  Bibliothèque de composants
+
+- [Chakra UI](https://chakra-ui.com/) : Une bibliothèque de composants React qui facilite la création d'interfaces utilisateur accessibles et réactives.
+- [React Router](https://reactrouter.com/) : Une bibliothèque pour la gestion des routes dans les applications React.
+- [React Query](https://react-query.tanstack.com/) : Une bibliothèque pour la gestion des requêtes et de la mise en cache des données dans les applications React.
+- [Formik](https://formik.org/) : Une bibliothèque pour la gestion des formulaires dans les applications React.
+- [React Hook Form](https://react-hook-form.com/) : Une autre bibliothèque pour la gestion des formulaires, plus légère que Formik.
+- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) : Une bibliothèque pour tester les composants React de manière simple et efficace.
+- [Axios](https://axios-http.com/) : Une bibliothèque pour effectuer des requêtes HTTP.
+- [React Icons](https://react-icons.github.io/react-icons/) : Une bibliothèque d'icônes pour React, qui regroupe plusieurs bibliothèques d'icônes populaires.
+- [Heroicons](https://heroicons.com/) : Une bibliothèque d'icônes SVG gratuites et personnalisables.
+
+
+
 ## Explications des dossiers clés
 
 ### `/public`
