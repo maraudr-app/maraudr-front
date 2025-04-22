@@ -1,6 +1,6 @@
 import React from 'react';
-import { ButtonProps } from '../../../types/ButtonProps.tsx';
-import { GoogleIcon } from '../../../assets/icon/microsoftIcon.tsx';
+import { ButtonProps } from '../../../types/ButtonProps';
+import { GoogleIcon } from '../../../assets/icon/googleIcon';
 import { Button } from './button';
 
 export interface GoogleButtonProps extends Omit<ButtonProps, 'children'> {

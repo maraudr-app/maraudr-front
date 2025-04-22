@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { InputProps } from "../../../types/inputProps";
 
+
 const Input: React.FC<InputProps> = ({
                                          placeholder = "Placeholder",
                                          type = "text",

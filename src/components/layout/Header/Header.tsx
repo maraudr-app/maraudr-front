@@ -33,7 +33,7 @@ const Header = () => {
                                 type="search"
                                 placeholder="Rechercher..."
                                 className="w-full"
-                                onChange={(e) => {
+                                onChange={(e : React.ChangeEvent<HTMLInputElement>) => {
                                     // TODO: Implement search functionality 
                                     console.log(e.target.value);
                                 }}
