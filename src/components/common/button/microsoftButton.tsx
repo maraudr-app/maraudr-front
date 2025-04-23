@@ -1,7 +1,8 @@
 
-import { Button } from './button';
+
 import { MicrosoftIcon } from '../../../assets/icon/microsoftIcon';
 import { ButtonProps } from '../../../types/ButtonProps';
+import Button from './button';
 
 export interface MicrosoftButtonProps extends Omit<ButtonProps, 'children'> {
     text?: string;
