@@ -13,7 +13,10 @@ interface NavLink {
 const navLinks: NavLink[] = [
     { name: 'Accueil', path: '/' },
     { name: 'Dashboard', path: '/dashboard' },
-    { name: 'À propos', path: '/about' },
+    { name: 'Connexion', path: '/login' },
+    { name: 'Paramètres', path: '/settings' },
+    { name: 'Contact', path: '/contact' },
+
 ];
 
 const Header = () => {
@@ -33,7 +36,7 @@ const Header = () => {
                                 type="search"
                                 placeholder="Rechercher..."
                                 className="w-full"
-                                onChange={(e) => {
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     // TODO: Implement search functionality 
                                     console.log(e.target.value);
                                 }}
