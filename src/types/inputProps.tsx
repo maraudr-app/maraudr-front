@@ -9,6 +9,7 @@ export interface InputProps {
     name?: string;
     id?: string;
     required?: boolean;
+    autoComplete?: string;
 }
 
 
