@@ -3,23 +3,26 @@ import Header from './components/layout/Header/Header';
 import Home from './pages/Home/Home';
 import DashBoard from './pages/DashBoard/DashBoard';
 import Login from './pages/Login/Login';
+import { ThemeProvider } from './context/ThemeContext';
 
 
 // ... autres pages
 
 function App() {
   return (
-    <Router>
-      <Header />
-      <main className="pt-16 px-4">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<DashBoard />} />
-          <Route path="/login" element={<Login />} />
-          {/* autres routes */}
-        </Routes>
-      </main>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Header />
+        <main className="pt-16 px-4 min-h-screen bg-white dark:bg-gray-900 transition-colors">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<DashBoard />} />
+            <Route path="/login" element={<Login />} />
+            {/* autres routes */}
+          </Routes>
+        </main>
+      </Router>
+    </ThemeProvider>
   );
 }
 

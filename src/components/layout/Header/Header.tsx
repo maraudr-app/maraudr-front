@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Input } from '../../common/input/input';
+import { ThemeToggle } from '../../common/button/ThemeToggle';
 
 interface NavLink {
     name: string;
@@ -16,32 +17,31 @@ const navLinks: NavLink[] = [
     { name: 'Connexion', path: '/login' },
     { name: 'Paramètres', path: '/settings' },
     { name: 'Contact', path: '/contact' },
-
 ];
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <header className="fixed top-0 left-0 w-full bg-gray-100 shadow-md z-50">
+        <header className="fixed top-0 left-0 w-full bg-gray-100 dark:bg-gray-800 shadow-md dark:shadow-gray-900 z-50 transition-colors">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
-                    <div className="text-xl font-bold text-blue-600">maraudr</div>
+                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400">maraudr</div>
 
                     {/* Search Bar */}
-                    <div className="w-1/2 hidden md:block"> {/* Changed from w-1/3 to w-1/2 */}
+                    <div className="w-1/2 hidden md:block">
                         <div className="relative">
                             <Input
                                 type="search"
                                 placeholder="Rechercher..."
-                                className="w-full"
+                                className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     // TODO: Implement search functionality 
                                     console.log(e.target.value);
                                 }}
                             />
-                            <MagnifyingGlassIcon className="h-5 w-5 absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <MagnifyingGlassIcon className="h-5 w-5 absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none" />
                         </div>
                     </div>
 
@@ -51,20 +51,22 @@ const Header = () => {
                             <Link
                                 key={link.name}
                                 to={link.path}
-                                className="text-gray-700 hover:text-blue-600 transition"
+                                className="text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition"
                             >
                                 {link.name}
                             </Link>
                         ))}
+                        <ThemeToggle />
                     </nav>
 
                     {/* Burger Menu */}
-                    <div className="md:hidden">
+                    <div className="md:hidden flex items-center gap-2">
+                        <ThemeToggle />
                         <button onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
                             {isOpen ? (
-                                <XMarkIcon className="h-6 w-6 text-gray-700" />
+                                <XMarkIcon className="h-6 w-6 text-gray-700 dark:text-gray-200" />
                             ) : (
-                                <Bars3Icon className="h-6 w-6 text-gray-700" />
+                                <Bars3Icon className="h-6 w-6 text-gray-700 dark:text-gray-200" />
                             )}
                         </button>
                     </div>
@@ -73,13 +75,13 @@ const Header = () => {
 
             {/* Mobile Nav */}
             {isOpen && (
-                <div className="md:hidden bg-white px-4 pb-4 shadow-md border-t">
+                <div className="md:hidden bg-white dark:bg-gray-800 px-4 pb-4 shadow-md border-t dark:border-gray-700">
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             to={link.path}
                             onClick={() => setIsOpen(false)}
-                            className="block py-2 text-gray-700 hover:text-blue-600"
+                            className="block py-2 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
                         >
                             {link.name}
                         </Link>

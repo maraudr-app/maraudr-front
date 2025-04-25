@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import { InputProps } from "../../../types/inputProps";
 
@@ -12,7 +10,8 @@ const Input: React.FC<InputProps> = ({
                                          onChange,
                                          name,
                                          id,
-                                         required = false
+                                         required = false,
+                                         autoComplete
                                      }) => {
     const [isFocused, setIsFocused] = useState<boolean>(false);
 
@@ -29,7 +28,8 @@ const Input: React.FC<InputProps> = ({
                 value={value}
                 onChange={onChange}
                 required={required}
-                className="peer w-full border border-gray-300 rounded px-5 py-3 outline-none transition-all duration-200 focus:border-blue-500"
+                autoComplete={autoComplete}
+                className="peer w-full border border-gray-300 dark:border-gray-600 rounded px-5 py-3 outline-none transition-all duration-200 focus:border-blue-500 dark:focus:border-blue-400 dark:bg-gray-700 dark:text-white"
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
             />
@@ -38,8 +38,8 @@ const Input: React.FC<InputProps> = ({
             <label
                 className={`absolute transition-all duration-200 pointer-events-none
                     ${isActive
-                    ? "text-xs -top-2 left-3 bg-white px-1 text-blue-500"
-                    : "text-gray-500 top-1/2 left-5 transform -translate-y-1/2"
+                    ? "text-xs -top-2 left-3 bg-white dark:bg-gray-700 px-1 text-blue-500 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400 top-1/2 left-5 transform -translate-y-1/2"
                 }
                 `}
             >
