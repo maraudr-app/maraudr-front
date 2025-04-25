@@ -4,7 +4,7 @@ import { MicrosoftButton } from '../../components/common/button/microsoftButton'
 import { Input } from '../../components/common/input/input';
 import { Button } from '../../components/common/button/button';
 import { Link } from 'react-router-dom';
-import loginImage from '../../assets/pictures/access-key.jpg';
+import loginImage from '../../assets/pictures/login-key.png';
 import { LockClosedIcon } from '@heroicons/react/24/solid';
 
 const Login = () => {
@@ -23,11 +23,11 @@ const Login = () => {
       <div className="max-w-6xl w-full">
         <div className="flex flex-col md:flex-row shadow-lg border-solid rounded-r overflow-hidden">
           {/* Partie gauche - Formulaire */}
-          <div className="w-full md:w-1/2 bg-white p-8 pb-10 border-r border-gray-200">
+          <div className="w-full md:w-1/2  p-8 pb-10 border-r border-gray-200 bg-blue-50">
             <div className="mb-6">
               <div className="flex items-center mb-3">
                 <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                  <LockClosedIcon className="h-6 w-6 text-gray-500" />
+                  <LockClosedIcon className="h-6 w-6 text-gray-500"/>
                 </div>
                 <div className="ml-3">
                   <div className="h-2 w-2 bg-pink-500 rounded-full absolute -mt-1"></div>
@@ -45,38 +45,38 @@ const Login = () => {
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
                 <Input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  placeholder="Adresse e-mail"
-                  value={email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    id="email-address"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="Adresse e-mail"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 />
               </div>
               <div>
                 <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  placeholder="Mot de passe"
-                  value={password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    placeholder="Mot de passe"
+                    value={password}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                     Se souvenir de moi
@@ -92,13 +92,13 @@ const Login = () => {
 
               <div>
                 <Button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                    type="submit"
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Se connecter
                 </Button>
               </div>
-              
+
               <div className="text-center">
                 <span className="text-sm">
                   Pas encore de compte?{' '}
@@ -122,14 +122,14 @@ const Login = () => {
               <div className="flex flex-col gap-3 my-6">
                 <div className="mb-3">
                   <GoogleButton
-                    onClick={() => console.log('Connexion avec Google')}
-                    className="w-full"
+                      onClick={() => console.log('Connexion avec Google')}
+                      className="w-full"
                   />
                 </div>
                 <div>
                   <MicrosoftButton
-                    onClick={() => console.log('Connexion avec Microsoft')}
-                    className="w-full"
+                      onClick={() => console.log('Connexion avec Microsoft')}
+                      className="w-full"
                   />
                 </div>
               </div>
@@ -137,11 +137,11 @@ const Login = () => {
           </div>
 
           {/* Partie droite - Image */}
-          <div className="hidden md:block w-1/2 relative bg-gray-100 overflow-hidden">
-            <img 
-              src={loginImage} 
-              alt="Illustration" 
-              className="w-full h-full object-cover"
+          <div className="hidden md:flex w-1/2 relative bg-blue-100 items-center justify-center">
+            <img
+                src={loginImage}
+                alt="Illustration"
+                className="w-2/4 h-2/4 object-cover"
             />
           </div>
         </div>
