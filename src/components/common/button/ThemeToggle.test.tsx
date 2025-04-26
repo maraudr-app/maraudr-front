@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ThemeToggle } from './ThemeToggle';
 import { ThemeProvider } from '../../../context/ThemeContext';
-import { useTheme } from '../../../context/useTheme';
+import { useTheme } from '../../../useTheme';
 import { vi } from 'vitest';
 
 // Composant de test qui affiche le thème actuel

@@ -40,7 +40,7 @@ const Header = () => {
                                 type="search"
                                 placeholder={t('header.search')}
                                 className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                onChange={() => {
                                     // TODO: Implement search functionality 
                                 }}
                             />

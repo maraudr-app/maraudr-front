@@ -8,9 +8,6 @@ import frHome from '../locales/fr/home.json';
 import enCommon from '../locales/en/common.json';
 import enHome from '../locales/en/home.json';
 
-// Mode debug désactivé pour la production
-const isDebug = false;
-
 // Ressources préchargées
 const resources = {
   fr: {
