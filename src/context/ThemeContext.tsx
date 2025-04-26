@@ -1,15 +1,7 @@
-import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
+import { ThemeContextType, Theme } from './ThemeContextTypes';
 
-type Theme = 'light' | 'dark';
-
-interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export function ThemeProvider({ children }: { children: ReactNode }) {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     // Récupérer le thème du localStorage s'il existe
     const savedTheme = localStorage.getItem('theme');
@@ -36,23 +28,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    setTheme((prevTheme: Theme) => prevTheme === 'light' ? 'dark' : 'light');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContextType.Provider value={{ theme, toggleTheme }}>
       {children}
-    </ThemeContext.Provider>
+    </ThemeContextType.Provider>
   );
-}
-
-// Hook personnalisé pour utiliser le contexte de thème
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  
-  if (context === undefined) {
-    throw new Error('useTheme doit être utilisé à l\'intérieur d\'un ThemeProvider');
-  }
-  
-  return context;
 } 

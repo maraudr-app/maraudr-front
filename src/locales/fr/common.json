@@ -1,0 +1,32 @@
+{
+  "header": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "login": "Connexion",
+    "settings": "Paramètres",
+    "contact": "Contact",
+    "search": "Rechercher..."
+  },
+  "auth": {
+    "welcome": "Hey, bienvenue sur maraudr.",
+    "login": "Connectez-vous à votre compte",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "remember": "Se souvenir de moi",
+    "forgot": "Mot de passe oublié?",
+    "loginButton": "Se connecter",
+    "noAccount": "Pas encore de compte?",
+    "register": "S'inscrire",
+    "or": "Ou continuer avec",
+    "google": "Se connecter avec Google",
+    "microsoft": "Se connecter avec Microsoft"
+  },
+  "themes": {
+    "switchToLight": "Passer au mode clair",
+    "switchToDark": "Passer au mode sombre"
+  },
+  "languages": {
+    "fr": "Français",
+    "en": "Anglais"
+  }
+} 

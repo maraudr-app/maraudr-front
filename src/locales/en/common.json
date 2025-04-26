@@ -1,0 +1,32 @@
+{
+  "header": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "settings": "Settings",
+    "contact": "Contact",
+    "search": "Search..."
+  },
+  "auth": {
+    "welcome": "Hey, welcome to maraudr.",
+    "login": "Login to your account",
+    "email": "Email address",
+    "password": "Password",
+    "remember": "Remember me",
+    "forgot": "Forgot password?",
+    "loginButton": "Sign in",
+    "noAccount": "Don't have an account?",
+    "register": "Register",
+    "or": "Or continue with",
+    "google": "Sign in with Google",
+    "microsoft": "Sign in with Microsoft"
+  },
+  "themes": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "languages": {
+    "fr": "French",
+    "en": "English"
+  }
+} 
