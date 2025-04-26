@@ -1,4 +1,3 @@
-import React from 'react';
 
 // Loading placeholder pour le chargement des traductions
 export const LoadingTranslations = () => (
