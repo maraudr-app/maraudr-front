@@ -1,0 +1,56 @@
+{
+  "hero": {
+    "title": "Simplifiez la gestion de votre association",
+    "description": "Une plateforme intuitive pour gérer vos membres, organiser vos missions, suivre les stocks et analyser vos actions. Conçue pour les associations engagées comme la vôtre.",
+    "createAccount": "Créer un compte",
+    "discoverFeatures": "Découvrir les fonctionnalités"
+  },
+  "features": {
+    "title": "Nos fonctionnalités",
+    "memberManagement": {
+      "title": "Gestion des membres",
+      "description": "Gérez efficacement vos adhérents, leurs rôles et leurs contributions. Suivez les cotisations et gardez un historique complet des activités."
+    },
+    "dataAnalysis": {
+      "title": "Analyse des données",
+      "description": "Visualisez et analysez vos données pour prendre des décisions éclairées. Créez des rapports détaillés sur vos activités et leur impact."
+    },
+    "stockManagement": {
+      "title": "Gestion des stocks",
+      "description": "Suivez en temps réel vos inventaires, recevez des alertes de seuil et optimisez la distribution des ressources entre vos différents sites."
+    },
+    "fieldTracking": {
+      "title": "Suivi terrain",
+      "description": "Localisez vos équipes, coordonnez les actions et améliorez la sécurité de vos bénévoles avec notre système de suivi en temps réel."
+    },
+    "socialImpact": {
+      "title": "Impact social",
+      "description": "Mesurez et démontrez l'impact de vos actions sur la communauté. Générez des rapports d'impact pour vos partenaires et donateurs."
+    }
+  },
+  "testimonials": {
+    "title": "Témoignages de nos utilisateurs",
+    "users": [
+      {
+        "name": "Jean Dupont",
+        "org": "Association Entraide",
+        "quote": "Grâce au suivi des stocks en temps réel, nous avons réduit nos pertes de 30% et optimisé nos distributions sur le terrain."
+      },
+      {
+        "name": "Marie Lambert",
+        "org": "Club Sportif Local",
+        "quote": "La fonctionnalité de géolocalisation nous a permis de coordonner efficacement nos bénévoles lors des grands événements."
+      },
+      {
+        "name": "Paul Lefèvre",
+        "org": "Association Culturelle",
+        "quote": "Le module de gestion des événements nous a fait gagner un temps précieux et amélioré la communication avec nos participants."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Prêt à transformer votre association ?",
+    "description": "Rejoignez des centaines d'associations qui utilisent déjà notre outil pour structurer leurs actions et décupler leur impact.",
+    "button": "Créer mon espace"
+  }
+} 

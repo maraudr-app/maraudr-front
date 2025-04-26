@@ -1,34 +1,48 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import Backend from 'i18next-http-backend';
+
+// Import des traductions
+import frCommon from '../locales/fr/common.json';
+import frHome from '../locales/fr/home.json';
+import enCommon from '../locales/en/common.json';
+import enHome from '../locales/en/home.json';
+
+// Ressources préchargées
+const resources = {
+  fr: {
+    common: frCommon,
+    home: frHome
+  },
+  en: {
+    common: enCommon,
+    home: enHome
+  }
+};
 
 i18n
-  // Charger les traductions depuis le serveur ou les fichiers locaux
-  .use(Backend)
   // Détecter la langue de l'utilisateur
   .use(LanguageDetector)
   // Passer l'instance i18n à react-i18next
   .use(initReactI18next)
   // Initialiser i18next
   .init({
+    // Ressources préchargées
+    resources,
     // Langues supportées
     supportedLngs: ['fr', 'en'],
     // Langue par défaut
     fallbackLng: 'fr',
-    // Mode debug en développement
-    debug: process.env.NODE_ENV === 'development',
+    // Mode debug désactivé
+    debug: false,
     // Espace de noms par défaut
     defaultNS: 'common',
+    // Liste des espaces de noms à charger
+    ns: ['common', 'home'],
     // Options pour la détection de la langue
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
-    },
-    // Options pour le chargement des traductions
-    backend: {
-      // Chemin vers les fichiers de traduction
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
     },
     // Interpolation
     interpolation: {
