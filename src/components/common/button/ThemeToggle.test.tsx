@@ -1,3 +1,5 @@
+// Importer le mock i18n avant tout autre import
+import '../../../tests/__mocks__/i18nextMock';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ThemeToggle } from './ThemeToggle';
