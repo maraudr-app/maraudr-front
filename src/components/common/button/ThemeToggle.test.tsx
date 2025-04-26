@@ -3,7 +3,8 @@ import '../../../tests/__mocks__/i18nextMock';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ThemeToggle } from './ThemeToggle';
-import { ThemeProvider, useTheme } from '../../../context/ThemeContext';
+import { ThemeProvider } from '../../../context/ThemeContext';
+import { useTheme } from '../../../context/useTheme';
 import { vi } from 'vitest';
 
 // Composant de test qui affiche le thème actuel

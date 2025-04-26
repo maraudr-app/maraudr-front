@@ -16,7 +16,6 @@ const Login = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, password, rememberMe });
     // Logique de connexion à implémenter
   };
 
@@ -124,14 +123,14 @@ const Login = () => {
               <div className="mt-4 mb-6">
                 <div className="mb-3">
                   <GoogleButton
-                    onClick={() => console.log('Connexion avec Google')}
+                    onClick={() => {/* Auth logic */}}
                     className="w-full"
                     text={t('auth.google')}
                   />
                 </div>
                 <div>
                   <MicrosoftButton
-                    onClick={() => console.log('Connexion avec Microsoft')}
+                    onClick={() => {/* Auth logic */}}
                     className="w-full"
                     text={t('auth.microsoft')}
                   />

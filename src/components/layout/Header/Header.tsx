@@ -42,7 +42,6 @@ const Header = () => {
                                 className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     // TODO: Implement search functionality 
-                                    console.log(e.target.value);
                                 }}
                             />
                             <MagnifyingGlassIcon className="h-5 w-5 absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 dark:text-gray-300 pointer-events-none" />

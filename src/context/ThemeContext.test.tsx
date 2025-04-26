@@ -1,6 +1,7 @@
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ThemeProvider, useTheme } from './ThemeContext';
+import { ThemeProvider } from './ThemeContext';
+import { useTheme } from './useTheme';
 import { vi } from 'vitest';
 
 // Composant de test qui affiche le thème actuel et permet de le basculer
