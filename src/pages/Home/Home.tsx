@@ -1,11 +1,37 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import landingImage from '../../assets/pictures/assoc-landing-page.jpg';
 import membersImage from '../../assets/pictures/gestion-des-membres.jpg';
 import analysisImage from '../../assets/pictures/statistic.jpg';
 import stockImage from '../../assets/pictures/stock.jpg';
 import terrainImage from '../../assets/pictures/terrain.jpg';
 import impactSocialImage from '../../assets/pictures/impact-social.jpg';
+
 const Home = () => {
+  const { t } = useTranslation();
+
+  // Hard-coded testimonials with translation keys
+  const testimonials = [
+    {
+      name: t('home:testimonials.users.0.name', 'Jean Dupont'),
+      org: t('home:testimonials.users.0.org', 'Association Entraide'),
+      initials: 'JD',
+      quote: t('home:testimonials.users.0.quote', 'Grâce au suivi des stocks en temps réel, nous avons réduit nos pertes de 30% et optimisé nos distributions sur le terrain.')
+    },
+    {
+      name: t('home:testimonials.users.1.name', 'Marie Lambert'),
+      org: t('home:testimonials.users.1.org', 'Club Sportif Local'),
+      initials: 'ML',
+      quote: t('home:testimonials.users.1.quote', 'La fonctionnalité de géolocalisation nous a permis de coordonner efficacement nos bénévoles lors des grands événements.')
+    },
+    {
+      name: t('home:testimonials.users.2.name', 'Paul Lefèvre'),
+      org: t('home:testimonials.users.2.org', 'Association Culturelle'),
+      initials: 'PL',
+      quote: t('home:testimonials.users.2.quote', 'Le module de gestion des événements nous a fait gagner un temps précieux et amélioré la communication avec nos participants.')
+    }
+  ];
+
   return (
     <div className="container mx-auto py-16 px-4">
       {/* Hero Section */}
@@ -20,24 +46,23 @@ const Home = () => {
         
         <div className="w-full md:w-1/2 pl-0 md:pl-8">
           <h1 className="text-4xl md:text-5xl font-bold text-blue-400 mb-6 tracking-wide">
-            Simplifiez la gestion de votre association
+            {t('home:hero.title', 'Simplifiez la gestion de votre association')}
           </h1>
           <p className="text-gray-700 mb-8 text-lg leading-relaxed">
-            Une plateforme intuitive pour gérer vos membres, organiser vos missions, suivre les stocks
-            et analyser vos actions. Conçue pour les associations engagées comme la vôtre.
+            {t('home:hero.description', 'Une plateforme intuitive pour gérer vos membres, organiser vos missions, suivre les stocks et analyser vos actions. Conçue pour les associations engagées comme la vôtre.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link 
               to="/signup"
               className="px-8 py-3 bg-blue-500 text-gray-800 font-medium text-center rounded-md hover:bg-blue-600 transition duration-300 text-sm uppercase tracking-wider"
             >
-              Créer un compte
+              {t('home:hero.createAccount', 'Créer un compte')}
             </Link>
             <a 
               href="#features"
               className="px-8 py-3 border border-gray-300 text-gray-700 font-medium text-center rounded-md hover:bg-gray-50 transition duration-300 text-sm uppercase tracking-wider"  
             >
-              Découvrir les fonctionnalités
+              {t('home:hero.discoverFeatures', 'Découvrir les fonctionnalités')}
             </a>
           </div>
         </div>
@@ -45,7 +70,9 @@ const Home = () => {
 
       {/* Fonctionnalités */}
       <div id="features" className="mt-24 mb-16">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Nos fonctionnalités</h2>
+        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+          {t('home:features.title', 'Nos fonctionnalités')}
+        </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Gestion des membres */}
@@ -53,13 +80,15 @@ const Home = () => {
             <div className="w-52 h-52 rounded-full border-2 border-gray-300 overflow-hidden shadow-lg mb-4">
               <img 
                 src={membersImage}
-                alt="Gestion des membres"
+                alt={t('home:features.memberManagement.title', 'Gestion des membres')}
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-xl font-bold mb-2">Gestion des membres</h3>
+            <h3 className="text-xl font-bold mb-2">
+              {t('home:features.memberManagement.title', 'Gestion des membres')}
+            </h3>
             <p className="text-gray-600 text-center">
-              Gérez efficacement vos adhérents, leurs rôles et leurs contributions. Suivez les cotisations et gardez un historique complet des activités.
+              {t('home:features.memberManagement.description', 'Gérez efficacement vos adhérents, leurs rôles et leurs contributions. Suivez les cotisations et gardez un historique complet des activités.')}
             </p>
           </div>
 
@@ -68,13 +97,15 @@ const Home = () => {
             <div className="w-52 h-52 rounded-full border-2 border-gray-300 overflow-hidden shadow-lg mb-4">
               <img 
                 src={analysisImage}
-                alt="Analyse des données"
+                alt={t('home:features.dataAnalysis.title', 'Analyse des données')}
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-xl font-bold mb-2">Analyse des données</h3>
+            <h3 className="text-xl font-bold mb-2">
+              {t('home:features.dataAnalysis.title', 'Analyse des données')}
+            </h3>
             <p className="text-gray-600 text-center">
-              Visualisez et analysez vos données pour prendre des décisions éclairées. Créez des rapports détaillés sur vos activités et leur impact.
+              {t('home:features.dataAnalysis.description', 'Visualisez et analysez vos données pour prendre des décisions éclairées. Créez des rapports détaillés sur vos activités et leur impact.')}
             </p>
           </div>
 
@@ -83,13 +114,15 @@ const Home = () => {
             <div className="w-52 h-52 rounded-full border-2 border-gray-300 overflow-hidden shadow-lg mb-4">
               <img 
                 src={stockImage}
-                alt="Gestion des stocks"
+                alt={t('home:features.stockManagement.title', 'Gestion des stocks')}
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-xl font-bold mb-2">Gestion des stocks</h3>
+            <h3 className="text-xl font-bold mb-2">
+              {t('home:features.stockManagement.title', 'Gestion des stocks')}
+            </h3>
             <p className="text-gray-600 text-center">
-              Suivez en temps réel vos inventaires, recevez des alertes de seuil et optimisez la distribution des ressources entre vos différents sites.
+              {t('home:features.stockManagement.description', 'Suivez en temps réel vos inventaires, recevez des alertes de seuil et optimisez la distribution des ressources entre vos différents sites.')}
             </p>
           </div>
 
@@ -98,13 +131,15 @@ const Home = () => {
             <div className="w-52 h-52 rounded-full border-2 border-gray-300 overflow-hidden shadow-lg mb-4">
               <img 
                 src={terrainImage}
-                alt="Suivi terrain"
+                alt={t('home:features.fieldTracking.title', 'Suivi terrain')}
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-xl font-bold mb-2">Suivi terrain</h3>
+            <h3 className="text-xl font-bold mb-2">
+              {t('home:features.fieldTracking.title', 'Suivi terrain')}
+            </h3>
             <p className="text-gray-600 text-center">
-              Localisez vos équipes, coordonnez les actions et améliorez la sécurité de vos bénévoles avec notre système de suivi en temps réel.
+              {t('home:features.fieldTracking.description', 'Localisez vos équipes, coordonnez les actions et améliorez la sécurité de vos bénévoles avec notre système de suivi en temps réel.')}
             </p>
           </div>
 
@@ -113,13 +148,15 @@ const Home = () => {
             <div className="w-52 h-52 rounded-full border-2 border-gray-300 overflow-hidden shadow-lg mb-4">
               <img 
                 src={impactSocialImage}
-                alt="Impact social"
+                alt={t('home:features.socialImpact.title', 'Impact social')}
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-xl font-bold mb-2">Impact social</h3>
+            <h3 className="text-xl font-bold mb-2">
+              {t('home:features.socialImpact.title', 'Impact social')}
+            </h3>
             <p className="text-gray-600 text-center">
-              Mesurez et démontrez l'impact de vos actions sur la communauté. Générez des rapports d'impact pour vos partenaires et donateurs.
+              {t('home:features.socialImpact.description', 'Mesurez et démontrez l\'impact de vos actions sur la communauté. Générez des rapports d\'impact pour vos partenaires et donateurs.')}
             </p>
           </div>
         </div>
@@ -127,28 +164,11 @@ const Home = () => {
 
       {/* Témoignages */}
       <div className="mt-24 bg-gray-50 py-12 px-4 rounded-lg">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Témoignages de nos utilisateurs</h2>
+        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+          {t('home:testimonials.title', 'Témoignages de nos utilisateurs')}
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[
-            {
-              name: 'Jean Dupont',
-              org: 'Association Entraide',
-              initials: 'JD',
-              quote: 'Grâce au suivi des stocks en temps réel, nous avons réduit nos pertes de 30% et optimisé nos distributions sur le terrain.'
-            },
-            {
-              name: 'Marie Lambert',
-              org: 'Club Sportif Local',
-              initials: 'ML',
-              quote: 'La fonctionnalité de géolocalisation nous a permis de coordonner efficacement nos bénévoles lors des grands événements.'
-            },
-            {
-              name: 'Paul Lefèvre',
-              org: 'Association Culturelle',
-              initials: 'PL',
-              quote: 'Le module de gestion des événements nous a fait gagner un temps précieux et amélioré la communication avec nos participants.'
-            }
-          ].map(({ name, org, initials, quote }) => (
+          {testimonials.map(({ name, org, initials, quote }) => (
             <div key={name} className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
@@ -167,15 +187,17 @@ const Home = () => {
 
       {/* Call To Action */}
       <div className="mt-24 text-center">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">Prêt à transformer votre association ?</h2>
+        <h2 className="text-3xl font-bold mb-6 text-gray-800">
+          {t('home:cta.title', 'Prêt à transformer votre association ?')}
+        </h2>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          Rejoignez des centaines d'associations qui utilisent déjà notre outil pour structurer leurs actions et décupler leur impact.
+          {t('home:cta.description', 'Rejoignez des centaines d\'associations qui utilisent déjà notre outil pour structurer leurs actions et décupler leur impact.')}
         </p>
         <Link 
           to="/signup" 
           className="px-8 py-4 bg-yellow-400 text-gray-800 font-semibold rounded-md hover:bg-yellow-500 transition duration-300 inline-block"
         >
-          Créer mon espace
+          {t('home:cta.button', 'Créer mon espace')}
         </Link>
       </div>
     </div>

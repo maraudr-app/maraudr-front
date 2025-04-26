@@ -4,11 +4,20 @@ import Home from './pages/Home/Home';
 import DashBoard from './pages/DashBoard/DashBoard';
 import Login from './pages/Login/Login';
 import { ThemeProvider } from './context/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 
 
 // ... autres pages
 
 function App() {
+  const { i18n } = useTranslation();
+
+  // Effet pour mettre à jour l'attribut lang de la balise html
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
   return (
     <ThemeProvider>
       <Router>

@@ -6,11 +6,13 @@ import { Button } from '../../components/common/button/button';
 import { Link } from 'react-router-dom';
 import loginImage from '../../assets/pictures/access-key.jpg';
 import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const { t } = useTranslation();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +39,9 @@ const Login = () => {
                 </div>
               </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors">
-                Hey, bienvenue sur maraudr.
+                {t('auth.welcome')}
               </h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300 transition-colors">Connectez-vous à votre compte</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 transition-colors">{t('auth.login')}</p>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -49,7 +51,7 @@ const Login = () => {
                   name="email"
                   type="email"
                   required
-                  placeholder="Adresse e-mail"
+                  placeholder={t('auth.email')}
                   value={email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -61,7 +63,7 @@ const Login = () => {
                   name="password"
                   type="password"
                   required
-                  placeholder="Mot de passe"
+                  placeholder={t('auth.password')}
                   value={password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -79,13 +81,13 @@ const Login = () => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                    Se souvenir de moi
+                    {t('auth.remember')}
                   </label>
                 </div>
 
                 <div className="text-sm">
                   <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                    Mot de passe oublié?
+                    {t('auth.forgot')}
                   </Link>
                 </div>
               </div>
@@ -95,15 +97,15 @@ const Login = () => {
                   type="submit"
                   className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
                 >
-                  Se connecter
+                  {t('auth.loginButton')}
                 </Button>
               </div>
               
               <div className="text-center">
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Pas encore de compte?{' '}
+                  {t('auth.noAccount')}{' '}
                   <Link to="/set-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                    S'inscrire
+                    {t('auth.register')}
                   </Link>
                 </span>
               </div>
@@ -115,7 +117,7 @@ const Login = () => {
                   <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400">Ou continuer avec</span>
+                  <span className="px-2 bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400">{t('auth.or')}</span>
                 </div>
               </div>
 
@@ -124,12 +126,14 @@ const Login = () => {
                   <GoogleButton
                     onClick={() => console.log('Connexion avec Google')}
                     className="w-full"
+                    text={t('auth.google')}
                   />
                 </div>
                 <div>
                   <MicrosoftButton
                     onClick={() => console.log('Connexion avec Microsoft')}
                     className="w-full"
+                    text={t('auth.microsoft')}
                   />
                 </div>
               </div>
