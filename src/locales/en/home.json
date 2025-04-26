@@ -1,0 +1,56 @@
+{
+  "hero": {
+    "title": "Simplify your organization's management",
+    "description": "An intuitive platform to manage your members, organize missions, track inventory, and analyze your actions. Designed for committed organizations like yours.",
+    "createAccount": "Create account",
+    "discoverFeatures": "Discover features"
+  },
+  "features": {
+    "title": "Our features",
+    "memberManagement": {
+      "title": "Member management",
+      "description": "Efficiently manage your members, their roles, and contributions. Track membership fees and keep a complete history of activities."
+    },
+    "dataAnalysis": {
+      "title": "Data analysis",
+      "description": "Visualize and analyze your data to make informed decisions. Create detailed reports on your activities and their impact."
+    },
+    "stockManagement": {
+      "title": "Inventory management",
+      "description": "Track your inventories in real-time, receive threshold alerts, and optimize resource distribution across your different locations."
+    },
+    "fieldTracking": {
+      "title": "Field tracking",
+      "description": "Locate your teams, coordinate actions, and improve volunteer safety with our real-time tracking system."
+    },
+    "socialImpact": {
+      "title": "Social impact",
+      "description": "Measure and demonstrate the impact of your actions on the community. Generate impact reports for your partners and donors."
+    }
+  },
+  "testimonials": {
+    "title": "User testimonials",
+    "users": [
+      {
+        "name": "John Smith",
+        "org": "Help Association",
+        "quote": "Thanks to real-time inventory tracking, we've reduced our losses by 30% and optimized our field distributions."
+      },
+      {
+        "name": "Mary Johnson",
+        "org": "Local Sports Club",
+        "quote": "The geolocation feature has allowed us to effectively coordinate our volunteers during major events."
+      },
+      {
+        "name": "Paul Brown",
+        "org": "Cultural Association",
+        "quote": "The event management module has saved us valuable time and improved communication with our participants."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to transform your organization?",
+    "description": "Join hundreds of organizations already using our tool to structure their actions and multiply their impact.",
+    "button": "Create my account"
+  }
+} 
