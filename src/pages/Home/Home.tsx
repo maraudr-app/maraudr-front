@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
 import landingImage from '../../assets/pictures/assoc-landing-page.jpg';
 import membersImage from '../../assets/pictures/gestion-des-membres.jpg';
 import analysisImage from '../../assets/pictures/statistic.jpg';
@@ -8,11 +9,25 @@ import terrainImage from '../../assets/pictures/terrain.jpg';
 import impactSocialImage from '../../assets/pictures/impact-social.jpg';
 
 const Home = () => {
-  // Utiliser une approche sans namespace explicite
   const { t } = useTranslation();
+  const [showFeatureButton, setShowFeatureButton] = useState(false);
   
-  // Version simplifiée de l'accès aux traductions, plus lisible
   const t_home = (key: string, fallback: string) => t(`home:${key}`, fallback);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const featuresSection = document.getElementById('features');
+      if (featuresSection) {
+        const rect = featuresSection.getBoundingClientRect();
+        setShowFeatureButton(rect.top > window.innerHeight || rect.bottom < 0);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial state
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Hard-coded testimonials with translation keys
   const testimonials = [
@@ -57,14 +72,14 @@ const Home = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link 
-              to="/signup"
+              to="/login"
               className="px-8 py-3 bg-blue-500 text-gray-800 font-medium text-center rounded-md hover:bg-blue-600 transition duration-300 text-sm uppercase tracking-wider"
             >
               {t_home('hero.createAccount', 'Créer un compte')}
             </Link>
             <a 
               href="#features"
-              className="px-8 py-3 border border-gray-300 text-gray-700 font-medium text-center rounded-md hover:bg-gray-50 transition duration-300 text-sm uppercase tracking-wider"  
+              className={`px-8 py-3 border border-gray-300 text-gray-700 font-medium text-center rounded-md hover:bg-gray-50 transition duration-300 text-sm uppercase tracking-wider ${showFeatureButton ? 'fixed top-4 right-4 z-50 bg-white' : ''}`}
             >
               {t_home('hero.discoverFeatures', 'Découvrir les fonctionnalités')}
             </a>
