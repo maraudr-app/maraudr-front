@@ -1,17 +1,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import { useNavigate } from 'react-router-dom';
-import { useLoginNavigation } from './Login';
+import { useLoginNavigation } from '../../hooks/useLoginNavigation';
 
 // Mock de useNavigate
 vi.mock('react-router-dom', () => ({
-  useNavigate: vi.fn()
+  useNavigate: vi.fn(() => vi.fn())
 }));
 
 describe('Login Page Navigation', () => {
   it('handleCloseLoginPage redirige vers la page d\'accueil', () => {
-    // Mock de navigate
+    // Réinitialiser les mocks
+    vi.clearAllMocks();
+    
+    // Obtenir la référence au mock
     const mockNavigate = vi.fn();
-    (useNavigate as any).mockReturnValue(mockNavigate);
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     
     // Tester directement la fonction useLoginNavigation
     const { handleCloseLoginPage } = useLoginNavigation();

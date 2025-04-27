@@ -3,21 +3,11 @@ import { GoogleButton } from '../../components/common/button/googleButton';
 import { MicrosoftButton } from '../../components/common/button/microsoftButton';
 import { Input } from '../../components/common/input/input';
 import { Button } from '../../components/common/button/button';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import loginImage from '../../assets/pictures/access-key.jpg';
 import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
-
-// Exporter la fonction de navigation pour les tests
-export const useLoginNavigation = () => {
-  const navigate = useNavigate();
-  
-  const handleCloseLoginPage = () => {
-    navigate('/');
-  };
-  
-  return { handleCloseLoginPage };
-};
+import { useLoginNavigation } from '../../hooks/useLoginNavigation';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
