@@ -8,6 +8,15 @@
     "search": "Rechercher...",
     "signup": "Créer un compte"
   },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "stock": "Stock",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
+    "logout": "Déconnexion"
+  },
   "auth": {
     "welcome": "Hey, bienvenue sur maraudr.",
     "login": "Connectez-vous à votre compte",
@@ -20,7 +29,8 @@
     "register": "S'inscrire",
     "or": "Ou continuer avec",
     "google": "Se connecter avec Google",
-    "microsoft": "Se connecter avec Microsoft"
+    "microsoft": "Se connecter avec Microsoft",
+    "logout": "Déconnexion"
   },
   "themes": {
     "switchToLight": "Passer au mode clair",

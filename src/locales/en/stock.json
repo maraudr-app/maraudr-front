@@ -1,0 +1,55 @@
+{
+  "title": "Stock Management",
+  "overview": {
+    "title": "Stock Overview",
+    "total": "Total Items",
+    "categories": "Categories",
+    "locations": "Locations",
+    "value": "Total Value"
+  },
+  "actions": {
+    "add": "Add Item",
+    "import": "Import Inventory",
+    "export": "Export Data",
+    "scan": "Scan Barcode",
+    "filter": "Filter Items",
+    "search": "Search inventory..."
+  },
+  "table": {
+    "name": "Item Name",
+    "category": "Category",
+    "quantity": "Quantity",
+    "location": "Location",
+    "expiry": "Expiry Date",
+    "value": "Value",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "filters": {
+    "all": "All Items",
+    "low": "Low Stock",
+    "expiring": "Expiring Soon",
+    "category": "By Category",
+    "location": "By Location"
+  },
+  "details": {
+    "title": "Item Details",
+    "history": "Transaction History",
+    "edit": "Edit Item",
+    "delete": "Delete Item",
+    "transfer": "Transfer Stock"
+  },
+  "status": {
+    "inStock": "In Stock",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "expiringSoon": "Expiring Soon",
+    "expired": "Expired"
+  },
+  "alerts": {
+    "low": "Low Stock Alert",
+    "expiry": "Expiration Alert",
+    "success": "Operation Successful",
+    "error": "Operation Failed"
+  }
+} 
