@@ -29,6 +29,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Simuler un appel API
           await new Promise(resolve => setTimeout(resolve, 500));
+          console.log('Login attempt:', { email, password });
           
           // Simuler un utilisateur
           // En production, cela viendrait de l'API
