@@ -78,6 +78,11 @@ const Login = () => {
     }
   };
 
+  // Fonction d'aide pour gérer le clic du bouton
+  const handleButtonClick = () => {
+    // Ne fait rien, car le formulaire gère déjà la soumission
+  };
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 flex items-center justify-center mt-10 pt-10 pb-10 transition-colors">
       <div className="max-w-6xl w-full">
@@ -159,7 +164,7 @@ const Login = () => {
 
               {/* Bouton de connexion avec état de chargement */}
               <Button
-                onClick={handleSubmit}
+                onClick={handleButtonClick}
                 type="submit"
                 disabled={isLoading}
                 isLoading={isLoading}
