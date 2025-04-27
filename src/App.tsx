@@ -5,11 +5,12 @@ import DashBoard from './pages/DashBoard/DashBoard';
 import Login from './pages/Login/Login';
 import { ThemeProvider } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useAuthStore } from './store/authStore';
 
 // Composant pour les routes protégées
 const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -20,28 +21,12 @@ const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
 
 function App() {
   const { i18n } = useTranslation();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Effet pour vérifier l'authentification
-  useEffect(() => {
-    const checkAuth = () => {
-      const auth = localStorage.getItem('isAuthenticated');
-      setIsAuthenticated(auth === 'true');
-    };
-    
-    checkAuth();
-    window.addEventListener('storage', checkAuth);
-    
-    return () => {
-      window.removeEventListener('storage', checkAuth);
-    };
-  }, []);
-
+  
   // Effet pour mettre à jour l'attribut lang de la balise html
   useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
-
+  
   return (
     <ThemeProvider>
       <Router>

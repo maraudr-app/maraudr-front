@@ -29,7 +29,8 @@
     "register": "S'inscrire",
     "or": "Ou continuer avec",
     "google": "Se connecter avec Google",
-    "microsoft": "Se connecter avec Microsoft"
+    "microsoft": "Se connecter avec Microsoft",
+    "logout": "Déconnexion"
   },
   "themes": {
     "switchToLight": "Passer au mode clair",

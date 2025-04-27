@@ -8,6 +8,7 @@ import loginImage from '../../assets/pictures/access-key.jpg';
 import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 import { useLoginNavigation } from '../../hooks/useLoginNavigation';
+import { useAuthStore } from '../../store/authStore';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
@@ -19,6 +20,7 @@ const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { handleCloseLoginPage } = useLoginNavigation();
+  const login = useAuthStore(state => state.login);
 
   // Hide login button in navbar when on home page
   const isHomePage = location.pathname === '/';
@@ -41,26 +43,33 @@ const Login = () => {
     e.preventDefault();
     setError(null);
     
-    // Validation basique des champs
-    if (!email || !password) {
-      setError('Veuillez remplir tous les champs');
-      return;
-    }
-
+    // Pour la simulation, on accepte tout email/mot de passe
     try {
       setIsLoading(true);
       
-      // Simuler une connexion (à remplacer par un appel à une API d'authentification)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Stocker des informations d'authentification fictives
-      localStorage.setItem('isAuthenticated', 'true');
-      if (rememberMe) {
-        localStorage.setItem('userEmail', email);
+      // Validation simple
+      if (!email || !password) {
+        setError('Veuillez remplir tous les champs');
+        setIsLoading(false);
+        return;
       }
       
-      // Redirection vers le tableau de bord
-      navigate('/dashboard');
+      // Appeler la fonction login du store
+      const success = await login(email, password);
+      
+      if (success) {
+        // Si rememberMe est coché, on peut stocker un flag supplémentaire
+        if (rememberMe) {
+          localStorage.setItem('rememberMeEmail', email);
+        } else {
+          localStorage.removeItem('rememberMeEmail');
+        }
+        
+        // Redirection vers le tableau de bord
+        navigate('/dashboard');
+      } else {
+        setError('Échec de la connexion. Veuillez réessayer.');
+      }
     } catch (err) {
       setError('Échec de la connexion. Veuillez réessayer.');
       console.error(err);
@@ -150,11 +159,11 @@ const Login = () => {
 
               {/* Bouton de connexion avec état de chargement */}
               <Button
-                  onClick={() => handleSubmit(new Event('submit') as unknown as React.FormEvent)}
-                  type="button"
-                  disabled={isLoading}
-                  isLoading={isLoading}
-                  className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={handleSubmit}
+                type="submit"
+                disabled={isLoading}
+                isLoading={isLoading}
+                className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {t('auth.loginButton')}
               </Button>

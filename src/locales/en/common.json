@@ -29,7 +29,8 @@
     "register": "Register",
     "or": "Or continue with",
     "google": "Sign in with Google",
-    "microsoft": "Sign in with Microsoft"
+    "microsoft": "Sign in with Microsoft",
+    "logout": "Log out"
   },
   "themes": {
     "switchToLight": "Switch to light mode",
