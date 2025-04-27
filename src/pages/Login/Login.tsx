@@ -3,16 +3,36 @@ import { GoogleButton } from '../../components/common/button/googleButton';
 import { MicrosoftButton } from '../../components/common/button/microsoftButton';
 import { Input } from '../../components/common/input/input';
 import { Button } from '../../components/common/button/button';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import loginImage from '../../assets/pictures/access-key.jpg';
-import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
+import { useLoginNavigation } from '../../hooks/useLoginNavigation';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const { t } = useTranslation();
+  const location = useLocation();
+  const { handleCloseLoginPage } = useLoginNavigation();
+
+  // Hide login button in navbar when on home page
+  const isHomePage = location.pathname === '/';
+  if (isHomePage) {
+    // Vérifier si le bouton est visible dans la vue
+    const loginButton = document.querySelector('.login-button');
+    if (loginButton) {
+      const rect = loginButton.getBoundingClientRect();
+      const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      
+      // Si le bouton n'est pas visible, on affiche le bouton dans la navbar
+      if (!isVisible) {
+        return null;
+      }
+    }
+    return null;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +161,14 @@ const Login = () => {
 
           {/* Partie droite - Image */}
           <div className="hidden md:block w-1/2 relative bg-gray-100 dark:bg-gray-900 overflow-hidden">
+            <button
+              onClick={handleCloseLoginPage}
+              className="absolute top-4 right-4 w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
+              aria-label="Close"
+              data-testid="close-login-button"
+            >
+              <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            </button>
             <img 
               src={loginImage} 
               alt="Illustration" 
