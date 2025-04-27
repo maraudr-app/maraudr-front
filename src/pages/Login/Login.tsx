@@ -3,7 +3,7 @@ import { GoogleButton } from '../../components/common/button/googleButton';
 import { MicrosoftButton } from '../../components/common/button/microsoftButton';
 import { Input } from '../../components/common/input/input';
 import { Button } from '../../components/common/button/button';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import loginImage from '../../assets/pictures/access-key.jpg';
 import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
@@ -13,8 +13,11 @@ const Login = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const { handleCloseLoginPage } = useLoginNavigation();
 
   // Hide login button in navbar when on home page
@@ -34,9 +37,36 @@ const Login = () => {
     return null;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Logique de connexion à implémenter
+    setError(null);
+    
+    // Validation basique des champs
+    if (!email || !password) {
+      setError('Veuillez remplir tous les champs');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Simuler une connexion (à remplacer par un appel à une API d'authentification)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Stocker des informations d'authentification fictives
+      localStorage.setItem('isAuthenticated', 'true');
+      if (rememberMe) {
+        localStorage.setItem('userEmail', email);
+      }
+      
+      // Redirection vers le tableau de bord
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Échec de la connexion. Veuillez réessayer.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -111,14 +141,23 @@ const Login = () => {
                 </div>
               </div>
 
-              <div>
-                <Button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-                >
-                  {t('auth.loginButton')}
-                </Button>
-              </div>
+              {/* Afficher l'erreur s'il y en a une */}
+              {error && (
+                <div className="text-red-500 text-sm mt-2 text-center">
+                  {error}
+                </div>
+              )}
+
+              {/* Bouton de connexion avec état de chargement */}
+              <Button
+                  onClick={() => handleSubmit(new Event('submit') as unknown as React.FormEvent)}
+                  type="button"
+                  disabled={isLoading}
+                  isLoading={isLoading}
+                  className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {t('auth.loginButton')}
+              </Button>
               
               <div className="text-center">
                 <span className="text-sm text-gray-700 dark:text-gray-300">

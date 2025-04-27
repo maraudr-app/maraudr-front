@@ -16,10 +16,28 @@ interface NavLink {
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [showCreateAccount, setShowCreateAccount] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const { t } = useTranslation();
     const location = useLocation();
     const isHomePage = location.pathname === '/';
     const isLoginPage = location.pathname === '/login';
+
+    // Vérifier si l'utilisateur est authentifié
+    useEffect(() => {
+        const checkAuth = () => {
+            const auth = localStorage.getItem('isAuthenticated');
+            setIsAuthenticated(auth === 'true');
+        };
+        
+        checkAuth();
+        
+        // Écouter les changements d'authentification
+        window.addEventListener('storage', checkAuth);
+        
+        return () => {
+            window.removeEventListener('storage', checkAuth);
+        };
+    }, []);
 
     // Vérifier si le scroll a dépassé la section héro
     useEffect(() => {
@@ -42,9 +60,15 @@ const Header = () => {
         };
     }, [isHomePage]);
 
-    const navLinks: NavLink[] = [
-        { name: t('header.contact'), path: '/contact', translationKey: 'header.contact' },
-    ];
+    const navLinks: NavLink[] = [];
+    
+    // Ajouter le lien Dashboard si l'utilisateur est authentifié
+    if (isAuthenticated) {
+        navLinks.push({ name: t('header.dashboard'), path: '/dashboard', translationKey: 'header.dashboard' });
+    }
+    
+    // Ajouter le lien Contact
+    navLinks.push({ name: t('header.contact'), path: '/contact', translationKey: 'header.contact' });
 
     // Ajouter le lien Login seulement si on est sur la page Login
     if (isLoginPage) {
@@ -73,7 +97,7 @@ const Header = () => {
                         ))}
                         <ThemeToggle />
                         <LanguageSwitcher />
-                        {(showCreateAccount || !isHomePage) && !isLoginPage && (
+                        {(showCreateAccount || !isHomePage) && !isLoginPage && !isAuthenticated && (
                             <Link
                                 to="/login"
                                 className="ml-3 px-4 py-2 bg-blue-500 text-white font-medium text-center rounded-md hover:bg-blue-600 transition duration-300 text-sm"
@@ -113,7 +137,7 @@ const Header = () => {
                             {link.name}
                         </Link>
                     ))}
-                    {(showCreateAccount || !isHomePage) && !isLoginPage && (
+                    {(showCreateAccount || !isHomePage) && !isLoginPage && !isAuthenticated && (
                         <Link
                             to="/login"
                             onClick={() => setIsOpen(false)}

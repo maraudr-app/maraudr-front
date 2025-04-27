@@ -8,6 +8,15 @@
     "search": "Search...",
     "signup": "Create Account"
   },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "settings": "Settings",
+    "profile": "Profile",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "logout": "Log Out"
+  },
   "auth": {
     "welcome": "Hey, welcome to maraudr.",
     "login": "Login to your account",
