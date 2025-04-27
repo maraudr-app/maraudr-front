@@ -5,7 +5,8 @@
     "login": "Connexion",
     "settings": "Paramètres",
     "contact": "Contact",
-    "search": "Rechercher..."
+    "search": "Rechercher...",
+    "signup": "Créer un compte"
   },
   "auth": {
     "welcome": "Hey, bienvenue sur maraudr.",

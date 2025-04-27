@@ -3,9 +3,9 @@ import { GoogleButton } from '../../components/common/button/googleButton';
 import { MicrosoftButton } from '../../components/common/button/microsoftButton';
 import { Input } from '../../components/common/input/input';
 import { Button } from '../../components/common/button/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import loginImage from '../../assets/pictures/access-key.jpg';
-import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 const Login = () => {
@@ -13,10 +13,22 @@ const Login = () => {
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Hide login button in navbar when on home page
+  const isHomePage = location.pathname === '/';
+  if (isHomePage) {
+    return null;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Logique de connexion à implémenter
+  };
+
+  const handleCloseLoginPage = () => {
+    navigate('/');
   };
 
   return (
@@ -141,6 +153,13 @@ const Login = () => {
 
           {/* Partie droite - Image */}
           <div className="hidden md:block w-1/2 relative bg-gray-100 dark:bg-gray-900 overflow-hidden">
+            <button
+              onClick={handleCloseLoginPage}
+              className="absolute top-4 right-4 w-8 h-8 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
+              aria-label="Close"
+            >
+              <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            </button>
             <img 
               src={loginImage} 
               alt="Illustration" 
