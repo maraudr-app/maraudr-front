@@ -1,0 +1,26 @@
+{
+  "dashboard": {
+    "customers": "Customers",
+    "revenue": "Revenue",
+    "profit": "Profit",
+    "invoices": "Invoices",
+    "sinceLast": "Since last week",
+    "invoiceStats": "Invoice Statistics",
+    "salesAnalytics": "Sales Analytics",
+    "recentInvoices": "Recent Invoices",
+    "filter": "Filter",
+    "no": "No",
+    "idCustomers": "Id Customers",
+    "customersName": "Customers name",
+    "itemsName": "Items Name",
+    "orderDate": "Order Date",
+    "status": "Status",
+    "price": "Price",
+    "totalPaid": "Total Paid",
+    "totalOverdue": "Total Overdue",
+    "totalUnpaid": "Total Unpaid",
+    "statusPaid": "Paid",
+    "statusPending": "Pending",
+    "statusOverdue": "Overdue"
+  }
+} 

@@ -18,6 +18,10 @@ interface SidebarItemProps {
   isCollapsed: boolean;
 }
 
+interface SidebarProps {
+  onToggle?: (isCollapsed: boolean) => void;
+}
+
 const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, isCollapsed }) => {
   return (
     <Link
@@ -34,25 +38,29 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, is
   );
 };
 
-const Sidebar = () => {
+const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { pathname } = useLocation();
   const { t } = useTranslation();
 
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    if (onToggle) {
+      onToggle(newState);
+    }
   };
 
   const navigationItems = [
     { 
-      to: '/dashboard', 
+      to: '/maraudApp/dashboard', 
       icon: <ChartBarIcon className="w-5 h-5" />, 
       label: t('sidebar.dashboard', 'Dashboard'), 
       key: 'dashboard' 
     },
     { 
-      to: '/stock', 
+      to: '/maraudApp/stock', 
       icon: <CubeIcon className="w-5 h-5" />, 
       label: t('sidebar.stock', 'Stock'), 
       key: 'stock' 
@@ -73,6 +81,11 @@ const Sidebar = () => {
       key: 'logOut'
     }
   ];
+
+  // Fonction pour vérifier si un élément est actif
+  const checkIsActive = (path: string) => {
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   return (
     <div
@@ -102,7 +115,7 @@ const Sidebar = () => {
                 to={item.to}
                 icon={item.icon}
                 label={item.label}
-                isActive={pathname === item.to}
+                isActive={checkIsActive(item.to)}
                 isCollapsed={isCollapsed}
               />
             </div>
@@ -117,7 +130,7 @@ const Sidebar = () => {
               to={item.to}
               icon={item.icon}
               label={item.label}
-              isActive={pathname === item.to}
+              isActive={checkIsActive(item.to)}
               isCollapsed={isCollapsed}
             />
           </div>
