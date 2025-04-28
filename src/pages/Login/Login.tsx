@@ -3,19 +3,24 @@ import { GoogleButton } from '../../components/common/button/googleButton';
 import { MicrosoftButton } from '../../components/common/button/microsoftButton';
 import { Input } from '../../components/common/input/input';
 import { Button } from '../../components/common/button/button';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import loginImage from '../../assets/pictures/access-key.jpg';
 import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 import { useLoginNavigation } from '../../hooks/useLoginNavigation';
+import { useAuthStore } from '../../store/authStore';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const { handleCloseLoginPage } = useLoginNavigation();
+  const login = useAuthStore(state => state.login);
 
   // Hide login button in navbar when on home page
   const isHomePage = location.pathname === '/';
@@ -34,9 +39,48 @@ const Login = () => {
     return null;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Logique de connexion à implémenter
+    setError(null);
+    
+    // Pour la simulation, on accepte tout email/mot de passe
+    try {
+      setIsLoading(true);
+      
+      // Validation simple
+      if (!email || !password) {
+        setError('Veuillez remplir tous les champs');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Appeler la fonction login du store
+      const success = await login(email, password);
+      
+      if (success) {
+        // Si rememberMe est coché, on peut stocker un flag supplémentaire
+        if (rememberMe) {
+          localStorage.setItem('rememberMeEmail', email);
+        } else {
+          localStorage.removeItem('rememberMeEmail');
+        }
+        
+        // Redirection vers le tableau de bord
+        navigate('/maraudApp');
+      } else {
+        setError('Échec de la connexion. Veuillez réessayer.');
+      }
+    } catch (err) {
+      setError('Échec de la connexion. Veuillez réessayer.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fonction d'aide pour gérer le clic du bouton
+  const handleButtonClick = () => {
+    // Ne fait rien, car le formulaire gère déjà la soumission
   };
 
   return (
@@ -111,14 +155,23 @@ const Login = () => {
                 </div>
               </div>
 
-              <div>
-                <Button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-                >
-                  {t('auth.loginButton')}
-                </Button>
-              </div>
+              {/* Afficher l'erreur s'il y en a une */}
+              {error && (
+                <div className="text-red-500 text-sm mt-2 text-center">
+                  {error}
+                </div>
+              )}
+
+              {/* Bouton de connexion avec état de chargement */}
+              <Button
+                onClick={handleButtonClick}
+                type="submit"
+                disabled={isLoading}
+                isLoading={isLoading}
+                className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {t('auth.loginButton')}
+              </Button>
               
               <div className="text-center">
                 <span className="text-sm text-gray-700 dark:text-gray-300">

@@ -1,0 +1,80 @@
+{
+  "title": "Gestion des Stocks",
+  "overview": {
+    "title": "Aperçu des Stocks",
+    "total": "Articles Totaux",
+    "categories": "Catégories",
+    "locations": "Emplacements",
+    "value": "Valeur Totale"
+  },
+  "actions": {
+    "add": "Ajouter un Article",
+    "import": "Importer l'Inventaire",
+    "export": "Exporter les Données",
+    "scan": "Scanner le Code-barres",
+    "filter": "Filtrer les Articles",
+    "search": "Rechercher dans l'inventaire..."
+  },
+  "table": {
+    "name": "Nom de l'Article",
+    "category": "Catégorie",
+    "quantity": "Quantité",
+    "location": "Emplacement",
+    "expiry": "Date d'Expiration",
+    "value": "Valeur",
+    "status": "Statut",
+    "actions": "Actions"
+  },
+  "filters": {
+    "all": "Tous les Articles",
+    "low": "Stock Faible",
+    "expiring": "Expiration Proche",
+    "category": "Par Catégorie",
+    "location": "Par Emplacement"
+  },
+  "details": {
+    "title": "Détails de l'Article",
+    "history": "Historique des Transactions",
+    "edit": "Modifier l'Article",
+    "delete": "Supprimer l'Article",
+    "transfer": "Transférer le Stock"
+  },
+  "status": {
+    "inStock": "En Stock",
+    "lowStock": "Stock Faible",
+    "outOfStock": "Rupture de Stock",
+    "expiringSoon": "Expiration Proche",
+    "expired": "Expiré"
+  },
+  "alerts": {
+    "low": "Alerte de Stock Faible",
+    "expiry": "Alerte d'Expiration",
+    "success": "Opération Réussie",
+    "error": "Échec de l'Opération"
+  },
+  "balance": "Solde",
+  "income": "Revenus",
+  "savings": "Épargne",
+  "expenses": "Dépenses",
+  "finances": "Finances",
+  "outcome": "Sorties",
+  "monthly": "Mensuel",
+  "weekly": "Hebdomadaire",
+  "daily": "Quotidien",
+  "allExpenses": "Toutes les Dépenses",
+  "shopping": "Achats",
+  "workspace": "Espace de Travail",
+  "food": "Nourriture",
+  "entertainment": "Divertissements",
+  "myCards": "Mes Cartes",
+  "yourBalance": "Votre Solde",
+  "currency": "Devise",
+  "active": "Active",
+  "addNewCard": "Ajouter une Nouvelle Carte",
+  "transactions": "Transactions",
+  "recent": "Récentes",
+  "quickTransfer": "Transfert Rapide",
+  "cardNumber": "Numéro de Carte",
+  "sendMoney": "Envoyer de l'Argent",
+  "saveAsDraft": "Enregistrer comme Brouillon"
+} 

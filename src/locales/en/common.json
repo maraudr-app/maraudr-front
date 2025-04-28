@@ -8,6 +8,15 @@
     "search": "Search...",
     "signup": "Create Account"
   },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "settings": "Settings",
+    "profile": "Profile",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "logout": "Log Out"
+  },
   "auth": {
     "welcome": "Hey, welcome to maraudr.",
     "login": "Login to your account",
@@ -20,7 +29,8 @@
     "register": "Register",
     "or": "Or continue with",
     "google": "Sign in with Google",
-    "microsoft": "Sign in with Microsoft"
+    "microsoft": "Sign in with Microsoft",
+    "logout": "Log out"
   },
   "themes": {
     "switchToLight": "Switch to light mode",
