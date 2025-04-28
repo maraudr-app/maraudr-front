@@ -65,9 +65,7 @@ const Header = () => {
     const navLinks: NavLink[] = [];
     
     // Ajouter le lien Dashboard si l'utilisateur est authentifié
-    if (isAuthenticated) {
-        navLinks.push({ name: t('header.dashboard'), path: '/dashboard', translationKey: 'header.dashboard' });
-    }
+   
     
     // Ajouter le lien Contact
     navLinks.push({ name: t('header.contact'), path: '/contact', translationKey: 'header.contact' });

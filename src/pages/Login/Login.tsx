@@ -66,7 +66,7 @@ const Login = () => {
         }
         
         // Redirection vers le tableau de bord
-        navigate('/dashboard');
+        navigate('/maraudApp');
       } else {
         setError('Échec de la connexion. Veuillez réessayer.');
       }

@@ -1,0 +1,26 @@
+{
+  "dashboard": {
+    "customers": "Clients",
+    "revenue": "Chiffre d'affaires",
+    "profit": "Profit",
+    "invoices": "Factures",
+    "sinceLast": "Depuis la semaine dernière",
+    "invoiceStats": "Statistiques des factures",
+    "salesAnalytics": "Analyse des ventes",
+    "recentInvoices": "Factures récentes",
+    "filter": "Filtrer",
+    "no": "N°",
+    "idCustomers": "ID Clients",
+    "customersName": "Nom des clients",
+    "itemsName": "Nom des articles",
+    "orderDate": "Date de commande",
+    "status": "Statut",
+    "price": "Prix",
+    "totalPaid": "Total payé",
+    "totalOverdue": "Total en retard",
+    "totalUnpaid": "Total impayé",
+    "statusPaid": "Payé",
+    "statusPending": "En attente",
+    "statusOverdue": "En retard"
+  }
+} 
