@@ -17,7 +17,7 @@ const MaraudrApp = () => {
 
             {/* Contenu principal qui s'adapte à la taille de la sidebar */}
             <div 
-                className={`flex-1 bg-gray-100 dark:bg-gray-900 p-4 transition-all duration-300 ${
+                className={`flex-1  dark:bg-gray-900 p-4 transition-all duration-300 ${
                     sidebarCollapsed ? 'ml-14' : 'ml-48'
                 }`}
             >

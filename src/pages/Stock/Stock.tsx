@@ -98,7 +98,7 @@ const Stock = () => {
     },
   ];
 
-  // Données fictives pour la carte
+  // Données fictives pour la plan
   const cardInfo = {
     number: '0818 7183 0713 2514',
     expiryDate: '07/10',
@@ -160,7 +160,7 @@ const Stock = () => {
         ))}
       </div>
 
-      {/* Graphiques et carte */}
+      {/* Graphiques et plan */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">

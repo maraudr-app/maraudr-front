@@ -7,6 +7,10 @@ import {
   Cog6ToothIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  UserCircleIcon,
+  MapIcon,
+  InformationCircleIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import {ArrowRightOnRectangleIcon} from "@heroicons/react/20/solid";
 
@@ -53,23 +57,47 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   };
 
   const navigationItems = [
-    { 
-      to: '/maraudApp/dashboard', 
-      icon: <ChartBarIcon className="w-5 h-5" />, 
-      label: t('sidebar.dashboard', 'Dashboard'), 
-      key: 'dashboard' 
+    {
+      to: '/maraudApp/dashboard',
+      icon: <ChartBarIcon className="w-5 h-5" />,
+      label: t('sidebar.dashboard', 'Dashboard'),
+      key: 'dashboard'
     },
-    { 
-      to: '/maraudApp/stock', 
-      icon: <CubeIcon className="w-5 h-5" />, 
-      label: t('sidebar.stock', 'Stock'), 
-      key: 'stock' 
+    {
+      to: '/maraudApp/stock',
+      icon: <CubeIcon className="w-5 h-5" />,
+      label: t('sidebar.stock', 'Stock'),
+      key: 'stock'
+    },
+    {
+      to: '/maraudApp/team',
+      icon: <UsersIcon className="w-5 h-5" />,
+      label: t('sidebar.team', 'Équipe'),
+      key: 'team'
+    },
+    {
+      to: '/maraudApp/map',
+      icon: <MapIcon className="w-5 h-5" />,
+      label: t('sidebar.map', 'Carte'),
+      key: 'map'
+    },
+    {
+      to: '/maraudApp/about',
+      icon: <InformationCircleIcon className="w-5 h-5" />,
+      label: t('sidebar.about', 'À propos'),
+      key: 'about'
     }
   ];
 
   const bottomItems = [
     { 
-      to: '/settings', 
+      to: '/maraudApp/profile',
+      icon: <UserCircleIcon className="w-5 h-5" />, 
+      label: t('sidebar.profile', 'Profile'), 
+      key: 'profile' 
+    },
+    { 
+      to: '/maraudApp/setting',
       icon: <Cog6ToothIcon className="w-5 h-5" />, 
       label: t('sidebar.settings', 'Settings'), 
       key: 'settings' 
