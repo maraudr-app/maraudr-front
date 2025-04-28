@@ -17,6 +17,17 @@ const Stock = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
   const [selectedExpensePeriod, setSelectedExpensePeriod] = useState('monthly');
 
+  // Fonctions pour changer les périodes
+  const handlePeriodChange = (period: string) => {
+    console.log(`Changing period to: ${period}`);
+    setSelectedPeriod(period);
+  };
+
+  const handleExpensePeriodChange = (period: string) => {
+    console.log(`Changing expense period to: ${period}`);
+    setSelectedExpensePeriod(period);
+  };
+
   // Données fictives pour les statistiques
   const stats = [
     {
@@ -165,7 +176,13 @@ const Stock = () => {
                 <span className="h-2 w-2 bg-red-400 rounded-full mr-1"></span>
                 <span className="text-gray-600 dark:text-gray-300">{t('stock.outcome', 'Outcome')}</span>
               </div>
-              <div className="flex items-center ml-4 bg-gray-100 dark:bg-gray-700 rounded px-2 py-1">
+              <div 
+                className="flex items-center ml-4 bg-gray-100 dark:bg-gray-700 rounded px-2 py-1 cursor-pointer"
+                onClick={() => {
+                  const newPeriod = selectedPeriod === 'monthly' ? 'weekly' : (selectedPeriod === 'weekly' ? 'daily' : 'monthly');
+                  handlePeriodChange(newPeriod);
+                }}
+              >
                 <span className="text-gray-700 dark:text-gray-300 mr-1">{t(`stock.${selectedPeriod}`, 'Monthly')}</span>
                 <ChevronDownIcon className="h-4 w-4 text-gray-500" />
               </div>
@@ -231,7 +248,13 @@ const Stock = () => {
               <h3 className="text-lg font-medium text-gray-800 dark:text-white">
                 {t('stock.allExpenses', 'All Expenses')}
               </h3>
-              <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded px-2 py-1 text-sm">
+              <div 
+                className="flex items-center bg-gray-100 dark:bg-gray-700 rounded px-2 py-1 text-sm cursor-pointer"
+                onClick={() => {
+                  const newPeriod = selectedExpensePeriod === 'monthly' ? 'weekly' : (selectedExpensePeriod === 'weekly' ? 'daily' : 'monthly');
+                  handleExpensePeriodChange(newPeriod);
+                }}
+              >
                 <span className="text-gray-700 dark:text-gray-300 mr-1">{t(`stock.${selectedExpensePeriod}`, 'Monthly')}</span>
                 <ChevronDownIcon className="h-4 w-4 text-gray-500" />
               </div>
@@ -278,15 +301,24 @@ const Stock = () => {
 
             {/* Périodes */}
             <div className="mt-6 grid grid-cols-3 gap-2 text-sm">
-              <div className="text-center">
+              <div 
+                className="text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded" 
+                onClick={() => handleExpensePeriodChange('daily')}
+              >
                 <p className="text-gray-500 dark:text-gray-400">{t('stock.daily', 'Daily')}</p>
                 <p className="font-semibold text-gray-800 dark:text-white">$573.12</p>
               </div>
-              <div className="text-center">
+              <div 
+                className="text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded" 
+                onClick={() => handleExpensePeriodChange('weekly')}
+              >
                 <p className="text-gray-500 dark:text-gray-400">{t('stock.weekly', 'Weekly')}</p>
                 <p className="font-semibold text-gray-800 dark:text-white">$4,791</p>
               </div>
-              <div className="text-center">
+              <div 
+                className="text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded" 
+                onClick={() => handleExpensePeriodChange('monthly')}
+              >
                 <p className="text-gray-500 dark:text-gray-400">{t('stock.monthly', 'Monthly')}</p>
                 <p className="font-semibold text-gray-800 dark:text-white">$19,112</p>
               </div>
