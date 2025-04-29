@@ -8,11 +8,12 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   UserCircleIcon,
-  MapIcon,
   InformationCircleIcon,
   UsersIcon,
 } from '@heroicons/react/24/outline';
+import { FiCalendar } from "react-icons/fi";
 import {ArrowRightOnRectangleIcon} from "@heroicons/react/20/solid";
+import { CiMap } from "react-icons/ci";
 
 interface SidebarItemProps {
   to: string;
@@ -77,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
     },
     {
       to: '/maraudApp/map',
-      icon: <MapIcon className="w-5 h-5" />,
+      icon: <CiMap className="w-5 h-5" />,
       label: t('sidebar.map', 'Carte'),
       key: 'map'
     },
@@ -86,6 +87,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       icon: <InformationCircleIcon className="w-5 h-5" />,
       label: t('sidebar.about', 'À propos'),
       key: 'about'
+    },
+    {
+      to: '/maraudApp/planing',
+      icon: <FiCalendar className="w-5 h-5" />,
+      label: t('sidebar.about', 'Planing'),
+      key: 'planing'
     }
   ];
 
