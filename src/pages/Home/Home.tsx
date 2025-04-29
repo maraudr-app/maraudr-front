@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import landingImage from '../../assets/pictures/assoc-landing-page.jpg';
@@ -7,12 +7,21 @@ import analysisImage from '../../assets/pictures/statistic.jpg';
 import stockImage from '../../assets/pictures/stock.jpg';
 import terrainImage from '../../assets/pictures/terrain.jpg';
 import impactSocialImage from '../../assets/pictures/impact-social.jpg';
+import {useAuthStore} from "../../store/authStore.ts";
 
 const Home = () => {
   const { t } = useTranslation();
   const [showFeatureButton, setShowFeatureButton] = useState(false);
-  
+  const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+
   const t_home = (key: string, fallback: string) => t(`home:${key}`, fallback);
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/maraudApp/dashboard'); // Redirige vers le dashboard si l'utilisateur est authentifié
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const handleScroll = () => {
