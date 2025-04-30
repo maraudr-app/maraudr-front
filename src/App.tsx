@@ -14,6 +14,7 @@ import Plan from "./pages/plan/plan.tsx";
 import Setting from "./pages/setting/setting.tsx";
 import About from "./pages/About/About.tsx";
 import Team from "./pages/team/team.tsx";
+import Planning from "./pages/planing/planing.tsx";
 
 // Composant pour les routes protégées
 const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
@@ -54,6 +55,7 @@ function App() {
               <Route path="setting" element={<Setting/>} />
               <Route path="about" element={<About/>} />
               <Route path="team" element={<Team/>} />
+              <Route path="planing" element={<Planning/>} />
               <Route path="profile" element={<ProtectedRoute element={<Profile />} />} />
             </Route>
 
