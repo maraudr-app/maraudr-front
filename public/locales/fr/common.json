@@ -28,5 +28,38 @@
   "languages": {
     "fr": "Français",
     "en": "Anglais"
+  },
+  "createAccount": {
+    "title": "Créer un compte",
+    "firstname": "Prénom",
+    "lastname": "Nom",
+    "email": "Email",
+    "phoneNumber": "Numéro de téléphone",
+    "street": "Rue",
+    "city": "Ville",
+    "state": "État/Région",
+    "postalCode": "Code postal",
+    "country": "Pays",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "isManager": "Je suis un manager",
+    "languages": "Langues parlées",
+    "submit": "Créer mon compte",
+    "or": "ou",
+    "login": "Déjà un compte ? Se connecter",
+    "errors": {
+      "required": "Ce champ est requis",
+      "invalidEmail": "L'adresse email n'est pas valide",
+      "invalidPhone": "Le numéro de téléphone n'est pas valide",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "passwordLength": "Le mot de passe doit contenir au moins 8 caractères",
+      "createError": "Une erreur est survenue lors de la création du compte"
+    },
+    "success": "Compte créé avec succès !",
+    "feature_secure": "Paiements sécurisés via des partenaires fiables",
+    "feature_fast": "Transferts rapides",
+    "feature_fair": "Commissions équitables",
+    "feature_rates": "Meilleurs taux disponibles",
+    "feature_convenience": "Commodité"
   }
 } 
