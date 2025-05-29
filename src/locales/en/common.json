@@ -30,7 +30,12 @@
     "or": "Or continue with",
     "google": "Sign in with Google",
     "microsoft": "Sign in with Microsoft",
-    "logout": "Log out"
+    "logout": "Log out",
+    "firstname": "First name",
+    "lastname": "Last name",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match",
+    "createError": "Error creating account"
   },
   "themes": {
     "switchToLight": "Switch to light mode",

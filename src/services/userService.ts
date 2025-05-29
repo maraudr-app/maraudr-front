@@ -1,10 +1,10 @@
-import { UserToCreate } from '../types/user/userToCreate';
+import { UserToCreate, UserToCreateDTO } from '../types/user/userToCreate';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5141';
 
 export const userService = {
-  createUser: async (userData: UserToCreate) => {
+  createUser: async (userData: UserToCreateDTO) => {
     try {
       const response = await axios.post(`${API_URL}/users`, userData);
       return response.data;

@@ -21,29 +21,12 @@
     "google": "Se connecter avec Google",
     "microsoft": "Se connecter avec Microsoft"
   },
-  "themes": {
-    "switchToLight": "Passer au mode clair",
-    "switchToDark": "Passer au mode sombre"
-  },
-  "languages": {
-    "fr": "Français",
-    "en": "Anglais"
-  },
   "createAccount": {
     "title": "Créer un compte",
     "firstname": "Prénom",
     "lastname": "Nom",
-    "email": "Email",
-    "phoneNumber": "Numéro de téléphone",
-    "street": "Rue",
-    "city": "Ville",
-    "state": "État/Région",
-    "postalCode": "Code postal",
-    "country": "Pays",
     "password": "Mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
-    "isManager": "Je suis un manager",
-    "languages": "Langues parlées",
     "submit": "Créer mon compte",
     "or": "ou",
     "login": "Déjà un compte ? Se connecter",
@@ -55,11 +38,14 @@
       "passwordLength": "Le mot de passe doit contenir au moins 8 caractères",
       "createError": "Une erreur est survenue lors de la création du compte"
     },
-    "success": "Compte créé avec succès !",
-    "feature_secure": "Paiements sécurisés via des partenaires fiables",
-    "feature_fast": "Transferts rapides",
-    "feature_fair": "Commissions équitables",
-    "feature_rates": "Meilleurs taux disponibles",
-    "feature_convenience": "Commodité"
+    "success": "Compte créé avec succès !"
+  },
+  "themes": {
+    "switchToLight": "Passer au mode clair",
+    "switchToDark": "Passer au mode sombre"
+  },
+  "languages": {
+    "fr": "Français",
+    "en": "Anglais"
   }
 } 

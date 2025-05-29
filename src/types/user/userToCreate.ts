@@ -14,4 +14,11 @@ export interface UserToCreate {
     managerId?: string | null;
     isManager: boolean;
     password: string;
+    confirmPassword: string;
+}
+export interface UserToCreateDTO {
+    firstname: string;
+    lastname: string;
+    password: string;
+    confirmPassword: string;
 }

@@ -30,7 +30,12 @@
     "or": "Ou continuer avec",
     "google": "Se connecter avec Google",
     "microsoft": "Se connecter avec Microsoft",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "firstname": "Prénom",
+    "lastname": "Nom",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "createError": "Erreur lors de la création du compte"
   },
   "themes": {
     "switchToLight": "Passer au mode clair",
