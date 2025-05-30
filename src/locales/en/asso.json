@@ -1,0 +1,11 @@
+{
+  "siret": {
+    "title": "Enter your organization's SIRET number",
+    "label": "SIRET Number",
+    "placeholder": "Enter SIRET number (14 digits)",
+    "validate": "Validate",
+    "invalid": "The SIRET number is not valid",
+    "error": "An error occurred while validating the SIRET",
+    "success": "SIRET successfully validated"
+  }
+} 

@@ -10,6 +10,7 @@
   },
   "sidebar": {
     "dashboard": "Tableau de bord",
+    "association": "Association",
     "stock": "Stock",
     "settings": "Paramètres",
     "profile": "Profil",
@@ -44,5 +45,37 @@
   "languages": {
     "fr": "Français",
     "en": "Anglais"
+  },
+  "siret": {
+    "title": "Entrez le numéro SIRET de votre association",
+    "placeholder": "Entrez le numéro SIRET (14 chiffres)",
+    "validate": "Valider",
+    "invalid": "Le numéro SIRET n'est pas valide",
+    "error": "Une erreur est survenue lors de la validation du SIRET"
+  },
+  "association": {
+    "title": "Informations de l'association",
+    "name": "Nom",
+    "siret": "Numéro SIRET",
+    "address": "Adresse",
+    "loading": "Chargement des informations...",
+    "error": "Erreur lors du chargement des informations"
+  },
+  "register": {
+    "title": "Créer un compte",
+    "firstname": "Prénom",
+    "lastname": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "street": "Rue",
+    "city": "Ville",
+    "state": "État/Région",
+    "postalCode": "Code postal",
+    "country": "Pays",
+    "password": "Mot de passe",
+    "submit": "Créer le compte",
+    "error": "Une erreur est survenue lors de la création du compte",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "login": "Se connecter"
   }
 } 

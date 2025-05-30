@@ -10,6 +10,7 @@
   },
   "sidebar": {
     "dashboard": "Dashboard",
+    "association": "Association",
     "stock": "Stock",
     "settings": "Settings",
     "profile": "Profile",
@@ -44,5 +45,37 @@
   "languages": {
     "fr": "French",
     "en": "English"
+  },
+  "siret": {
+    "title": "Enter your association's SIRET number",
+    "placeholder": "Enter SIRET number (14 digits)",
+    "validate": "Validate",
+    "invalid": "The SIRET number is not valid",
+    "error": "An error occurred while validating the SIRET number"
+  },
+  "association": {
+    "title": "Association Information",
+    "name": "Name",
+    "siret": "SIRET Number",
+    "address": "Address",
+    "loading": "Loading information...",
+    "error": "Error loading information"
+  },
+  "register": {
+    "title": "Create Account",
+    "firstname": "First Name",
+    "lastname": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "street": "Street",
+    "city": "City",
+    "state": "State/Region",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "password": "Password",
+    "submit": "Create Account",
+    "error": "An error occurred while creating the account",
+    "alreadyHaveAccount": "Already have an account?",
+    "login": "Sign in"
   }
 } 

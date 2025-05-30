@@ -10,6 +10,7 @@ declare module 'i18next' {
       common: typeof import('../../public/locales/fr/common.json');
       dashboard: typeof import('../../public/locales/fr/dashboard.json');
       home: typeof import('../../public/locales/fr/home.json');
+      asso: typeof import('../../public/locales/fr/asso.json');
     };
   }
 } 

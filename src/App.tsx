@@ -15,7 +15,9 @@ import Setting from "./pages/setting/setting.tsx";
 import About from "./pages/About/About.tsx";
 import Team from "./pages/team/team.tsx";
 import Planning from "./pages/planing/planing.tsx";
-import CreateAccount from './pages/Register/createAccount.tsx';
+import AssoSiret from './pages/Register/AssoSiret';
+import AssoInformation from './pages/Association/AssoInformation';
+import CreateAccount from './pages/Register/CreateAccount';
 
 
 // Composant pour les routes protégées
@@ -45,6 +47,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register/association" element={<AssoSiret />} />
+            <Route path="/register/create-account" element={<CreateAccount />} />
             <Route
                 path="/maraudApp"
                 element={<ProtectedRoute element={<MaraudrApp />} />}
@@ -52,6 +56,7 @@ function App() {
               {/* Redirection par défaut vers le dashboard */}
               <Route index element={<Navigate to="/maraudApp/dashboard" replace />} />
               <Route path="dashboard" element={<DashBoard />} />
+              <Route path="association" element={<AssoInformation />} />
               <Route path="stock" element={<Stock />} />
               <Route path="map" element={<Plan/>} />
               <Route path="setting" element={<Setting/>} />
@@ -60,7 +65,6 @@ function App() {
               <Route path="planing" element={<Planning/>} />
               <Route path="profile" element={<ProtectedRoute element={<Profile />} />} />
             </Route>
-            <Route path="/register" element={<CreateAccount />} />
 
             {/* autres routes */}
           </Routes>

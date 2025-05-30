@@ -1,0 +1,11 @@
+{
+  "siret": {
+    "title": "Entrez le numéro SIRET de votre association",
+    "label": "Numéro SIRET",
+    "placeholder": "Entrez le numéro SIRET (14 chiffres)",
+    "validate": "Valider",
+    "invalid": "Le numéro SIRET n'est pas valide",
+    "error": "Une erreur est survenue lors de la validation du SIRET",
+    "success": "SIRET validé avec succès"
+  }
+} 

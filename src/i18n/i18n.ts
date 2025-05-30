@@ -5,18 +5,22 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Import des traductions
 import frCommon from '../locales/fr/common.json';
 import frHome from '../locales/fr/home.json';
+import frAsso from '../locales/fr/asso.json';
 import enCommon from '../locales/en/common.json';
 import enHome from '../locales/en/home.json';
+import enAsso from '../locales/en/asso.json';
 
 // Ressources préchargées
 const resources = {
   fr: {
     common: frCommon,
-    home: frHome
+    home: frHome,
+    asso: frAsso
   },
   en: {
     common: enCommon,
-    home: enHome
+    home: enHome,
+    asso: enAsso
   }
 };
 
@@ -38,7 +42,7 @@ i18n
     // Espace de noms par défaut
     defaultNS: 'common',
     // Liste des espaces de noms à charger
-    ns: ['common', 'home'],
+    ns: ['common', 'home', 'asso'],
     // Options pour la détection de la langue
     detection: {
       order: ['localStorage', 'navigator'],

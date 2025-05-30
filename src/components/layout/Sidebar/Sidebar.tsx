@@ -10,6 +10,11 @@ import {
   UserCircleIcon,
   InformationCircleIcon,
   UsersIcon,
+  HomeIcon,
+  BuildingOfficeIcon,
+  ArrowLeftOnRectangleIcon,
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon,
 } from '@heroicons/react/24/outline';
 import { FiCalendar } from "react-icons/fi";
 import {ArrowRightOnRectangleIcon} from "@heroicons/react/20/solid";
@@ -60,13 +65,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   const navigationItems = [
     {
       to: '/maraudApp/dashboard',
-      icon: <ChartBarIcon className="w-5 h-5" />,
+      icon: <HomeIcon className="h-6 w-6" />,
       label: t('sidebar.dashboard', 'Dashboard'),
       key: 'dashboard'
     },
     {
+      to: '/maraudApp/association',
+      icon: <BuildingOfficeIcon className="h-6 w-6" />,
+      label: t('sidebar.association', 'Association'),
+      key: 'association'
+    },
+    {
       to: '/maraudApp/stock',
-      icon: <CubeIcon className="w-5 h-5" />,
+      icon: <ChartBarIcon className="h-6 w-6" />,
       label: t('sidebar.stock', 'Stock'),
       key: 'stock'
     },

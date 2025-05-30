@@ -10,11 +10,14 @@ import impactSocialImage from '../../assets/pictures/impact-social.jpg';
 import {useAuthStore} from "../../store/authStore.ts";
 
 const Home = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const [showFeatureButton, setShowFeatureButton] = useState(false);
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  const handleGetStarted = () => {
+    navigate('/register/create-account');
+  };
 
   const t_home = (key: string, fallback: string) => t(`home:${key}`, fallback);
   useEffect(() => {
@@ -80,12 +83,12 @@ const Home = () => {
             {t_home('hero.description', 'Une plateforme intuitive pour gérer vos membres, organiser vos missions, suivre les stocks et analyser vos actions. Conçue pour les associations engagées comme la vôtre.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link 
-              to="/login"
+            <button
+              onClick={handleGetStarted}
               className="px-8 py-3 bg-blue-500 text-gray-800 font-medium text-center rounded-md hover:bg-blue-600 transition duration-300 text-sm uppercase tracking-wider"
             >
               {t_home('hero.createAccount', 'Créer un compte')}
-            </Link>
+            </button>
             <a 
               href="#features"
               className={`px-8 py-3 border border-gray-300 text-gray-700 font-medium text-center rounded-md hover:bg-gray-50 transition duration-300 text-sm uppercase tracking-wider ${showFeatureButton ? 'fixed top-4 right-4 z-50 bg-white' : ''}`}

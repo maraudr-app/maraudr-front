@@ -149,7 +149,7 @@ const Header = () => {
                         ) : (
                             (showCreateAccount || !isHomePage) && !isLoginPage && (
                                 <Link
-                                    to="/login"
+                                    to="/register/association"
                                     className="ml-3 px-4 py-2 bg-blue-500 text-white font-medium text-center rounded-md hover:bg-blue-600 transition duration-300 text-sm"
                                 >
                                     {t('header.signup', 'Créer un compte')}
@@ -240,7 +240,7 @@ const Header = () => {
                     ) : (
                         (showCreateAccount || !isHomePage) && !isLoginPage && (
                             <Link
-                                to="/login"
+                                to="/register/association"
                                 onClick={() => setIsOpen(false)}
                                 className="block mx-4 py-2 px-4 my-2 bg-blue-500 text-white font-medium text-center rounded-md hover:bg-blue-600 transition duration-300"
                             >
