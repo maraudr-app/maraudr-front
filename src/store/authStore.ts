@@ -1,10 +1,27 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authService } from '../services/authService';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  sub: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  exp: number;
+  iat: number;
+  nbf: number;
+  jti: string;
+  iss: string;
+  aud: string;
+}
 
 // Type pour les données utilisateur
 type User = {
   email: string;
-  name: string;
+  sub: string;
+  firstName?: string;
+  lastName?: string;
   avatar?: string;
 };
 
@@ -27,36 +44,44 @@ export const useAuthStore = create<AuthState>()(
       
       login: async (email: string, password: string) => {
         try {
-          // Simuler un appel API
-          await new Promise(resolve => setTimeout(resolve, 500));
-          console.log('Login attempt:', { email, password });
+          const response = await authService.login(email, password);
+          console.log('Login response in store:', response);
           
-          // Simuler un utilisateur
-          // En production, cela viendrait de l'API
-          let userName = email.split('@')[0];
-          // Mettre la première lettre en majuscule
-          userName = userName.charAt(0).toUpperCase() + userName.slice(1);
-          
-          const userData: User = {
-            email,
-            name: userName,
-            avatar: `https://ui-avatars.com/api/?name=${userName}&background=random`
-          };
-          
-          // Mettre à jour le state
-          set({ 
-            isAuthenticated: true,
-            user: userData
-          });
-          
-          return true;
+          if (response && response.accessToken) {
+            // Décoder le token immédiatement
+            const decodedToken = jwtDecode<DecodedToken>(response.accessToken);
+            console.log('Decoded token in store:', decodedToken);
+            
+            if (decodedToken) {
+              const userData: User = {
+                email: decodedToken.email,
+                sub: decodedToken.sub,
+                firstName: decodedToken.firstName,
+                lastName: decodedToken.lastName,
+                avatar: `https://ui-avatars.com/api/?name=${decodedToken.firstName}+${decodedToken.lastName}&background=random`
+              };
+              
+              // Sauvegarder le token
+              authService.setToken(response.accessToken);
+              
+              // Mettre à jour le state
+              set({ 
+                isAuthenticated: true,
+                user: userData
+              });
+              
+              return true;
+            }
+          }
+          return false;
         } catch (error) {
-          console.error('Login error:', error);
+          console.error('Login error in store:', error);
           return false;
         }
       },
       
       logout: () => {
+        authService.logout();
         set({ 
           isAuthenticated: false,
           user: null

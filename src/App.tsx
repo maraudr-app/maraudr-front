@@ -16,7 +16,9 @@ import About from "./pages/About/About.tsx";
 import Team from "./pages/team/team.tsx";
 import Planning from "./pages/planing/planing.tsx";
 import CreateAccount from './pages/Register/createAccount.tsx';
+import CreateAsso from './pages/Association/CreateAsso.tsx';
 import { Toaster } from 'react-hot-toast';
+import AssoInformation from "./pages/Association/AssoInformation.tsx";
 
 
 // Composant pour les routes protégées
@@ -46,6 +48,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<CreateAccount />} />
+            <Route path="/create-asso" element={<ProtectedRoute element={<CreateAsso />} />} />
             <Route
                 path="/maraudApp"
                 element={<ProtectedRoute element={<MaraudrApp />} />}
@@ -53,15 +57,15 @@ function App() {
               {/* Redirection par défaut vers le dashboard */}
               <Route index element={<Navigate to="/maraudApp/dashboard" replace />} />
               <Route path="dashboard" element={<DashBoard />} />
-              <Route path="stock" element={<Stock />} />
+              <Route path="stock" element={<ProtectedRoute element={<Stock />} />} />
               <Route path="map" element={<Plan/>} />
-              <Route path="setting" element={<Setting/>} />
+              <Route path="setting" element={<ProtectedRoute element={<Setting/>} />} />
               <Route path="about" element={<About/>} />
               <Route path="team" element={<Team/>} />
-              <Route path="planing" element={<Planning/>} />
+              <Route path="planing" element={<ProtectedRoute element={<Planning/>} />} />
               <Route path="profile" element={<ProtectedRoute element={<Profile />} />} />
             </Route>
-            <Route path="/register" element={<CreateAccount />} />
+            <Route path="/association-info" element={<AssoInformation/>} />
 
             {/* autres routes */}
           </Routes>

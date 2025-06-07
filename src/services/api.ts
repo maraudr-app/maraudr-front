@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Créer une instance axios avec la configuration de base
 export const api = axios.create({
-    baseURL: 'http://localhost:5141', // URL directe du backend
+    baseURL: 'http://localhost:8082', // URL directe du backend
     headers: {
         'Content-Type': 'application/json',
     },

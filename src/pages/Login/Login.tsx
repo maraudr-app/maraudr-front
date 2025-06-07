@@ -56,17 +56,22 @@ const Login = () => {
       
       // Appeler la fonction login du store
       const success = await login(email, password);
+
+      console.log(success);
+      console.log(email);
+      console.log(password);
+      console.log('ou est lerrereur ?');
       
       if (success) {
-        // Si rememberMe est coché, on peut stocker un flag supplémentaire
+
         if (rememberMe) {
           localStorage.setItem('rememberMeEmail', email);
         } else {
           localStorage.removeItem('rememberMeEmail');
         }
         
-        // Redirection vers le tableau de bord
-        navigate('/maraudApp');
+        // Redirection vers la page de création d'association
+        navigate('/create-asso');
       } else {
         setError('Échec de la connexion. Veuillez réessayer.');
       }
