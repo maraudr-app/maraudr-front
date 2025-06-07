@@ -55,7 +55,16 @@
     "signIn": "Se connecter",
     "passwordError": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre",
     "passwordMatchError": "Les mots de passe ne correspondent pas",
-    "formError": "Veuillez corriger les erreurs avant de continuer"
+    "formError": "Veuillez corriger les erreurs avant de continuer",
+    "success": "Compte créé avec succès !",
+    "error": {
+      "400": "Données invalides",
+      "401": "Non autorisé",
+      "403": "Accès refusé",
+      "409": "Un compte existe déjà avec cet email",
+      "500": "Erreur serveur",
+      "default": "Une erreur est survenue lors de la création du compte"
+    }
   },
   "themes": {
     "switchToLight": "Passer au mode clair",

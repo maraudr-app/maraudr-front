@@ -12,5 +12,9 @@ export default defineConfig({
   css: {
     postcss: './postcss.config.js'
   },
-
+  server: {
+    port: 3000,
+    strictPort: true, // Empêche Vite d'essayer un autre port si 3000 est occupé
+    host: true, // Écoute sur toutes les interfaces réseau
+  }
 })

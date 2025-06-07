@@ -55,7 +55,16 @@
     "signIn": "Sign in",
     "passwordError": "Password must be at least 8 characters, including uppercase, lowercase, and numbers",
     "passwordMatchError": "Passwords do not match",
-    "formError": "Please correct the errors before submitting"
+    "formError": "Please correct the errors before submitting",
+    "success": "Account created successfully!",
+    "error": {
+      "400": "Invalid data",
+      "401": "Unauthorized",
+      "403": "Access denied",
+      "409": "An account already exists with this email",
+      "500": "Server error",
+      "default": "An error occurred while creating the account"
+    }
   },
   "themes": {
     "switchToLight": "Switch to light mode",

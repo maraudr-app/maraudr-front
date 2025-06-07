@@ -16,6 +16,7 @@ import About from "./pages/About/About.tsx";
 import Team from "./pages/team/team.tsx";
 import Planning from "./pages/planing/planing.tsx";
 import CreateAccount from './pages/Register/createAccount.tsx';
+import { Toaster } from 'react-hot-toast';
 
 
 // Composant pour les routes protégées
@@ -65,6 +66,7 @@ function App() {
             {/* autres routes */}
           </Routes>
         </main>
+        <Toaster />
       </Router>
     </ThemeProvider>
   );

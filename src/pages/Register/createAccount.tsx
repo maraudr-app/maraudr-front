@@ -6,6 +6,9 @@ import PasswordStrengthToast from "../../components/common/toast/PasswordStrengt
 import { getPasswordStrength } from "../../utils/passwordStrength";
 import Button from "../../components/common/button/button";
 import { useTranslation } from "react-i18next";
+import { userService } from "../../services/userService";
+import { Language } from "../../types/enums/Language";
+import { toast } from "react-hot-toast";
 
 const CreateAccount = () => {
   const { t } = useTranslation();
@@ -79,27 +82,51 @@ const CreateAccount = () => {
 
     try {
       if (form.password !== form.confirmPassword) {
-        setFormError("Passwords do not match");
+        setFormError(t('register.passwordMatchError'));
         return;
       }
 
       if (passwordError || confirmPasswordError) {
-        setFormError("Please correct the errors before submitting");
+        setFormError(t('register.formError'));
         return;
       }
 
-      // 👇 Exemple d'appel à l'API
-      // await userService.createUser({
-      //   ...form,
-      //   languages: [], // À gérer selon les besoins
-      //   isManager: false, // À gérer selon les besoins
-      // });
-      // navigate("/maraudApp");
+      const userData = {
+        ...form,
+        languages: [Language.French],
+        isManager: true,
+      };
 
-      alert("Account created!");
-      navigate("/login");
-    } catch (err) {
-      setFormError("An error occurred while creating the account.");
+      const response = await userService.createAccount(userData);
+      
+      if (response) {
+        toast.success(t('register.success'), {
+          duration: 4000,
+          position: 'top-center',
+          style: {
+            background: '#4CAF50',
+            color: '#fff',
+            padding: '16px',
+            borderRadius: '8px',
+          },
+        });
+        navigate('/login');
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.status 
+        ? t(`register.error.${error.response.status}`) 
+        : t('register.error.default');
+      
+      toast.error(errorMessage, {
+        duration: 4000,
+        position: 'top-center',
+        style: {
+          background: '#f44336',
+          color: '#fff',
+          padding: '16px',
+          borderRadius: '8px',
+        },
+      });
     } finally {
       setIsLoading(false);
     }
