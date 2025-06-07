@@ -6,7 +6,7 @@
     "settings": "Settings",
     "contact": "Contact",
     "search": "Search...",
-    "signup": "Create Account"
+    "signup": "Sign up"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -15,22 +15,47 @@
     "profile": "Profile",
     "expand": "Expand",
     "collapse": "Collapse",
-    "logout": "Log Out"
+    "logout": "Logout"
   },
   "auth": {
     "welcome": "Hey, welcome to maraudr.",
-    "login": "Login to your account",
+    "login": "Sign in to your account",
     "email": "Email address",
     "password": "Password",
     "remember": "Remember me",
     "forgot": "Forgot password?",
     "loginButton": "Sign in",
     "noAccount": "Don't have an account?",
-    "register": "Register",
+    "register": "Sign up",
     "or": "Or continue with",
     "google": "Sign in with Google",
     "microsoft": "Sign in with Microsoft",
-    "logout": "Log out"
+    "logout": "Logout"
+  },
+  "register": {
+    "title": "Create an account",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email address",
+    "phone": "Phone Number",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "street": "Street",
+    "city": "City",
+    "state": "State/Region",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "terms": "I agree to the",
+    "termsLink": "Terms of Service",
+    "and": "and",
+    "privacyLink": "Privacy Policy",
+    "submit": "Sign up",
+    "cancel": "Cancel",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "passwordError": "Password must be at least 8 characters, including uppercase, lowercase, and numbers",
+    "passwordMatchError": "Passwords do not match",
+    "formError": "Please correct the errors before submitting"
   },
   "themes": {
     "switchToLight": "Switch to light mode",

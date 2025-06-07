@@ -7,9 +7,9 @@ declare module 'i18next' {
     // Liste des namespaces supportés
     defaultNS: 'common';
     resources: {
-      common: typeof import('../../public/locales/fr/common.json');
-      dashboard: typeof import('../../public/locales/fr/dashboard.json');
-      home: typeof import('../../public/locales/fr/home.json');
+      common: typeof import('../locales/fr/common.json');
+      dashboard: typeof import('../locales/fr/dashboard.json');
+      home: typeof import('../locales/fr/home.json');
     };
   }
 } 

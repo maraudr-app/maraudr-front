@@ -32,6 +32,31 @@
     "microsoft": "Se connecter avec Microsoft",
     "logout": "Déconnexion"
   },
+  "register": {
+    "title": "Créer un compte",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Adresse e-mail",
+    "phone": "Numéro de téléphone",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "street": "Rue",
+    "city": "Ville",
+    "state": "État/Région",
+    "postalCode": "Code postal",
+    "country": "Pays",
+    "terms": "J'accepte les",
+    "termsLink": "Conditions d'utilisation",
+    "and": "et la",
+    "privacyLink": "Politique de confidentialité",
+    "submit": "S'inscrire",
+    "cancel": "Annuler",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "signIn": "Se connecter",
+    "passwordError": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre",
+    "passwordMatchError": "Les mots de passe ne correspondent pas",
+    "formError": "Veuillez corriger les erreurs avant de continuer"
+  },
   "themes": {
     "switchToLight": "Passer au mode clair",
     "switchToDark": "Passer au mode sombre"
