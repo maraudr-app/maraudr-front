@@ -21,8 +21,37 @@ interface DecodedToken {
   exp: number;
 }
 
+interface ContactInfo {
+  email: string;
+  phoneNumber: string;
+}
+
+interface Address {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+interface User {
+  role: number;
+  team: any[];
+  id: string;
+  firstname: string;
+  lastname: string;
+  createdAt: string;
+  lastLoggedIn: string;
+  isActive: boolean;
+  contactInfo: ContactInfo;
+  address: Address;
+  passwordHash: string;
+  biography: string | null;
+  languages: number[];
+}
+
 export const authService = {
-  login: async (email: string, password: string): Promise<LoginResponse> => {
+  login: async (email: string, password: string): Promise<{ accessToken: string; user: User }> => {
     try {
       console.log('Sending login request to:', `${API_URL}/auth/login`);
       const response = await axios.post(`${API_URL}/auth/login`, {
@@ -37,15 +66,26 @@ export const authService = {
       }
 
       // Vérifier que le token peut être décodé
+      let decoded: DecodedToken;
       try {
-        const decoded = jwtDecode<DecodedToken>(response.data.accessToken);
+        decoded = jwtDecode<DecodedToken>(response.data.accessToken);
         console.log('Decoded token:', decoded);
       } catch (decodeError) {
         console.error('Error decoding token:', decodeError);
         throw new Error('Invalid token format');
       }
+
+      // Sauvegarder le token et configurer l'intercepteur
+      authService.setToken(response.data.accessToken);
+
+      // Récupérer les informations complètes de l'utilisateur
+      const userData = await authService.getUserById(decoded.sub);
+      console.log('User data retrieved:', userData);
       
-      return response.data;
+      return {
+        accessToken: response.data.accessToken,
+        user: userData
+      };
     } catch (error) {
       console.error('Login error:', error);
       if (axios.isAxiosError(error)) {
@@ -58,6 +98,9 @@ export const authService = {
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    // Supprimer l'intercepteur
+    axios.interceptors.request.eject(authService.interceptorId);
   },
 
   getToken: (): string | null => {
@@ -76,15 +119,51 @@ export const authService = {
     return null;
   },
 
+  interceptorId: 0,
+
   setToken: (token: string) => {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
       console.log('Setting token, decoded:', decoded);
       localStorage.setItem('token', token);
+
+      // Supprimer l'ancien intercepteur s'il existe
+      if (authService.interceptorId) {
+        axios.interceptors.request.eject(authService.interceptorId);
+      }
+
+      // Configurer le nouvel intercepteur
+      authService.interceptorId = axios.interceptors.request.use(
+        (config) => {
+          config.headers.Authorization = `Bearer ${token}`;
+          return config;
+        },
+        (error) => {
+          return Promise.reject(error);
+        }
+      );
     } catch (error) {
       console.error('Error setting token:', error);
       throw new Error('Invalid token format');
     }
+  },
+
+  setUser: (user: User) => {
+    localStorage.setItem('user', JSON.stringify(user));
+  },
+
+  getUser: (): User | null => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr) as User;
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('user');
+        return null;
+      }
+    }
+    return null;
   },
 
   isAuthenticated: (): boolean => {
@@ -114,6 +193,38 @@ export const authService = {
     } catch (error) {
       console.error('Error getting decoded token:', error);
       return null;
+    }
+  },
+
+  getUserById: async (uuid: string): Promise<User> => {
+    try {
+      console.log('Fetching user with UUID:', uuid);
+      const response = await axios.get(`${API_URL}/users/${uuid}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting user by ID:', error);
+      throw error;
+    }
+  },
+
+  // Nouvelle fonction pour mettre à jour le profil
+  updateProfile: async (userData: Partial<User>): Promise<User> => {
+    try {
+      const user = authService.getUser();
+      if (!user) {
+        throw new Error('No user found');
+      }
+
+      const response = await axios.put(`${API_URL}/users/${user.id}`, userData);
+      const updatedUser = response.data;
+      
+      // Mettre à jour le user dans le localStorage
+      authService.setUser(updatedUser);
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
     }
   }
 }; 

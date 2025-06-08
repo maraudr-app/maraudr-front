@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, UserCircleIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { ThemeToggle } from '../../common/button/ThemeToggle';
 import { LanguageSwitcher } from '../../../i18n/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../../store/authStore';
+import { assoService } from '../../../services/assoService';
 
 interface NavLink {
     name: string;
@@ -14,10 +15,19 @@ interface NavLink {
     translationKey: string;
 }
 
+interface Association {
+    id: string;
+    name: string;
+    logo?: string;
+}
+
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [showCreateAccount, setShowCreateAccount] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showAssociationsMenu, setShowAssociationsMenu] = useState(false);
+    const [associations, setAssociations] = useState<Association[]>([]);
+    const [selectedAssociation, setSelectedAssociation] = useState<Association | null>(null);
     const { t } = useTranslation();
     const location = useLocation();
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -25,6 +35,29 @@ const Header = () => {
     const logout = useAuthStore(state => state.logout);
     const isHomePage = location.pathname === '/';
     const isLoginPage = location.pathname === '/login';
+
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            fetchUserAssociations();
+        }
+    }, [isAuthenticated, user]);
+
+    const fetchUserAssociations = async () => {
+        try {
+            const userAssociations = await assoService.getCurrentUserAssociation();
+            setAssociations(userAssociations);
+            if (userAssociations.length > 0) {
+                setSelectedAssociation(userAssociations[0]);
+            }
+        } catch (error) {
+            console.error('Error fetching user associations:', error);
+        }
+    };
+
+    const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
+        if (!firstName || !lastName) return '';
+        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    };
 
     // Vérifier si le scroll a dépassé la section héro
     useEffect(() => {
@@ -51,8 +84,14 @@ const Header = () => {
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const userMenu = document.getElementById('user-menu');
+            const associationsMenu = document.getElementById('associations-menu');
+            
             if (userMenu && !userMenu.contains(event.target as Node)) {
                 setShowUserMenu(false);
+            }
+            
+            if (associationsMenu && !associationsMenu.contains(event.target as Node)) {
+                setShowAssociationsMenu(false);
             }
         };
 
@@ -86,8 +125,43 @@ const Header = () => {
         <header className="fixed top-0 left-0 w-full bg-gray-50 dark:bg-gray-800 z-50 transition-colors">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex justify-between items-center h-16">
-                    {/* Logo */}
-                    <Link to={'/'} className="text-xl font-bold text-blue-600 dark:text-blue-400">maraudr</Link>
+                    {/* Logo et Associations Dropdown */}
+                    <div className="flex items-center space-x-4">
+                        {isAuthenticated && associations.length > 0 ? (
+                            <div className="relative" id="associations-menu">
+                                <button
+                                    onClick={() => setShowAssociationsMenu(!showAssociationsMenu)}
+                                    className="flex items-center space-x-2 text-xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                >
+                                    <span>{selectedAssociation?.name || 'maraudr'}</span>
+                                    <ChevronDownIcon className="h-5 w-5" />
+                                </button>
+                                
+                                {showAssociationsMenu && (
+                                    <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 z-10">
+                                        {associations.map((association) => (
+                                            <button
+                                                key={association.id}
+                                                onClick={() => {
+                                                    setSelectedAssociation(association);
+                                                    setShowAssociationsMenu(false);
+                                                }}
+                                                className={`block w-full text-left px-4 py-2 text-sm ${
+                                                    selectedAssociation?.id === association.id
+                                                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
+                                                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                                                }`}
+                                            >
+                                                {association.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <Link to={'/'} className="text-xl font-bold text-blue-600 dark:text-blue-400">maraudr</Link>
+                        )}
+                    </div>
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center">
@@ -111,15 +185,19 @@ const Header = () => {
                                     onClick={() => setShowUserMenu(!showUserMenu)}
                                     className="flex items-center space-x-2 text-sm focus:outline-none"
                                 >
-                                    <div className="text-gray-700 dark:text-gray-200 font-medium">{user.name}</div>
+                                    <div className="text-gray-700 dark:text-gray-200 font-medium">
+                                        {getInitials(user.firstName, user.lastName)}
+                                    </div>
                                     {user.avatar ? (
                                         <img
                                             src={user.avatar}
-                                            alt={user.name}
+                                            alt={`${user.firstName} ${user.lastName}`}
                                             className="h-8 w-8 rounded-full border-2 border-blue-400"
                                         />
                                     ) : (
-                                        <UserCircleIcon className="h-8 w-8 text-gray-500 dark:text-gray-300" />
+                                        <div className="h-8 w-8 rounded-full border-2 border-blue-400 bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
+                                            {getInitials(user.firstName, user.lastName)}
+                                        </div>
                                     )}
                                 </button>
                                 
@@ -165,11 +243,17 @@ const Header = () => {
                         
                         {isAuthenticated && user && (
                             <div className="mx-2">
-                                <img
-                                    src={user.avatar}
-                                    alt={user.name}
-                                    className="h-8 w-8 rounded-full border-2 border-blue-400"
-                                />
+                                {user.avatar ? (
+                                    <img
+                                        src={user.avatar}
+                                        alt={`${user.firstName} ${user.lastName}`}
+                                        className="h-8 w-8 rounded-full border-2 border-blue-400"
+                                    />
+                                ) : (
+                                    <div className="h-8 w-8 rounded-full border-2 border-blue-400 bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
+                                        {getInitials(user.firstName, user.lastName)}
+                                    </div>
+                                )}
                             </div>
                         )}
                         
@@ -207,13 +291,17 @@ const Header = () => {
                                     {user.avatar ? (
                                         <img
                                             src={user.avatar}
-                                            alt={user.name}
+                                            alt={`${user.firstName} ${user.lastName}`}
                                             className="h-8 w-8 rounded-full border-2 border-blue-400"
                                         />
                                     ) : (
-                                        <UserCircleIcon className="h-8 w-8 text-gray-500 dark:text-gray-300" />
+                                        <div className="h-8 w-8 rounded-full border-2 border-blue-400 bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
+                                            {getInitials(user.firstName, user.lastName)}
+                                        </div>
                                     )}
-                                    <div className="text-gray-700 dark:text-gray-200 font-medium">{user.name}</div>
+                                    <div className="text-gray-700 dark:text-gray-200 font-medium">
+                                        {getInitials(user.firstName, user.lastName)}
+                                    </div>
                                 </div>
                             </div>
                             <Link

@@ -19,7 +19,7 @@ interface DecodedToken {
 // Type pour les données utilisateur
 type User = {
   email: string;
-  sub: string;
+  sub: string;  // sub est l'UUID de l'utilisateur
   firstName?: string;
   lastName?: string;
   avatar?: string;
@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState>()(
             if (decodedToken) {
               const userData: User = {
                 email: decodedToken.email,
-                sub: decodedToken.sub,
+                sub: decodedToken.sub,  // sub est l'UUID de l'utilisateur
                 firstName: decodedToken.firstName,
                 lastName: decodedToken.lastName,
                 avatar: `https://ui-avatars.com/api/?name=${decodedToken.firstName}+${decodedToken.lastName}&background=random`

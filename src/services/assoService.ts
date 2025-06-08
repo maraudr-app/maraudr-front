@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 const API_URL = 'http://localhost:8080';
 
@@ -71,6 +72,23 @@ export const assoService = {
             const response = await axios.delete(`${API_URL}/association/${id}`);
             return response.data;
         } catch (error) {
+            throw error;
+        }
+    },
+
+    getCurrentUserAssociation: async () => {
+        try {
+            // Récupérer le sub (userId) depuis le store
+            const user = useAuthStore.getState().user;
+            if (!user || !user.sub) {
+                throw new Error('No user ID found in store');
+            }
+
+            console.log('Fetching association for user:', user.sub);
+            const response = await axios.get(`${API_URL}/association/membership?id=${user.sub}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error getting user association:', error);
             throw error;
         }
     }
