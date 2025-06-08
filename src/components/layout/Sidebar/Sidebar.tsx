@@ -31,10 +31,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, is
   return (
     <Link
       to={to}
-      className={`flex items-center py-2 px-3 rounded-lg transition-colors duration-200 text-sm ${
-        isActive 
-          ? 'bg-blue-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400' 
-          : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+      className={`flex items-center py-2 px-3 rounded-lg transition-colors duration-200 text-sm ${isActive 
+          ? 'bg-maraudr-blue/20 text-maraudr-blue dark:bg-maraudr-orange/20 dark:text-maraudr-orange' 
+          : 'hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 text-maraudr-darkText dark:text-maraudr-lightText'
       }`}
     >
       <div className="w-5 h-5">{icon}</div>
@@ -124,7 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
 
   return (
     <div
-      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 shadow-md transition-all duration-300 z-10 flex flex-col justify-between ${
+      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-maraudr-lightBg dark:bg-maraudr-darkBg shadow-md transition-all duration-300 z-10 flex flex-col justify-between font-body ${
         isCollapsed ? 'w-14' : 'w-48'
       }`}
     >
@@ -132,7 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
         <div className="flex justify-end p-2">
           <button
             onClick={toggleSidebar}
-            className="p-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+            className="p-1 rounded-full bg-maraudr-blue/10 dark:bg-maraudr-orange/10 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange"
             aria-label={isCollapsed ? t('sidebar.expand', 'Expand') : t('sidebar.collapse', 'Collapse')}
           >
             {isCollapsed ? (

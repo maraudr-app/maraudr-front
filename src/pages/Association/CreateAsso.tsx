@@ -6,6 +6,7 @@ import { FaCheckCircle, FaTimesCircle, FaBuilding } from 'react-icons/fa';
 import { validateSiret } from '../../utils/siretValidation';
 import { toast } from 'react-hot-toast';
 import { assoService } from '../../services/assoService';
+import { useAuthStore } from '../../store/authStore';
 
 const CreateAsso = () => {
   const [siret, setSiret] = useState('');
@@ -34,7 +35,11 @@ const CreateAsso = () => {
 
     setIsLoading(true);
     try {
-      const response = await assoService.createAssociation(siret);
+      const user = useAuthStore.getState().user;
+      if (!user || !user.sub) {
+        throw new Error('User not authenticated or user ID not found.');
+      }
+      const response = await assoService.createAssociation(siret, user.sub);
       toast.success('Association créée avec succès !');
       navigate('/maraudApp/dashboard');
     } catch (error: any) {

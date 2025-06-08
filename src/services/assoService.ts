@@ -9,9 +9,9 @@ interface AssoResponse {
 }
 
 export const assoService = {
-    createAssociation: async (siret: string): Promise<AssoResponse> => {
+    createAssociation: async (siret: string, userId: string): Promise<AssoResponse> => {
         try {
-            const url = `${API_URL}/association?siret=${siret}`;
+            const url = `${API_URL}/association?siret=${siret}&userId=${userId}`;
             console.log('Full URL:', url);
             console.log('Request method:', 'POST');
             console.log('Request headers:', {
@@ -51,7 +51,9 @@ export const assoService = {
 
     getAssociation: async (id: string) => {
         try {
-            const response = await axios.get(`${API_URL}/association/${id}`);
+            const response = await axios.get(`${API_URL}/association`, {
+                params: { id }
+            });
             return response.data;
         } catch (error) {
             throw error;

@@ -1,0 +1,32 @@
+{
+  "register": {
+    "title": "Créer un compte",
+    "welcome": "Bienvenue",
+    "welcomeMessage": "Rejoignez notre communauté et commencez à gérer votre association efficacement",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "street": "Rue",
+    "city": "Ville",
+    "state": "État/Région",
+    "postalCode": "Code postal",
+    "country": "Pays",
+    "terms": "J'accepte les",
+    "termsLink": "conditions d'utilisation",
+    "and": "et la",
+    "privacyLink": "politique de confidentialité",
+    "submit": "Créer mon compte",
+    "cancel": "Annuler",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "signIn": "Se connecter",
+    "passwordMatchError": "Les mots de passe ne correspondent pas",
+    "formError": "Veuillez corriger les erreurs dans le formulaire",
+    "success": "Compte créé avec succès",
+    "error": {
+      "default": "Une erreur est survenue lors de la création du compte"
+    }
+  }
+} 

@@ -45,9 +45,19 @@ const Header = () => {
     const fetchUserAssociations = async () => {
         try {
             const userAssociations = await assoService.getCurrentUserAssociation();
-            setAssociations(userAssociations);
-            if (userAssociations.length > 0) {
-                setSelectedAssociation(userAssociations[0]);
+            console.log('User Associations UUIDs:', userAssociations);
+            // Récupérer les informations complètes pour chaque association
+            const associationsWithDetails = await Promise.all(
+                userAssociations.map(async (assoId: string) => {
+                    const assoDetails = await assoService.getAssociation(assoId);
+                    console.log(`Details for ${assoId}:`, assoDetails);
+                    return assoDetails;
+                })
+            );
+            setAssociations(associationsWithDetails);
+            console.log('Associations with details in state:', associationsWithDetails);
+            if (associationsWithDetails.length > 0) {
+                setSelectedAssociation(associationsWithDetails[0]);
             }
         } catch (error) {
             console.error('Error fetching user associations:', error);
@@ -122,7 +132,7 @@ const Header = () => {
     };
 
     return (
-        <header className="fixed top-0 left-0 w-full bg-gray-50 dark:bg-gray-800 z-50 transition-colors">
+        <header className="fixed top-0 left-0 w-full bg-maraudr-lightBg dark:bg-maraudr-darkBg z-50 transition-colors font-sans">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo et Associations Dropdown */}
@@ -131,14 +141,14 @@ const Header = () => {
                             <div className="relative" id="associations-menu">
                                 <button
                                     onClick={() => setShowAssociationsMenu(!showAssociationsMenu)}
-                                    className="flex items-center space-x-2 text-xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                    className="flex items-center space-x-2 text-xl font-bold text-maraudr-blue dark:text-maraudr-orange font-header hover:text-maraudr-blue dark:hover:text-maraudr-orange"
                                 >
                                     <span>{selectedAssociation?.name || 'maraudr'}</span>
-                                    <ChevronDownIcon className="h-5 w-5" />
+                                    {associations.length > 1 && <ChevronDownIcon className="h-5 w-5" />}
                                 </button>
                                 
-                                {showAssociationsMenu && (
-                                    <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 z-10">
+                                {showAssociationsMenu && associations.length > 1 && (
+                                    <div className="absolute left-0 mt-2 w-48 bg-maraudr-lightBg dark:bg-maraudr-darkBg rounded-md shadow-lg py-1 z-[100]">
                                         {associations.map((association) => (
                                             <button
                                                 key={association.id}
@@ -148,8 +158,8 @@ const Header = () => {
                                                 }}
                                                 className={`block w-full text-left px-4 py-2 text-sm ${
                                                     selectedAssociation?.id === association.id
-                                                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
-                                                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                                                        ? 'bg-maraudr-blue/20 dark:bg-maraudr-orange/20 text-maraudr-blue dark:text-maraudr-orange'
+                                                        : 'text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10'
                                                 }`}
                                             >
                                                 {association.name}
@@ -159,18 +169,18 @@ const Header = () => {
                                 )}
                             </div>
                         ) : (
-                            <Link to={'/'} className="text-xl font-bold text-blue-600 dark:text-blue-400">maraudr</Link>
+                            <Link to={'/'} className="text-xl font-bold text-maraudr-blue dark:text-maraudr-orange font-header">maraudr</Link>
                         )}
                     </div>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center">
+                    <nav className="hidden md:flex items-center font-body">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.translationKey}
                                 to={link.path}
-                                className={`text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition px-3 ${
-                                    location.pathname === link.path ? 'bg-blue-100 dark:bg-blue-900 rounded-md font-semibold' : ''
+                                className={`text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange transition px-3 ${
+                                    location.pathname === link.path ? 'bg-maraudr-blue/20 dark:bg-maraudr-orange/20 rounded-md font-semibold' : ''
                                 }`}
                             >
                                 {link.name}
@@ -185,39 +195,39 @@ const Header = () => {
                                     onClick={() => setShowUserMenu(!showUserMenu)}
                                     className="flex items-center space-x-2 text-sm focus:outline-none"
                                 >
-                                    <div className="text-gray-700 dark:text-gray-200 font-medium">
+                                    <div className="text-maraudr-darkText dark:text-maraudr-lightText font-medium">
                                         {getInitials(user.firstName, user.lastName)}
                                     </div>
                                     {user.avatar ? (
                                         <img
                                             src={user.avatar}
                                             alt={`${user.firstName} ${user.lastName}`}
-                                            className="h-8 w-8 rounded-full border-2 border-blue-400"
+                                            className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
                                         />
                                     ) : (
-                                        <div className="h-8 w-8 rounded-full border-2 border-blue-400 bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
+                                        <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
                                             {getInitials(user.firstName, user.lastName)}
                                         </div>
                                     )}
                                 </button>
                                 
                                 {showUserMenu && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 z-10">
+                                    <div className="absolute right-0 mt-2 w-48 bg-maraudr-lightBg dark:bg-maraudr-darkBg rounded-md shadow-lg py-1 z-10">
                                         <Link
                                             to="/maraudApp/profile"
-                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
                                         >
                                             {t('sidebar.profile', 'Profil')}
                                         </Link>
                                         <Link
                                             to="/settings"
-                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
                                         >
                                             {t('sidebar.settings', 'Paramètres')}
                                         </Link>
                                         <button
                                             onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                            className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
                                         >
                                             {t('auth.logout', 'Déconnexion')}
                                         </button>
@@ -228,7 +238,7 @@ const Header = () => {
                             (showCreateAccount || !isHomePage) && !isLoginPage && (
                                 <Link
                                     to="/login"
-                                    className="ml-3 px-4 py-2 bg-blue-500 text-white font-medium text-center rounded-md hover:bg-blue-600 transition duration-300 text-sm"
+                                    className="ml-3 px-4 py-2 bg-maraudr-blue text-white font-medium text-center rounded-md hover:bg-maraudr-orange transition duration-300 text-sm"
                                 >
                                     {t('header.signup', 'Créer un compte')}
                                 </Link>
@@ -247,10 +257,10 @@ const Header = () => {
                                     <img
                                         src={user.avatar}
                                         alt={`${user.firstName} ${user.lastName}`}
-                                        className="h-8 w-8 rounded-full border-2 border-blue-400"
+                                        className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
                                     />
                                 ) : (
-                                    <div className="h-8 w-8 rounded-full border-2 border-blue-400 bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
+                                    <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
                                         {getInitials(user.firstName, user.lastName)}
                                     </div>
                                 )}
@@ -259,9 +269,9 @@ const Header = () => {
                         
                         <button onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu" className="ml-2">
                             {isOpen ? (
-                                <XMarkIcon className="h-6 w-6 text-gray-700 dark:text-gray-200" />
+                                <XMarkIcon className="h-6 w-6 text-maraudr-darkText dark:text-maraudr-lightText" />
                             ) : (
-                                <Bars3Icon className="h-6 w-6 text-gray-700 dark:text-gray-200" />
+                                <Bars3Icon className="h-6 w-6 text-maraudr-darkText dark:text-maraudr-lightText" />
                             )}
                         </button>
                     </div>
@@ -270,14 +280,14 @@ const Header = () => {
 
             {/* Mobile Nav */}
             {isOpen && (
-                <div className="md:hidden bg-white dark:bg-gray-800 pb-4 shadow-md border-t dark:border-gray-700">
+                <div className="md:hidden bg-maraudr-lightBg dark:bg-maraudr-darkBg pb-4 shadow-md border-t dark:border-gray-700">
                     {navLinks.map((link) => (
                         <Link
                             key={link.translationKey}
                             to={link.path}
                             onClick={() => setIsOpen(false)}
-                            className={`block py-2 px-4 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 ${
-                                location.pathname === link.path ? 'bg-blue-100 dark:bg-blue-900 font-semibold' : ''
+                            className={`block py-2 px-4 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange ${
+                                location.pathname === link.path ? 'bg-maraudr-blue/20 dark:bg-maraudr-orange/20 font-semibold' : ''
                             }`}
                         >
                             {link.name}
@@ -292,14 +302,14 @@ const Header = () => {
                                         <img
                                             src={user.avatar}
                                             alt={`${user.firstName} ${user.lastName}`}
-                                            className="h-8 w-8 rounded-full border-2 border-blue-400"
+                                            className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
                                         />
                                     ) : (
-                                        <div className="h-8 w-8 rounded-full border-2 border-blue-400 bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
+                                        <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
                                             {getInitials(user.firstName, user.lastName)}
                                         </div>
                                     )}
-                                    <div className="text-gray-700 dark:text-gray-200 font-medium">
+                                    <div className="text-maraudr-darkText dark:text-maraudr-lightText font-medium">
                                         {getInitials(user.firstName, user.lastName)}
                                     </div>
                                 </div>
@@ -307,20 +317,20 @@ const Header = () => {
                             <Link
                                 to="/profile"
                                 onClick={() => setIsOpen(false)}
-                                className="block py-2 px-4 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                                className="block py-2 px-4 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange"
                             >
                                 {t('sidebar.profile', 'Profil')}
                             </Link>
                             <Link
                                 to="/settings"
                                 onClick={() => setIsOpen(false)}
-                                className="block py-2 px-4 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+                                className="block py-2 px-4 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange"
                             >
                                 {t('sidebar.settings', 'Paramètres')}
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="block w-full text-left py-2 px-4 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                className="block w-full text-left py-2 px-4 text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
                             >
                                 {t('auth.logout', 'Déconnexion')}
                             </button>
@@ -330,7 +340,7 @@ const Header = () => {
                             <Link
                                 to="/login"
                                 onClick={() => setIsOpen(false)}
-                                className="block mx-4 py-2 px-4 my-2 bg-blue-500 text-white font-medium text-center rounded-md hover:bg-blue-600 transition duration-300"
+                                className="block mx-4 py-2 px-4 my-2 bg-maraudr-blue text-white font-medium text-center rounded-md hover:bg-maraudr-orange transition duration-300"
                             >
                                 {t('header.signup', 'Créer un compte')}
                             </Link>
