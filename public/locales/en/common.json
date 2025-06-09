@@ -5,7 +5,8 @@
     "login": "Login",
     "settings": "Settings",
     "contact": "Contact",
-    "search": "Search..."
+    "search": "Search...",
+    "createAssociation": "Create Association"
   },
   "auth": {
     "welcome": "Hey, welcome to maraudr.",
@@ -28,5 +29,42 @@
   "languages": {
     "fr": "French",
     "en": "English"
+  },
+  "createAccount": {
+    "title": "Create an account",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "street": "Street",
+    "city": "City",
+    "state": "State/Region",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "isManager": "I am a manager",
+    "languages": "Languages spoken",
+    "submit": "Create my account",
+    "or": "or",
+    "login": "Already have an account? Sign in",
+    "errors": {
+      "required": "This field is required",
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number",
+      "passwordMismatch": "Passwords do not match",
+      "passwordLength": "Password must be at least 8 characters",
+      "createError": "An error occurred during account creation"
+    },
+    "success": "Account created successfully!",
+    "feature_secure": "Secure payments through reliable partners",
+    "feature_fast": "Fast transfers",
+    "feature_fair": "Fair commissions",
+    "feature_rates": "Best rates available",
+    "feature_convenience": "Convenience"
+  },
+  "stock": {
+    "createStock": "Create Stock",
+    "title": "Stock Management"
   }
 } 

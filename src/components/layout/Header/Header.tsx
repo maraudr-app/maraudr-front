@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '../../../i18n/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../../store/authStore';
 import { assoService } from '../../../services/assoService';
+import Button from '../../common/button/button';
 
 interface NavLink {
     name: string;
@@ -28,7 +29,7 @@ const Header = () => {
     const [showAssociationsMenu, setShowAssociationsMenu] = useState(false);
     const [associations, setAssociations] = useState<Association[]>([]);
     const [selectedAssociation, setSelectedAssociation] = useState<Association | null>(null);
-    const { t } = useTranslation();
+    const { t } = useTranslation(['common']);
     const location = useLocation();
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
     const user = useAuthStore(state => state.user);
@@ -67,6 +68,18 @@ const Header = () => {
     const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
         if (!firstName || !lastName) return '';
         return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    };
+
+    const getAssociationInitials = (name: string | undefined) => {
+        if (!name) return '';
+        const words = name.split(' ').filter(Boolean);
+        if (words.length === 0) return '';
+        
+        let initials = '';
+        for (let i = 0; i < Math.min(words.length, 3); i++) {
+            initials += words[i].charAt(0);
+        }
+        return initials.toUpperCase();
     };
 
     // Vérifier si le scroll a dépassé la section héro
@@ -113,9 +126,6 @@ const Header = () => {
 
     const navLinks: NavLink[] = [];
     
-    // Ajouter le lien Dashboard si l'utilisateur est authentifié
-   
-    
     // Ajouter le lien Contact
     navLinks.push({ name: t('header.contact'), path: '/contact', translationKey: 'header.contact' });
 
@@ -132,23 +142,29 @@ const Header = () => {
     };
 
     return (
-        <header className="fixed top-0 left-0 w-full bg-maraudr-lightBg dark:bg-maraudr-darkBg z-50 transition-colors font-sans">
+        <header className="fixed top-0 left-0 w-full bg-maraudr-lightBg dark:bg-maraudr-darkBg z-50 transition-colors font-sans" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
             <div className="max-w-7xl mx-auto px-4">
-                <div className="flex justify-between items-center h-16">
+                <div className="flex justify-between items-center h-16" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                     {/* Logo et Associations Dropdown */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 " style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                         {isAuthenticated && associations.length > 0 ? (
                             <div className="relative" id="associations-menu">
                                 <button
                                     onClick={() => setShowAssociationsMenu(!showAssociationsMenu)}
-                                    className="flex items-center space-x-2 text-xl font-bold text-maraudr-blue dark:text-maraudr-orange font-header hover:text-maraudr-blue dark:hover:text-maraudr-orange"
+                                    className="flex items-center space-x-2 text-maraudr-blue dark:text-maraudr-orange font-header hover:text-maraudr-blue dark:hover:text-maraudr-orange"
                                 >
-                                    <span>{selectedAssociation?.name || 'maraudr'}</span>
+                                    {selectedAssociation ? (
+                                        <div className="h-12 w-12 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium text-xs">
+                                            {getAssociationInitials(selectedAssociation.name)}
+                                        </div>
+                                    ) : (
+                                        <span className="text-xl font-bold">maraudr</span>
+                                    )}
                                     {associations.length > 1 && <ChevronDownIcon className="h-5 w-5" />}
                                 </button>
                                 
                                 {showAssociationsMenu && associations.length > 1 && (
-                                    <div className="absolute left-0 mt-2 w-48 bg-maraudr-lightBg dark:bg-maraudr-darkBg rounded-md shadow-lg py-1 z-[100]">
+                                    <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg py-1 z-[100]" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                                         {associations.map((association) => (
                                             <button
                                                 key={association.id}
@@ -158,11 +174,11 @@ const Header = () => {
                                                 }}
                                                 className={`block w-full text-left px-4 py-2 text-sm ${
                                                     selectedAssociation?.id === association.id
-                                                        ? 'bg-maraudr-blue/20 dark:bg-maraudr-orange/20 text-maraudr-blue dark:text-maraudr-orange'
-                                                        : 'text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10'
+                                                        ? 'bg-maraudr-blue/20 text-maraudr-blue dark:bg-maraudr-orange/20 dark:text-maraudr-orange'
+                                                        : 'text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold'
                                                 }`}
                                             >
-                                                {association.name}
+                                                {association.name.charAt(0).toUpperCase() + association.name.slice(1).toLowerCase()}
                                             </button>
                                         ))}
                                     </div>
@@ -179,7 +195,7 @@ const Header = () => {
                             <Link
                                 key={link.translationKey}
                                 to={link.path}
-                                className={`text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange transition px-3 ${
+                                className={`text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange hover:font-semibold transition px-3 ${
                                     location.pathname === link.path ? 'bg-maraudr-blue/20 dark:bg-maraudr-orange/20 rounded-md font-semibold' : ''
                                 }`}
                             >
@@ -212,22 +228,22 @@ const Header = () => {
                                 </button>
                                 
                                 {showUserMenu && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-maraudr-lightBg dark:bg-maraudr-darkBg rounded-md shadow-lg py-1 z-10">
+                                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                                         <Link
                                             to="/maraudApp/profile"
-                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
+                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
                                         >
                                             {t('sidebar.profile', 'Profil')}
                                         </Link>
                                         <Link
                                             to="/settings"
-                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
+                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
                                         >
                                             {t('sidebar.settings', 'Paramètres')}
                                         </Link>
                                         <button
                                             onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
+                                            className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
                                         >
                                             {t('auth.logout', 'Déconnexion')}
                                         </button>
@@ -243,6 +259,15 @@ const Header = () => {
                                     {t('header.signup', 'Créer un compte')}
                                 </Link>
                             )
+                        )}
+
+                        {isAuthenticated && (
+                            <Button
+                                onClick={() => window.location.href = '/create-asso'}
+                                className="ml-3 px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium text-center rounded-md hover:bg-green-700 transition duration-300 text-sm"
+                            >
+                                {t('header.createAssociation', 'Créer une association')}
+                            </Button>
                         )}
                     </nav>
 
@@ -280,13 +305,13 @@ const Header = () => {
 
             {/* Mobile Nav */}
             {isOpen && (
-                <div className="md:hidden bg-maraudr-lightBg dark:bg-maraudr-darkBg pb-4 shadow-md border-t dark:border-gray-700">
+                <div className="md:hidden pb-4 shadow-md border-t dark:border-gray-700" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                     {navLinks.map((link) => (
                         <Link
                             key={link.translationKey}
                             to={link.path}
                             onClick={() => setIsOpen(false)}
-                            className={`block py-2 px-4 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange ${
+                            className={`block py-2 px-4 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange hover:font-semibold ${ 
                                 location.pathname === link.path ? 'bg-maraudr-blue/20 dark:bg-maraudr-orange/20 font-semibold' : ''
                             }`}
                         >
@@ -315,22 +340,22 @@ const Header = () => {
                                 </div>
                             </div>
                             <Link
-                                to="/profile"
+                                to="/maraudApp/profile"
                                 onClick={() => setIsOpen(false)}
-                                className="block py-2 px-4 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange"
+                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
                             >
                                 {t('sidebar.profile', 'Profil')}
                             </Link>
                             <Link
                                 to="/settings"
                                 onClick={() => setIsOpen(false)}
-                                className="block py-2 px-4 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange"
+                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
                             >
                                 {t('sidebar.settings', 'Paramètres')}
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="block w-full text-left py-2 px-4 text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10"
+                                className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
                             >
                                 {t('auth.logout', 'Déconnexion')}
                             </button>
@@ -340,7 +365,7 @@ const Header = () => {
                             <Link
                                 to="/login"
                                 onClick={() => setIsOpen(false)}
-                                className="block mx-4 py-2 px-4 my-2 bg-maraudr-blue text-white font-medium text-center rounded-md hover:bg-maraudr-orange transition duration-300"
+                                className="block w-full text-left px-4 py-2 text-sm bg-maraudr-blue text-white font-medium rounded-md hover:bg-maraudr-orange transition duration-300"
                             >
                                 {t('header.signup', 'Créer un compte')}
                             </Link>

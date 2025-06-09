@@ -7,6 +7,7 @@ import { validateSiret } from '../../utils/siretValidation';
 import { toast } from 'react-hot-toast';
 import { assoService } from '../../services/assoService';
 import { useAuthStore } from '../../store/authStore';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const CreateAsso = () => {
   const [siret, setSiret] = useState('');
@@ -53,7 +54,16 @@ const CreateAsso = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl w-full space-y-8">
-        <div className="flex flex-col md:flex-row shadow-lg rounded-lg overflow-hidden">
+        <div className="flex flex-col md:flex-row shadow-lg rounded-lg overflow-hidden relative">
+          {/* Bouton de fermeture */}
+          <button
+            onClick={() => navigate('/maraudApp/dashboard')}
+            className="absolute top-4 right-4 z-10 w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Close"
+          >
+            <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          </button>
+
           {/* Partie gauche - Fond coloré avec icône */}
           <div className="hidden md:flex md:w-1/2 relative bg-gradient-to-br from-blue-600 to-blue-800 items-center justify-center">
             <div className="text-center text-white p-8">

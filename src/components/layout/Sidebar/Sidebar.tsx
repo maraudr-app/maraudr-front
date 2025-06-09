@@ -123,9 +123,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
 
   return (
     <div
-      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-maraudr-lightBg dark:bg-maraudr-darkBg shadow-md transition-all duration-300 z-10 flex flex-col justify-between font-body ${
+      className={`fixed top-0 left-0 h-screen bg-maraudr-lightBg dark:bg-maraudr-darkBg shadow-md transition-all duration-300 z-[60] flex flex-col justify-between font-body ${
         isCollapsed ? 'w-14' : 'w-48'
       }`}
+      style={{
+      backgroundColor:'#104d77',
+      color:'#ffffff'
+      }}
     >
       <div>
         <div className="flex justify-end p-2">

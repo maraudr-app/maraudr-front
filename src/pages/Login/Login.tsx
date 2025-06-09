@@ -9,6 +9,7 @@ import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 import { useLoginNavigation } from '../../hooks/useLoginNavigation';
 import { useAuthStore } from '../../store/authStore';
+import { assoService } from '../../services/assoService';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
@@ -70,8 +71,16 @@ const Login = () => {
           localStorage.removeItem('rememberMeEmail');
         }
         
-        // Redirection vers la page de création d'association
-        navigate('/create-asso');
+        // Récupérer les associations de l'utilisateur
+        const userAssociations = await assoService.getCurrentUserAssociation();
+
+        if (userAssociations.length === 0) {
+          // Redirection vers la page de création d'association si aucune association n'est trouvée
+          navigate('/create-asso');
+        } else {
+          // Redirection vers le dashboard si au moins une association est trouvée
+          navigate('/maraudApp/dashboard');
+        }
       } else {
         setError('Échec de la connexion. Veuillez réessayer.');
       }
