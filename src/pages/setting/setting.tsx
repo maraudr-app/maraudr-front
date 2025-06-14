@@ -9,6 +9,8 @@ import {
 } from "@heroicons/react/16/solid";
 import {LightBulbIcon, LockClosedIcon, LockOpenIcon} from "@heroicons/react/24/solid";
 import {MoonIcon} from "@heroicons/react/24/outline";
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 
 
 const Setting: React.FC = () => {
@@ -21,11 +23,13 @@ const Setting: React.FC = () => {
     // Options de langue disponibles
     const availableLanguages = ['Français', 'English', 'Español', 'Deutsch'];
 
+    const { logout } = useAuthStore();
+    const navigate = useNavigate();
+
     // Fonction pour gérer la déconnexion
     const handleLogout = () => {
-        // Logique de déconnexion ici
-        console.log('Déconnexion...');
-        // Rediriger vers la page de connexion, par exemple
+        logout();
+        navigate('/login');
     };
 
     return (

@@ -4,6 +4,7 @@ import { Button } from '../common/button/button';
 import { AddItemModal } from './AddItemModal';
 import { StockHistoryModal } from './StockHistoryModal';
 import { useAssoStore } from '../../store/assoStore';
+import CubeIcon from '@heroicons/react/24/solid/CubeIcon';
 
 interface StockNavbarProps {
     onItemAdded: () => void;
@@ -28,10 +29,11 @@ export const StockNavbar = ({
     return (
         <nav className={`fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300`} style={{ left: sidebarWidth }}>
             <div className="flex items-center justify-between h-16">
-                <div className="flex items-center px-4">
-                    <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <div className="flex items-center gap-3 pl-7">
+                        <CubeIcon className="w-5 h-5" />
+                    <div className="text-gray-900  dark:text-white">
                         Gestion du Stock
-                    </h1>
+                    </div>
                 </div>
                 <div className="flex items-center space-x-4 px-4">
                     {showCreateStock && (

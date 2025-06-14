@@ -61,6 +61,106 @@ const MOCK_ITEMS: StockItem[] = [
         quantity: 40,
         entryDate: new Date('2024-03-11').toISOString(),
         barCode: '567890123456'
+    },
+    {
+        id: '6',
+        stockId: 'stock-1',
+        name: 'Jus d\'orange',
+        description: 'Bouteilles de jus d\'orange 1L',
+        category: Category.Liquid,
+        quantity: 30,
+        entryDate: new Date('2024-03-10').toISOString(),
+        barCode: '678901234567'
+    },
+    {
+        id: '7',
+        stockId: 'stock-1',
+        name: 'Paracétamol',
+        description: 'Boîte de 20 comprimés',
+        category: Category.Medical,
+        quantity: 15,
+        entryDate: new Date('2024-03-09').toISOString(),
+        barCode: '789012345678'
+    },
+    {
+        id: '8',
+        stockId: 'stock-1',
+        name: 'Pantalons',
+        description: 'Pantalons de jogging',
+        category: Category.Clothes,
+        quantity: 20,
+        entryDate: new Date('2024-03-08').toISOString(),
+        barCode: '890123456789'
+    },
+    {
+        id: '9',
+        stockId: 'stock-1',
+        name: 'Pommes',
+        description: 'Pommes Golden',
+        category: Category.Food,
+        quantity: 75,
+        entryDate: new Date('2024-03-07').toISOString(),
+        barCode: '901234567890'
+    },
+    {
+        id: '10',
+        stockId: 'stock-1',
+        name: 'Lait',
+        description: 'Briques de lait 1L',
+        category: Category.Liquid,
+        quantity: 45,
+        entryDate: new Date('2024-03-06').toISOString(),
+        barCode: '012345678901'
+    },
+    {
+        id: '11',
+        stockId: 'stock-1',
+        name: 'Bandages',
+        description: 'Rouleaux de bandages',
+        category: Category.Medical,
+        quantity: 8,
+        entryDate: new Date('2024-03-05').toISOString(),
+        barCode: '123456789012'
+    },
+    {
+        id: '12',
+        stockId: 'stock-1',
+        name: 'Chaussettes',
+        description: 'Paires de chaussettes',
+        category: Category.Clothes,
+        quantity: 50,
+        entryDate: new Date('2024-03-04').toISOString(),
+        barCode: '234567890123'
+    },
+    {
+        id: '13',
+        stockId: 'stock-1',
+        name: 'Pommes de terre',
+        description: 'Sac de 5kg',
+        category: Category.Food,
+        quantity: 10,
+        entryDate: new Date('2024-03-03').toISOString(),
+        barCode: '345678901234'
+    },
+    {
+        id: '14',
+        stockId: 'stock-1',
+        name: 'Soda',
+        description: 'Canettes de soda',
+        category: Category.Liquid,
+        quantity: 120,
+        entryDate: new Date('2024-03-02').toISOString(),
+        barCode: '456789012345'
+    },
+    {
+        id: '15',
+        stockId: 'stock-1',
+        name: 'Antiseptique',
+        description: 'Solution antiseptique 500ml',
+        category: Category.Medical,
+        quantity: 6,
+        entryDate: new Date('2024-03-01').toISOString(),
+        barCode: '567890123456'
     }
 ];
 

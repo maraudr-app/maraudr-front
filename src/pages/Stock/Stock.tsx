@@ -201,15 +201,17 @@ export const Stock = () => {
                                 name="name"
                                 value={filter.name}
                                 onChange={handleFilterChange}
-                                placeholder="Rechercher un item..."
+                                placeholder="Rechercher un item"
                             />
-                            <div className="h-[48px]">
+                            <div className="w-full">
                                 <Select
                                     name="category"
                                     value={filter.category}
                                     onChange={handleFilterChange}
-                                    className="h-full"
+                                    placeholder="Toutes les catégories"
+                                    className="w-full"
                                 >
+                                    <option value="">Toutes les catégories</option>
                                     {Object.values(Category).map(category => (
                                         <option key={category} value={category}>
                                             {category}
@@ -219,17 +221,17 @@ export const Stock = () => {
                             </div>
                             <Input
                                 type="number"
-                                name="minQuantity"
-                                value={filter.minQuantity}
-                                onChange={handleFilterChange}
-                                placeholder="Quantité minimum"
-                            />
-                            <Input
-                                type="number"
                                 name="maxQuantity"
                                 value={filter.maxQuantity}
                                 onChange={handleFilterChange}
                                 placeholder="Quantité maximum"
+                            />
+                            <Input
+                                type="number"
+                                name="minQuantity"
+                                value={filter.minQuantity}
+                                onChange={handleFilterChange}
+                                placeholder="Quantité minimum"
                             />
                         </div>
                         <div className="mt-4 flex justify-end space-x-2">

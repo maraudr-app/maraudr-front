@@ -29,11 +29,13 @@ type User = {
 interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
+  token: string | null;
   
   // Actions
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   fetchUser: () => Promise<void>;  // Nouvelle fonction
+  setToken: (token: string | null) => void;
 }
 
 // Création du store avec persistance
@@ -42,6 +44,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       isAuthenticated: false,
       user: null,
+      token: null,
       
       login: async (email: string, password: string) => {
         try {
@@ -68,7 +71,8 @@ export const useAuthStore = create<AuthState>()(
               // Mettre à jour le state
               set({ 
                 isAuthenticated: true,
-                user: userData
+                user: userData,
+                token: response.accessToken
               });
               
               return true;
@@ -95,7 +99,8 @@ export const useAuthStore = create<AuthState>()(
         // Réinitialiser le state
         set({ 
           isAuthenticated: false,
-          user: null
+          user: null,
+          token: null
         });
       },
 
@@ -124,13 +129,18 @@ export const useAuthStore = create<AuthState>()(
           console.error('Error fetching user data:', error);
           // En cas d'erreur, on ne modifie pas le state
         }
+      },
+
+      setToken: (token: string | null) => {
+        set({ token });
       }
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
-        user: state.user
+        user: state.user,
+        token: state.token
       })
     }
   )

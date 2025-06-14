@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'http://localhost:8082';
 
 interface AssoResponse {
     id?: string;
@@ -9,43 +9,26 @@ interface AssoResponse {
 }
 
 export const assoService = {
-    createAssociation: async (siret: string, userId: string): Promise<AssoResponse> => {
+    createAssociation: async (name: string, logo?: string): Promise<string> => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const url = `${API_URL}/association`;
         try {
-            const url = `${API_URL}/association?siret=${siret}&userId=${userId}`;
-            console.log('Full URL:', url);
-            console.log('Request method:', 'POST');
-            console.log('Request headers:', {
-                'Content-Type': 'application/json'
-            });
-            
-            const response = await axios({
-                method: 'post',
-                url: url,
+            const response = await axios.post(url, {
+                name,
+                logo
+            }, {
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${token}`
                 },
-                data: {},
                 withCredentials: true
             });
-            
-            console.log('Response status:', response.status);
-            console.log('Response data:', response.data);
-            return response.data;
+
+            return response.data.id;
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error('Error details:', {
-                    status: error.response?.status,
-                    statusText: error.response?.statusText,
-                    data: error.response?.data,
-                    headers: error.response?.headers,
-                    config: {
-                        url: error.config?.url,
-                        method: error.config?.method,
-                        headers: error.config?.headers,
-                        data: error.config?.data
-                    }
-                });
-            }
             throw error;
         }
     },

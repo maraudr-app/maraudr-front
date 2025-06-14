@@ -23,6 +23,7 @@ interface AssoState {
     clearAssociations: () => void;
     reloadAllData: () => Promise<void>;  // Nouvelle fonction pour tout recharger
     checkAndReloadIfNeeded: () => Promise<void>;  // Vérifie et recharge si nécessaire
+    fetchAssociations: () => Promise<void>;
 }
 
 // Temps maximum avant de recharger les données (5 minutes)
@@ -133,6 +134,35 @@ export const useAssoStore = create<AssoState>()(
                     // Si pas d'associations mais on a une dernière mise à jour, on recharge quand même
                     console.log('No associations but we have a lastFetchTime, reloading...');
                     await get().fetchUserAssociations();
+                }
+            },
+
+            fetchAssociations: async () => {
+                const state = get();
+                const now = Date.now();
+                const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+                // Vérifier si les données sont périmées ou manquantes
+                if (!state.lastFetchTime || now - state.lastFetchTime > CACHE_DURATION) {
+                    try {
+                        const associations = await assoService.getCurrentUserAssociation();
+                        set({
+                            associations,
+                            lastFetchTime: now
+                        });
+                    } catch (error) {
+                        throw error;
+                    }
+                } else if (state.associations.length === 0 && state.lastFetchTime) {
+                    try {
+                        const associations = await assoService.getCurrentUserAssociation();
+                        set({
+                            associations,
+                            lastFetchTime: now
+                        });
+                    } catch (error) {
+                        throw error;
+                    }
                 }
             }
         }),

@@ -1,25 +1,8 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { LoginResponse, DecodedToken, User } from '../types/auth/auth';
 
 const API_URL = 'http://localhost:8082';
-
-interface LoginResponse {
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-  };
-}
-
-interface DecodedToken {
-  sub: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  exp: number;
-}
 
 interface ContactInfo {
   email: string;
@@ -34,66 +17,15 @@ interface Address {
   country: string;
 }
 
-interface User {
-  role: number;
-  team: any[];
-  id: string;
-  firstname: string;
-  lastname: string;
-  createdAt: string;
-  lastLoggedIn: string;
-  isActive: boolean;
-  contactInfo: ContactInfo;
-  address: Address;
-  passwordHash: string;
-  biography: string | null;
-  languages: number[];
-}
-
 export const authService = {
-  login: async (email: string, password: string): Promise<{ accessToken: string; user: User }> => {
+  login: async (email: string, password: string): Promise<LoginResponse> => {
     try {
-      console.log('Sending login request to:', `${API_URL}/auth/login`);
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await axios.post<LoginResponse>(`${API_URL}/auth/login`, {
         email,
-        password,
-      }, {
-        withCredentials: true
+        password
       });
-      console.log('Login response:', response);
-      console.log('Response data:', response.data);
-      
-      if (!response.data || !response.data.accessToken) {
-        throw new Error('Invalid response format: missing accessToken');
-      }
-
-      // Vérifier que le token peut être décodé
-      let decoded: DecodedToken;
-      try {
-        decoded = jwtDecode<DecodedToken>(response.data.accessToken);
-        console.log('Decoded token:', decoded);
-      } catch (decodeError) {
-        console.error('Error decoding token:', decodeError);
-        throw new Error('Invalid token format');
-      }
-
-      // Sauvegarder le token et configurer l'intercepteur
-      authService.setToken(response.data.accessToken);
-
-      // Récupérer les informations complètes de l'utilisateur
-      const userData = await authService.getUserById(decoded.sub);
-      console.log('User data retrieved:', userData);
-      
-      return {
-        accessToken: response.data.accessToken,
-        user: userData
-      };
+      return response.data;
     } catch (error) {
-      console.error('Login error:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Response data:', error.response?.data);
-        console.error('Response status:', error.response?.status);
-      }
       throw error;
     }
   },
@@ -112,10 +44,8 @@ export const authService = {
     if (token) {
       try {
         const decoded = jwtDecode<DecodedToken>(token);
-        console.log('Current token decoded:', decoded);
         return token;
       } catch (error) {
-        console.error('Error decoding stored token:', error);
         localStorage.removeItem('token');
         return null;
       }
