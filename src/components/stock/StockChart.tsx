@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { StockItem } from '../../types/stock/StockItem';
+import { StockItem, Category } from '../../types/stock/StockItem';
 import { useState, useEffect, useMemo } from 'react';
 import { Select } from '../common/select/select';
 import { RecentStockHistory } from './RecentStockHistory';
@@ -35,6 +35,7 @@ interface StockChartProps {
 }
 
 type ChartType = 'bar' | 'line';
+type ViewMode = 'byCategory' | 'byItem';
 
 const chartTypes = [
     { value: 'line', label: 'Courbe' },
@@ -51,45 +52,83 @@ const maraudrColors = {
 
 export const StockChart = ({ items }: StockChartProps) => {
     const [chartType, setChartType] = useState<ChartType>('line');
+    const [viewMode, setViewMode] = useState<ViewMode>('byCategory');
+    const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
     const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
-    // Initialiser et mettre à jour les items sélectionnés (tous par défaut)
+    const categories = useMemo(() => [
+        { value: 'all', label: 'Toutes les catégories' },
+        ...Object.values(Category).map(cat => ({ value: cat, label: cat }))
+    ], []);
+
+    // Initialiser les items sélectionnés en fonction du mode de vue et de la catégorie
     useEffect(() => {
-        if (items.length > 0) {
-            setSelectedItemIds(items.map(item => item.id));
+        if (viewMode === 'byItem' && selectedCategory !== 'all' && items.length > 0) {
+            const itemsInSelectedCategory = items.filter(item => item.category === selectedCategory);
+            setSelectedItemIds(itemsInSelectedCategory.map(item => item.id));
+        } else if (viewMode === 'byCategory') {
+            setSelectedItemIds([]); // Pas de sélection d'item individuelle en mode catégorie
         }
-    }, [items]);
+    }, [items, viewMode, selectedCategory]);
 
-    // Filtrer les items basés sur la sélection de l'utilisateur
-    const filteredItems = useMemo(() => {
-        if (selectedItemIds.length === 0) {
-            return []; // Ne rien afficher si aucun item n'est sélectionné
+    const dataForChart = useMemo(() => {
+        if (viewMode === 'byCategory') {
+            const categoryQuantities = items.reduce((acc, item) => {
+                acc[item.category] = (acc[item.category] || 0) + item.quantity;
+                return acc;
+            }, {} as Record<Category, number>);
+
+            const labels = Object.keys(categoryQuantities).filter(cat => cat !== Category.Default && cat !== Category.Unknown);
+            const data = labels.map(cat => categoryQuantities[cat as Category]);
+
+            return {
+                labels,
+                datasets: [
+                    {
+                        label: 'Quantité totale par catégorie',
+                        data,
+                        backgroundColor: maraudrColors.orangeTransparent,
+                        borderColor: maraudrColors.orange,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false,
+                        pointBackgroundColor: maraudrColors.blue,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    },
+                ],
+            };
+        } else { // byItem mode
+            const filteredItems = items.filter(item => 
+                (selectedCategory === 'all' || item.category === selectedCategory) && 
+                selectedItemIds.includes(item.id)
+            );
+
+            return {
+                labels: filteredItems.map(item => item.name),
+                datasets: [
+                    {
+                        label: 'Quantité en stock',
+                        data: filteredItems.map(item => item.quantity),
+                        backgroundColor: maraudrColors.orangeTransparent,
+                        borderColor: maraudrColors.orange,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false,
+                        pointBackgroundColor: maraudrColors.blue,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    },
+                ],
+            };
         }
-        return items.filter(item => selectedItemIds.includes(item.id));
-    }, [items, selectedItemIds]);
+    }, [items, viewMode, selectedCategory, selectedItemIds]);
 
-    // Préparer les données pour le graphique avec les items filtrés
-    const chartData = {
-        labels: filteredItems.map(item => item.name),
-        datasets: [
-            {
-                label: 'Quantité en stock',
-                data: filteredItems.map(item => item.quantity),
-                backgroundColor: 'rgba(249, 115, 22, 0.5)', // maraudr-orange avec transparence
-                borderColor: 'rgb(249, 115, 22)', // maraudr-orange
-                borderWidth: 2,
-                tension: 0.4, // Pour la courbe
-                fill: false, // Pour la courbe
-                pointBackgroundColor: 'rgb(59, 130, 246)', // maraudr-blue
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-            },
-        ],
-    };
-
-    const options = {
+    const options = useMemo(() => ({
         responsive: true,
         plugins: {
             legend: {
@@ -104,7 +143,9 @@ export const StockChart = ({ items }: StockChartProps) => {
             },
             title: {
                 display: true,
-                text: filteredItems.length > 0 ? `Quantité en stock (${filteredItems.map(item => item.name).join(', ')})` : 'Quantité des items en stock',
+                text: viewMode === 'byCategory' 
+                    ? 'Quantité des items par catégorie' 
+                    : `Quantité en stock (${dataForChart.labels.join(', ')})`,
                 color: 'rgb(17, 24, 39)', // text-gray-900
                 font: {
                     size: 16,
@@ -134,7 +175,7 @@ export const StockChart = ({ items }: StockChartProps) => {
             x: {
                 title: {
                     display: true,
-                    text: 'Items',
+                    text: viewMode === 'byCategory' ? 'Catégories' : 'Items',
                     color: 'rgb(17, 24, 39)', // text-gray-900
                     font: {
                         size: 14,
@@ -149,11 +190,30 @@ export const StockChart = ({ items }: StockChartProps) => {
                 },
             },
         },
-    };
+    }), [viewMode, dataForChart.labels]);
 
     const handleItemSelectChange = (values: string[]) => {
         setSelectedItemIds(values);
     };
+
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value as Category | 'all';
+        setSelectedCategory(value);
+        if (value === 'all') {
+            setViewMode('byCategory');
+        } else {
+            setViewMode('byItem');
+        }
+    };
+
+    const itemsForMultiSelect = useMemo(() => {
+        if (selectedCategory === 'all') {
+            return [];
+        }
+        return items
+            .filter(item => item.category === selectedCategory)
+            .map(item => ({ value: item.id, label: item.name }));
+    }, [items, selectedCategory]);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -174,19 +234,34 @@ export const StockChart = ({ items }: StockChartProps) => {
                         </Select>
                     </div>
                     <div className="w-48">
-                        <MultiSelectDropdown
-                            options={items.map(item => ({ value: item.id, label: item.name }))}
-                            selectedValues={selectedItemIds}
-                            onChange={handleItemSelectChange}
-                            placeholder="Sélectionner des items"
-                        />
+                        <Select
+                            value={selectedCategory}
+                            onChange={handleCategoryChange}
+                            placeholder="Toutes les catégories"
+                        >
+                            {categories.map(cat => (
+                                <option key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                </option>
+                            ))}
+                        </Select>
                     </div>
+                    {viewMode === 'byItem' && (
+                        <div className="w-48">
+                            <MultiSelectDropdown
+                                options={itemsForMultiSelect}
+                                selectedValues={selectedItemIds}
+                                onChange={handleItemSelectChange}
+                                placeholder="Sélectionner des items"
+                            />
+                        </div>
+                    )}
                 </div>
                 <div className="h-[400px]">
                     {chartType === 'bar' ? (
-                        <Bar data={chartData} options={options} />
+                        <Bar data={dataForChart} options={options} />
                     ) : (
-                        <Line data={chartData} options={options} />
+                        <Line data={dataForChart} options={options} />
                     )}
                 </div>
             </div>
