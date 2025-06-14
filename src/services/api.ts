@@ -6,6 +6,7 @@ export const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true // Ajout de cette ligne pour permettre l'envoi des credentials
 });
 
 // Intercepteur pour ajouter le token d'authentification

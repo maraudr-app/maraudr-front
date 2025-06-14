@@ -24,7 +24,8 @@ export const assoService = {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                data: {}
+                data: {},
+                withCredentials: true
             });
             
             console.log('Response status:', response.status);
@@ -52,7 +53,8 @@ export const assoService = {
     getAssociation: async (id: string) => {
         try {
             const response = await axios.get(`${API_URL}/association`, {
-                params: { id }
+                params: { id },
+                withCredentials: true
             });
             return response.data;
         } catch (error) {
@@ -80,14 +82,18 @@ export const assoService = {
 
     getCurrentUserAssociation: async () => {
         try {
-            // Récupérer le sub (userId) depuis le store
             const user = useAuthStore.getState().user;
             if (!user || !user.sub) {
                 throw new Error('No user ID found in store');
             }
 
             console.log('Fetching association for user:', user.sub);
-            const response = await axios.get(`${API_URL}/association/membership?id=${user.sub}`);
+            const response = await axios.get(`${API_URL}/association/membership?id=${user.sub}`, {
+                withCredentials: true, // Inclure les cookies
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             return response.data;
         } catch (error) {
             console.error('Error getting user association:', error);

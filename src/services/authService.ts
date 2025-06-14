@@ -57,6 +57,8 @@ export const authService = {
       const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password,
+      }, {
+        withCredentials: true
       });
       console.log('Login response:', response);
       console.log('Response data:', response.data);
@@ -100,7 +102,9 @@ export const authService = {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     // Supprimer l'intercepteur
-    axios.interceptors.request.eject(authService.interceptorId);
+    if (authService.interceptorId) {
+      axios.interceptors.request.eject(authService.interceptorId);
+    }
   },
 
   getToken: (): string | null => {
@@ -199,10 +203,28 @@ export const authService = {
   getUserById: async (uuid: string): Promise<User> => {
     try {
       console.log('Fetching user with UUID:', uuid);
-      const response = await axios.get(`${API_URL}/users/${uuid}`);
+      const token = authService.getToken();
+      console.log('Token being used:', token ? 'Present' : 'Missing');
+      
+      const response = await axios.get(`${API_URL}/users/${uuid}`, {
+        withCredentials: true,
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined
+        }
+      });
+      console.log('Response headers:', response.headers);
+      console.log('Response status:', response.status);
       return response.data;
     } catch (error) {
       console.error('Error getting user by ID:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error response:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
+      }
       throw error;
     }
   },

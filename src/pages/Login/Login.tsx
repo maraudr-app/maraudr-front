@@ -64,16 +64,14 @@ const Login = () => {
       console.log('ou est lerrereur ?');
       
       if (success) {
-
         if (rememberMe) {
           localStorage.setItem('rememberMeEmail', email);
         } else {
           localStorage.removeItem('rememberMeEmail');
         }
-        
         // Récupérer les associations de l'utilisateur
         const userAssociations = await assoService.getCurrentUserAssociation();
-
+        console.log("userAssociations:", userAssociations);
         if (userAssociations.length === 0) {
           // Redirection vers la page de création d'association si aucune association n'est trouvée
           navigate('/create-asso');

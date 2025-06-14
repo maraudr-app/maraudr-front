@@ -47,21 +47,52 @@ const Header = () => {
         try {
             const userAssociations = await assoService.getCurrentUserAssociation();
             console.log('User Associations UUIDs:', userAssociations);
+            
+            if (!userAssociations || userAssociations.length === 0) {
+                console.log('No associations found for user');
+                setAssociations([]);
+                setSelectedAssociation(null);
+                return;
+            }
+
             // Récupérer les informations complètes pour chaque association
             const associationsWithDetails = await Promise.all(
                 userAssociations.map(async (assoId: string) => {
+                    console.log('Fetching details for association:', assoId);
                     const assoDetails = await assoService.getAssociation(assoId);
-                    console.log(`Details for ${assoId}:`, assoDetails);
-                    return assoDetails;
+                    console.log('Association details received:', assoDetails);
+                    
+                    // Vérifier la structure des données
+                    if (!assoDetails || !assoDetails.id || !assoDetails.name) {
+                        console.error('Invalid association data structure:', assoDetails);
+                        return null;
+                    }
+                    
+                    return {
+                        id: assoDetails.id,
+                        name: assoDetails.name,
+                        logo: assoDetails.logo
+                    };
                 })
             );
-            setAssociations(associationsWithDetails);
-            console.log('Associations with details in state:', associationsWithDetails);
-            if (associationsWithDetails.length > 0) {
-                setSelectedAssociation(associationsWithDetails[0]);
+
+            // Filtrer les associations nulles
+            const validAssociations = associationsWithDetails.filter((asso): asso is Association => asso !== null);
+            console.log('Valid associations:', validAssociations);
+
+            setAssociations(validAssociations);
+            
+            if (validAssociations.length > 0) {
+                console.log('Setting selected association to:', validAssociations[0]);
+                setSelectedAssociation(validAssociations[0]);
+            } else {
+                console.log('No valid associations to set as selected');
+                setSelectedAssociation(null);
             }
         } catch (error) {
             console.error('Error fetching user associations:', error);
+            setAssociations([]);
+            setSelectedAssociation(null);
         }
     };
 
@@ -72,6 +103,7 @@ const Header = () => {
 
     const getAssociationInitials = (name: string | undefined) => {
         if (!name) return '';
+        // Prendre les premières lettres de chaque mot, maximum 3 mots
         const words = name.split(' ').filter(Boolean);
         if (words.length === 0) return '';
         
@@ -137,8 +169,7 @@ const Header = () => {
     // Gérer la déconnexion
     const handleLogout = () => {
         logout();
-        // Rediriger vers la page d'accueil
-        window.location.href = '/';
+        window.location.href = '/login';
     };
 
     return (
@@ -146,7 +177,7 @@ const Header = () => {
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex justify-between items-center h-16" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                     {/* Logo et Associations Dropdown */}
-                    <div className="flex items-center space-x-4 " style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
+                    <div className="flex items-center space-x-4" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                         {isAuthenticated && associations.length > 0 ? (
                             <div className="relative" id="associations-menu">
                                 <button
@@ -154,17 +185,22 @@ const Header = () => {
                                     className="flex items-center space-x-2 text-maraudr-blue dark:text-maraudr-orange font-header hover:text-maraudr-blue dark:hover:text-maraudr-orange"
                                 >
                                     {selectedAssociation ? (
-                                        <div className="h-12 w-12 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium text-xs">
-                                            {getAssociationInitials(selectedAssociation.name)}
+                                        <div className="flex items-center space-x-2">
+                                            <div className="h-9 w-9 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-bold text-xs">
+                                                {getAssociationInitials(selectedAssociation.name)}
+                                            </div>
+                                            <span className="text-lg font-bold text-maraudr-darkText dark:text-maraudr-lightText">
+                                                {selectedAssociation.name.charAt(0).toUpperCase() + selectedAssociation.name.slice(1).toLowerCase()}
+                                            </span>
                                         </div>
                                     ) : (
                                         <span className="text-xl font-bold">maraudr</span>
                                     )}
-                                    {associations.length > 1 && <ChevronDownIcon className="h-5 w-5" />}
+                                    {associations.length > 1 && <ChevronDownIcon className="h-5 w-5 ml-2" />}
                                 </button>
                                 
                                 {showAssociationsMenu && associations.length > 1 && (
-                                    <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg py-1 z-[100]" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
+                                    <div className="absolute left-0 mt-2 w-64 rounded-md shadow-lg py-1 z-[100]" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                                         {associations.map((association) => (
                                             <button
                                                 key={association.id}
@@ -172,13 +208,16 @@ const Header = () => {
                                                     setSelectedAssociation(association);
                                                     setShowAssociationsMenu(false);
                                                 }}
-                                                className={`block w-full text-left px-4 py-2 text-sm ${
+                                                className={`flex items-center space-x-2 w-full text-left px-4 py-2 text-sm ${
                                                     selectedAssociation?.id === association.id
                                                         ? 'bg-maraudr-blue/20 text-maraudr-blue dark:bg-maraudr-orange/20 dark:text-maraudr-orange'
                                                         : 'text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold'
                                                 }`}
                                             >
-                                                {association.name.charAt(0).toUpperCase() + association.name.slice(1).toLowerCase()}
+                                                <div className="h-9 w-9 rounded-full border  flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-bold text-xs">
+                                                    {getAssociationInitials(association.name)}
+                                                </div>
+                                                <span>{association.name.toLowerCase()}</span>
                                             </button>
                                         ))}
                                     </div>

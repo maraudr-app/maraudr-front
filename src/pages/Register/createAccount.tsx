@@ -12,6 +12,33 @@ import { toast } from "react-hot-toast";
 import { HeartIcon } from '@heroicons/react/24/outline';
 import associationImage from "../../assets/pictures/associationcreateaccount.png";
 
+// Interfaces pour la validation
+interface BaseUserData {
+  firstname: string;
+  lastname: string;
+  email: string;
+  phoneNumber: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  password: string;
+  confirmPassword: string;
+  languages: Language[];
+}
+
+interface ManagerUserData extends BaseUserData {
+  isManager: true;
+}
+
+interface NonManagerUserData extends BaseUserData {
+  isManager: false;
+  managerId: string;
+}
+
+type UserData = ManagerUserData | NonManagerUserData;
+
 const CreateAccount = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -20,7 +47,7 @@ const CreateAccount = () => {
     return t(`register.${key}` as any);
   };
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<BaseUserData & { isManager: boolean; managerId?: string }>({
     firstname: "",
     lastname: "",
     email: "",
@@ -32,6 +59,8 @@ const CreateAccount = () => {
     country: "",
     password: "",
     confirmPassword: "",
+    isManager: true,
+    languages: [Language.French],
   });
 
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -57,11 +86,24 @@ const CreateAccount = () => {
     postalCode: form.postalCode.length > 0,
     country: form.country.length > 0,
     password: passwordStrength.strength >= 3,
+    // La validation de managerId est gérée séparément dans handleSubmit
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    
+    if (type === 'checkbox') {
+      setForm(prev => {
+        const newForm = { ...prev, [name]: checked };
+        // Si on devient manager, on supprime managerId
+        if (name === 'isManager' && checked) {
+          delete newForm.managerId;
+        }
+        return newForm;
+      });
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
 
     if (name === "password") {
       const { strength } = getPasswordStrength(value);
@@ -97,11 +139,25 @@ const CreateAccount = () => {
         return;
       }
 
-      const userData = {
-        ...form,
-        languages: [Language.French],
-        isManager: true,
-      };
+      // Validation spécifique selon le type d'utilisateur
+      if (!form.isManager && !form.managerId?.trim()) {
+        setFormError(t_register('managerIdRequired'));
+        return;
+      }
+
+      // Préparation des données selon le type d'utilisateur
+      const userData: UserData = form.isManager 
+        ? {
+            ...form,
+            isManager: true,
+            languages: [Language.French],
+          } as ManagerUserData
+        : {
+            ...form,
+            isManager: false,
+            managerId: form.managerId!,
+            languages: [Language.French],
+          } as NonManagerUserData;
 
       const response = await userService.createAccount(userData);
       
@@ -247,6 +303,35 @@ const CreateAccount = () => {
                   </div>
                 }
               />
+            </div>
+
+            {/* Manager Fields */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isManager"
+                  name="isManager"
+                  checked={form.isManager}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-maraudr-blue dark:text-maraudr-orange rounded border-gray-300 focus:ring-maraudr-blue dark:focus:ring-maraudr-orange"
+                />
+                <label htmlFor="isManager" className="text-sm font-medium text-maraudr-darkText dark:text-maraudr-lightText">
+                  {t_register('isManager')}
+                </label>
+              </div>
+
+              {!form.isManager && (
+                <Input
+                  placeholder={t_register('managerId')}
+                  name="managerId"
+                  value={form.managerId || ''}
+                  onChange={handleChange}
+                  required
+                  error={!form.isManager && !form.managerId?.trim() ? t_register('managerIdRequired') : undefined}
+                  rightIcon={!form.isManager && form.managerId?.trim() ? <FaCheckCircle className="text-green-500 text-lg" /> : undefined}
+                />
+              )}
             </div>
 
             {/* Address Fields */}
