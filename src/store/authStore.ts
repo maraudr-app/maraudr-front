@@ -33,6 +33,7 @@ interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  fetchUser: () => Promise<void>;  // Nouvelle fonction
 }
 
 // Création du store avec persistance
@@ -81,15 +82,56 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: () => {
+        // Effacer le token et les données d'authentification
         authService.logout();
+        
+        // Effacer tous les stores du localStorage
+        localStorage.removeItem('auth-storage');  // Store d'authentification
+        localStorage.removeItem('asso-storage');  // Store des associations
+        localStorage.removeItem('token');         // Token JWT
+        localStorage.removeItem('user');          // Données utilisateur
+        localStorage.removeItem('rememberMeEmail'); // Email mémorisé
+        
+        // Réinitialiser le state
         set({ 
           isAuthenticated: false,
           user: null
         });
+      },
+
+      // Nouvelle fonction pour récupérer les données utilisateur
+      fetchUser: async () => {
+        try {
+          const currentUser = useAuthStore.getState().user;
+          if (!currentUser || !currentUser.sub) {
+            console.error('No user ID found in store');
+            return;
+          }
+
+          const userData = await authService.getUserById(currentUser.sub);
+          
+          // Mettre à jour le state avec les nouvelles données
+          set({
+            user: {
+              ...currentUser,
+              firstName: userData.firstname,
+              lastName: userData.lastname,
+              // On garde l'avatar existant ou on en crée un nouveau
+              avatar: currentUser.avatar || `https://ui-avatars.com/api/?name=${userData.firstname}+${userData.lastname}&background=random`
+            }
+          });
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // En cas d'erreur, on ne modifie pas le state
+        }
       }
     }),
     {
-      name: 'auth-storage', // nom utilisé pour le localStorage
+      name: 'auth-storage',
+      partialize: (state) => ({
+        isAuthenticated: state.isAuthenticated,
+        user: state.user
+      })
     }
   )
 ); 

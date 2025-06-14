@@ -14,6 +14,7 @@ import {
 import { FiCalendar } from "react-icons/fi";
 import {ArrowRightOnRectangleIcon} from "@heroicons/react/20/solid";
 import { CiMap } from "react-icons/ci";
+import { useAssoStore } from '../../../store/assoStore';
 
 interface SidebarItemProps {
   to: string;
@@ -43,14 +44,13 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, is
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const { pathname } = useLocation();
   const { t } = useTranslation();
-
+  const { sidebarCollapsed, setSidebarCollapsed } = useAssoStore();
 
   const toggleSidebar = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
+    const newState = !sidebarCollapsed;
+    setSidebarCollapsed(newState);
     if (onToggle) {
       onToggle(newState);
     }
@@ -124,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   return (
     <div
       className={`fixed top-0 left-0 h-screen bg-maraudr-lightBg dark:bg-maraudr-darkBg shadow-md transition-all duration-300 z-[60] flex flex-col justify-between font-body ${
-        isCollapsed ? 'w-14' : 'w-48'
+        sidebarCollapsed ? 'w-14' : 'w-48'
       }`}
       style={{
       backgroundColor:'#104d77',
@@ -136,9 +136,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
           <button
             onClick={toggleSidebar}
             className="p-1 rounded-full bg-maraudr-blue/10 dark:bg-maraudr-orange/10 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange"
-            aria-label={isCollapsed ? t('sidebar.expand', 'Expand') : t('sidebar.collapse', 'Collapse')}
+            aria-label={sidebarCollapsed ? t('sidebar.expand', 'Expand') : t('sidebar.collapse', 'Collapse')}
           >
-            {isCollapsed ? (
+            {sidebarCollapsed ? (
               <ChevronRightIcon className="w-4 h-4" />
             ) : (
               <ChevronLeftIcon className="w-4 h-4" />
@@ -154,7 +154,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
                 icon={item.icon}
                 label={item.label}
                 isActive={checkIsActive(item.to)}
-                isCollapsed={isCollapsed}
+                isCollapsed={sidebarCollapsed}
               />
             </div>
           ))}
@@ -169,7 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
               icon={item.icon}
               label={item.label}
               isActive={checkIsActive(item.to)}
-              isCollapsed={isCollapsed}
+              isCollapsed={sidebarCollapsed}
             />
           </div>
         ))}

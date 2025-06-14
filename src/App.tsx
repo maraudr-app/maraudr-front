@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import MaraudrApp from "./pages/MaraudrApp.tsx";
-import Stock from "./pages/Stock/Stock.tsx";
 import Profile from "./pages/Profile/Profile.tsx";
 import Plan from "./pages/plan/plan.tsx";
 import Setting from "./pages/setting/setting.tsx";
@@ -19,6 +18,7 @@ import CreateAccount from './pages/Register/createAccount.tsx';
 import CreateAsso from './pages/Association/CreateAsso.tsx';
 import { Toaster } from 'react-hot-toast';
 import AssoInformation from "./pages/Association/AssoInformation.tsx";
+import { Stock } from './pages/Stock/Stock.tsx';
 
 
 // Composant pour les routes protégées

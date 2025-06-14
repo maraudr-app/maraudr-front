@@ -76,5 +76,47 @@
   "languages": {
     "fr": "Français",
     "en": "Anglais"
+  },
+  "stock": {
+    "title": "Stock",
+    "addItem": "Ajouter un item",
+    "history": "Historique",
+    "createStock": "Créer un stock",
+    "filters": {
+      "category": "Catégorie",
+      "name": "Nom",
+      "search": "Rechercher par nom...",
+      "allCategories": "Toutes les catégories",
+      "apply": "Filtrer"
+    },
+    "item": {
+      "name": "Nom",
+      "description": "Description",
+      "barcode": "Code-barres",
+      "category": "Catégorie",
+      "quantity": "Quantité",
+      "entryDate": "Date d'entrée",
+      "delete": "Supprimer",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet item ?"
+    },
+    "history": {
+      "title": "Historique du stock",
+      "noHistory": "Aucun historique disponible",
+      "date": "Date",
+      "item": "Item",
+      "category": "Catégorie",
+      "quantity": "Quantité"
+    },
+    "errors": {
+      "loadItems": "Erreur lors du chargement des items",
+      "deleteItem": "Erreur lors de la suppression de l'item",
+      "createStock": "Erreur lors de la création du stock",
+      "checkStock": "Erreur lors de la vérification du stock",
+      "noAssociation": "Aucune association sélectionnée"
+    },
+    "success": {
+      "itemAdded": "Item ajouté avec succès !",
+      "itemDeleted": "Item supprimé avec succès"
+    }
   }
 } 

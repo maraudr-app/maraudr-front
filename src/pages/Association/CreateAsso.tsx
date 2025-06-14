@@ -7,6 +7,7 @@ import { validateSiret } from '../../utils/siretValidation';
 import { toast } from 'react-hot-toast';
 import { assoService } from '../../services/assoService';
 import { useAuthStore } from '../../store/authStore';
+import { useAssoStore } from '../../store/assoStore';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const CreateAsso = () => {
@@ -14,6 +15,7 @@ const CreateAsso = () => {
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { reloadAllData } = useAssoStore();
 
   const handleSiretChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 14);
@@ -40,8 +42,14 @@ const CreateAsso = () => {
       if (!user || !user.sub) {
         throw new Error('User not authenticated or user ID not found.');
       }
+      
+      // Créer l'association
       const response = await assoService.createAssociation(siret, user.sub);
       toast.success('Association créée avec succès !');
+      
+      // Recharger toutes les données (user et associations)
+      await reloadAllData();
+      
       navigate('/maraudApp/dashboard');
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || 'Une erreur est survenue lors de la création de l\'association';

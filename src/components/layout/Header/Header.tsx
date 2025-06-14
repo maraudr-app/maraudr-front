@@ -7,7 +7,7 @@ import { ThemeToggle } from '../../common/button/ThemeToggle';
 import { LanguageSwitcher } from '../../../i18n/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../../store/authStore';
-import { assoService } from '../../../services/assoService';
+import { useAssoStore } from '../../../store/assoStore';
 import Button from '../../common/button/button';
 
 interface NavLink {
@@ -16,19 +16,11 @@ interface NavLink {
     translationKey: string;
 }
 
-interface Association {
-    id: string;
-    name: string;
-    logo?: string;
-}
-
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [showCreateAccount, setShowCreateAccount] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showAssociationsMenu, setShowAssociationsMenu] = useState(false);
-    const [associations, setAssociations] = useState<Association[]>([]);
-    const [selectedAssociation, setSelectedAssociation] = useState<Association | null>(null);
     const { t } = useTranslation(['common']);
     const location = useLocation();
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -36,65 +28,17 @@ const Header = () => {
     const logout = useAuthStore(state => state.logout);
     const isHomePage = location.pathname === '/';
     const isLoginPage = location.pathname === '/login';
+    const sidebarCollapsed = useAssoStore(state => state.sidebarCollapsed);
+
+    // Utiliser le store d'associations
+    const { associations, selectedAssociation, fetchUserAssociations, setSelectedAssociation, checkAndReloadIfNeeded } = useAssoStore();
 
     useEffect(() => {
         if (isAuthenticated && user) {
-            fetchUserAssociations();
+            // Au lieu de fetchUserAssociations, on utilise checkAndReloadIfNeeded
+            checkAndReloadIfNeeded();
         }
-    }, [isAuthenticated, user]);
-
-    const fetchUserAssociations = async () => {
-        try {
-            const userAssociations = await assoService.getCurrentUserAssociation();
-            console.log('User Associations UUIDs:', userAssociations);
-            
-            if (!userAssociations || userAssociations.length === 0) {
-                console.log('No associations found for user');
-                setAssociations([]);
-                setSelectedAssociation(null);
-                return;
-            }
-
-            // Récupérer les informations complètes pour chaque association
-            const associationsWithDetails = await Promise.all(
-                userAssociations.map(async (assoId: string) => {
-                    console.log('Fetching details for association:', assoId);
-                    const assoDetails = await assoService.getAssociation(assoId);
-                    console.log('Association details received:', assoDetails);
-                    
-                    // Vérifier la structure des données
-                    if (!assoDetails || !assoDetails.id || !assoDetails.name) {
-                        console.error('Invalid association data structure:', assoDetails);
-                        return null;
-                    }
-                    
-                    return {
-                        id: assoDetails.id,
-                        name: assoDetails.name,
-                        logo: assoDetails.logo
-                    };
-                })
-            );
-
-            // Filtrer les associations nulles
-            const validAssociations = associationsWithDetails.filter((asso): asso is Association => asso !== null);
-            console.log('Valid associations:', validAssociations);
-
-            setAssociations(validAssociations);
-            
-            if (validAssociations.length > 0) {
-                console.log('Setting selected association to:', validAssociations[0]);
-                setSelectedAssociation(validAssociations[0]);
-            } else {
-                console.log('No valid associations to set as selected');
-                setSelectedAssociation(null);
-            }
-        } catch (error) {
-            console.error('Error fetching user associations:', error);
-            setAssociations([]);
-            setSelectedAssociation(null);
-        }
-    };
+    }, [isAuthenticated, user, checkAndReloadIfNeeded]);
 
     const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
         if (!firstName || !lastName) return '';
@@ -103,7 +47,6 @@ const Header = () => {
 
     const getAssociationInitials = (name: string | undefined) => {
         if (!name) return '';
-        // Prendre les premières lettres de chaque mot, maximum 3 mots
         const words = name.split(' ').filter(Boolean);
         if (words.length === 0) return '';
         
@@ -174,7 +117,7 @@ const Header = () => {
 
     return (
         <header className="fixed top-0 left-0 w-full bg-maraudr-lightBg dark:bg-maraudr-darkBg z-50 transition-colors font-sans" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
-            <div className="max-w-7xl mx-auto px-4">
+            <div className={`transition-all duration-300 ${sidebarCollapsed ? 'ml-14' : 'ml-48'} p-2`}>
                 <div className="flex justify-between items-center h-16" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                     {/* Logo et Associations Dropdown */}
                     <div className="flex items-center space-x-4" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
@@ -214,7 +157,7 @@ const Header = () => {
                                                         : 'text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold'
                                                 }`}
                                             >
-                                                <div className="h-9 w-9 rounded-full border  flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-bold text-xs">
+                                                <div className="h-9 w-9 rounded-full border flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-bold text-xs">
                                                     {getAssociationInitials(association.name)}
                                                 </div>
                                                 <span>{association.name.toLowerCase()}</span>
