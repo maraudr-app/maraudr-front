@@ -34,11 +34,27 @@ const Header = () => {
     const { associations, selectedAssociation, fetchUserAssociations, setSelectedAssociation, checkAndReloadIfNeeded } = useAssoStore();
 
     useEffect(() => {
-        if (isAuthenticated && user) {
-            // Au lieu de fetchUserAssociations, on utilise checkAndReloadIfNeeded
-            checkAndReloadIfNeeded();
-        }
-    }, [isAuthenticated, user, checkAndReloadIfNeeded]);
+        let isMounted = true;
+        
+        const checkData = async () => {
+            if (isAuthenticated && user && isMounted) {
+                const state = useAssoStore.getState();
+                const now = Date.now();
+                const MAX_CACHE_TIME = 5 * 60 * 1000; // 5 minutes
+
+                // Ne recharger que si les données sont périmées ou manquantes
+                if (!state.lastFetchTime || (now - state.lastFetchTime > MAX_CACHE_TIME)) {
+                    await checkAndReloadIfNeeded();
+                }
+            }
+        };
+
+        checkData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isAuthenticated, user]);
 
     const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
         if (!firstName || !lastName) return '';

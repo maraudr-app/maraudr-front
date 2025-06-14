@@ -14,6 +14,7 @@ interface AssoState {
     selectedAssociation: Association | null;
     sidebarCollapsed: boolean;
     lastFetchTime: number | null;  // Pour suivre quand les données ont été mises à jour
+    isLoading: boolean;  // Nouveau drapeau pour suivre l'état de chargement
     
     // Actions
     setAssociations: (associations: Association[]) => void;
@@ -36,6 +37,7 @@ export const useAssoStore = create<AssoState>()(
             selectedAssociation: null,
             sidebarCollapsed: false,
             lastFetchTime: null,
+            isLoading: false,  // Initialiser le drapeau de chargement
 
             setAssociations: (associations) => set({ 
                 associations,
@@ -47,14 +49,20 @@ export const useAssoStore = create<AssoState>()(
             setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
             
             fetchUserAssociations: async () => {
+                const state = get();
+                if (state.isLoading) return;
+
+                set({ isLoading: true });
                 try {
                     const userAssociations = await assoService.getCurrentUserAssociation();
+                    console.log('User associations:', userAssociations);
                     
                     if (!userAssociations || userAssociations.length === 0) {
                         set({ 
                             associations: [], 
                             selectedAssociation: null,
-                            lastFetchTime: Date.now()
+                            lastFetchTime: Date.now(),
+                            isLoading: false
                         });
                         return;
                     }
@@ -62,39 +70,50 @@ export const useAssoStore = create<AssoState>()(
                     // Récupérer les informations complètes pour chaque association
                     const associationsWithDetails = await Promise.all(
                         userAssociations.map(async (assoId: string) => {
-                            const assoDetails = await assoService.getAssociation(assoId);
-                            
-                            if (!assoDetails || !assoDetails.id || !assoDetails.name) {
+                            try {
+                                const assoDetails = await assoService.getAssociation(assoId);
+                                console.log('Association details for', assoId, ':', assoDetails);
+                                
+                                if (!assoDetails || !assoDetails.id || !assoDetails.name) {
+                                    console.warn('Invalid association details for', assoId);
+                                    return null;
+                                }
+                                
+                                return {
+                                    id: assoDetails.id,
+                                    name: assoDetails.name,
+                                    logo: assoDetails.logo
+                                };
+                            } catch (error) {
+                                console.error('Error fetching details for association', assoId, ':', error);
                                 return null;
                             }
-                            
-                            return {
-                                id: assoDetails.id,
-                                name: assoDetails.name,
-                                logo: assoDetails.logo
-                            };
                         })
                     );
 
                     // Filtrer les associations nulles
                     const validAssociations = associationsWithDetails.filter((asso): asso is Association => asso !== null);
+                    console.log('Valid associations:', validAssociations);
                     
+                    // Mettre à jour le state avec les associations valides
                     set({ 
                         associations: validAssociations,
-                        lastFetchTime: Date.now()
+                        lastFetchTime: Date.now(),
+                        isLoading: false
                     });
                     
-                    if (validAssociations.length > 0) {
+                    // Sélectionner la première association si aucune n'est sélectionnée
+                    if (validAssociations.length > 0 && !state.selectedAssociation) {
+                        console.log('Setting selected association to:', validAssociations[0]);
                         set({ selectedAssociation: validAssociations[0] });
-                    } else {
-                        set({ selectedAssociation: null });
                     }
                 } catch (error) {
                     console.error('Error fetching user associations:', error);
                     set({ 
                         associations: [], 
                         selectedAssociation: null,
-                        lastFetchTime: null
+                        lastFetchTime: null,
+                        isLoading: false
                     });
                 }
             },
@@ -102,65 +121,68 @@ export const useAssoStore = create<AssoState>()(
             clearAssociations: () => set({ 
                 associations: [], 
                 selectedAssociation: null,
-                lastFetchTime: null
+                lastFetchTime: null,
+                isLoading: false
             }),
 
             // Nouvelle fonction pour recharger toutes les données
             reloadAllData: async () => {
+                const state = get();
+                if (state.isLoading) return;
+
+                set({ isLoading: true });
                 try {
-                    // Recharger les données utilisateur
                     const authStore = useAuthStore.getState();
                     if (authStore.user) {
                         await authStore.fetchUser();
                     }
-
-                    // Recharger les associations
                     await get().fetchUserAssociations();
                 } catch (error) {
                     console.error('Error reloading all data:', error);
+                } finally {
+                    set({ isLoading: false });
                 }
             },
 
             // Vérifie si les données doivent être rechargées
             checkAndReloadIfNeeded: async () => {
                 const state = get();
-                const now = Date.now();
+                if (state.isLoading) return;
 
-                // Si pas de données ou données trop anciennes, on recharge
-                if (!state.lastFetchTime || (now - state.lastFetchTime > MAX_CACHE_TIME)) {
-                    console.log('Data is stale or missing, reloading...');
-                    await get().reloadAllData();
-                } else if (state.associations.length === 0) {
-                    // Si pas d'associations mais on a une dernière mise à jour, on recharge quand même
-                    console.log('No associations but we have a lastFetchTime, reloading...');
+                const now = Date.now();
+                // Toujours recharger si pas d'associations ou si les données sont périmées
+                const shouldReload = !state.lastFetchTime || 
+                                   (now - state.lastFetchTime > MAX_CACHE_TIME) || 
+                                   state.associations.length === 0;
+
+                if (shouldReload) {
+                    console.log('Reloading associations data...');
                     await get().fetchUserAssociations();
+                } else {
+                    console.log('Using cached associations data');
                 }
             },
 
             fetchAssociations: async () => {
                 const state = get();
-                const now = Date.now();
-                const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+                if (state.isLoading) return;
 
-                // Vérifier si les données sont périmées ou manquantes
-                if (!state.lastFetchTime || now - state.lastFetchTime > CACHE_DURATION) {
+                const now = Date.now();
+                const shouldFetch = !state.lastFetchTime || 
+                                  (now - state.lastFetchTime > MAX_CACHE_TIME) || 
+                                  (state.associations.length === 0 && state.lastFetchTime);
+
+                if (shouldFetch) {
+                    set({ isLoading: true });
                     try {
                         const associations = await assoService.getCurrentUserAssociation();
                         set({
                             associations,
-                            lastFetchTime: now
+                            lastFetchTime: now,
+                            isLoading: false
                         });
                     } catch (error) {
-                        throw error;
-                    }
-                } else if (state.associations.length === 0 && state.lastFetchTime) {
-                    try {
-                        const associations = await assoService.getCurrentUserAssociation();
-                        set({
-                            associations,
-                            lastFetchTime: now
-                        });
-                    } catch (error) {
+                        set({ isLoading: false });
                         throw error;
                     }
                 }

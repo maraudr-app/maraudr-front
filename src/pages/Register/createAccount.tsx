@@ -102,7 +102,7 @@ const CreateAccount = () => {
         return newForm;
       });
     } else {
-      setForm(prev => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
     }
 
     if (name === "password") {
@@ -153,10 +153,10 @@ const CreateAccount = () => {
             languages: [Language.French],
           } as ManagerUserData
         : {
-            ...form,
+        ...form,
             isManager: false,
             managerId: form.managerId!,
-            languages: [Language.French],
+        languages: [Language.French],
           } as NonManagerUserData;
 
       const response = await userService.createAccount(userData);
@@ -205,105 +205,105 @@ const CreateAccount = () => {
           <h1 className="text-3xl font-bold text-center mb-8">{t_register('title')}</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6 relative">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
                 placeholder={t_register('firstName')}
-                name="firstname"
-                value={form.firstname}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.firstname && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
+              name="firstname"
+              value={form.firstname}
+              onChange={handleChange}
+              required
+              rightIcon={isValid.firstname && <FaCheckCircle className="text-green-500 text-lg" />}
+            />
 
-              <Input
+            <Input
                 placeholder={t_register('lastName')}
-                name="lastname"
-                value={form.lastname}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.lastname && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
-            </div>
+              name="lastname"
+              value={form.lastname}
+              onChange={handleChange}
+              required
+              rightIcon={isValid.lastname && <FaCheckCircle className="text-green-500 text-lg" />}
+            />
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
                 placeholder={t_register('email')}
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.email && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              rightIcon={isValid.email && <FaCheckCircle className="text-green-500 text-lg" />}
+            />
 
-              <Input
+            <Input
                 placeholder={t_register('phone')}
-                name="phoneNumber"
-                type="tel"
-                value={form.phoneNumber}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.phoneNumber && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
-            </div>
+              name="phoneNumber"
+              type="tel"
+              value={form.phoneNumber}
+              onChange={handleChange}
+              required
+              rightIcon={isValid.phoneNumber && <FaCheckCircle className="text-green-500 text-lg" />}
+            />
+          </div>
 
-            {/* Password Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <Input
-                  placeholder={t_register('password')}
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                  isFocused={isPasswordFocused}
-                  setIsFocused={setIsPasswordFocused}
-                  error={passwordError}
-                  className={`${
-                    form.password === form.confirmPassword && !passwordError && !confirmPasswordError
-                      ? "border-green-500"
-                      : ""
-                  }`}
-                  rightIcon={
-                    <div onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <FaEyeSlash /> : <FaEye />}
-                    </div>
-                  }
-                />
-                {isPasswordFocused && form.password && (
-                  <div className="absolute right-0 top-14 z-10">
-                    <PasswordStrengthToast
-                      strength={passwordStrength.strength}
-                      label={passwordStrength.label}
-                      message={passwordStrength.message}
-                    />
-                  </div>
-                )}
-              </div>
-
+          {/* Password Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
               <Input
-                placeholder={t_register('confirmPassword')}
-                name="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                value={form.confirmPassword}
+                  placeholder={t_register('password')}
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
                 onChange={handleChange}
                 required
-                isFocused={isConfirmPasswordFocused}
-                setIsFocused={setIsConfirmPasswordFocused}
-                error={confirmPasswordError}
+                isFocused={isPasswordFocused}
+                setIsFocused={setIsPasswordFocused}
+                error={passwordError}
                 className={`${
                   form.password === form.confirmPassword && !passwordError && !confirmPasswordError
                     ? "border-green-500"
                     : ""
                 }`}
                 rightIcon={
-                  <div onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  <div onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </div>
                 }
               />
+              {isPasswordFocused && form.password && (
+                <div className="absolute right-0 top-14 z-10">
+                  <PasswordStrengthToast
+                    strength={passwordStrength.strength}
+                    label={passwordStrength.label}
+                    message={passwordStrength.message}
+                  />
+                </div>
+              )}
             </div>
+
+            <Input
+                placeholder={t_register('confirmPassword')}
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              value={form.confirmPassword}
+              onChange={handleChange}
+              required
+              isFocused={isConfirmPasswordFocused}
+              setIsFocused={setIsConfirmPasswordFocused}
+              error={confirmPasswordError}
+              className={`${
+                form.password === form.confirmPassword && !passwordError && !confirmPasswordError
+                  ? "border-green-500"
+                  : ""
+              }`}
+              rightIcon={
+                <div onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </div>
+              }
+            />
+          </div>
 
             {/* Manager Fields */}
             <div className="grid grid-cols-1 gap-4">
@@ -334,102 +334,102 @@ const CreateAccount = () => {
               )}
             </div>
 
-            {/* Address Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Input
-                placeholder={t_register('street')}
-                name="street"
-                value={form.street}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.street && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
-
-              <Input
-                placeholder={t_register('city')}
-                name="city"
-                value={form.city}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.city && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
-
-              <Input
-                placeholder={t_register('state')}
-                name="state"
-                value={form.state}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.state && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
-
-              <Input
-                placeholder={t_register('postalCode')}
-                name="postalCode"
-                value={form.postalCode}
-                onChange={handleChange}
-                required
-                rightIcon={isValid.postalCode && <FaCheckCircle className="text-green-500 text-lg" />}
-              />
-            </div>
-
+          {/* Address Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Input
-              placeholder={t_register('country')}
-              name="country"
-              value={form.country}
+                placeholder={t_register('street')}
+              name="street"
+              value={form.street}
               onChange={handleChange}
               required
-              rightIcon={isValid.country && <FaCheckCircle className="text-green-500 text-lg" />}
+              rightIcon={isValid.street && <FaCheckCircle className="text-green-500 text-lg" />}
             />
 
-            {/* Erreur globale */}
+            <Input
+                placeholder={t_register('city')}
+              name="city"
+              value={form.city}
+              onChange={handleChange}
+              required
+              rightIcon={isValid.city && <FaCheckCircle className="text-green-500 text-lg" />}
+            />
+
+            <Input
+                placeholder={t_register('state')}
+              name="state"
+              value={form.state}
+              onChange={handleChange}
+              required
+              rightIcon={isValid.state && <FaCheckCircle className="text-green-500 text-lg" />}
+            />
+
+            <Input
+                placeholder={t_register('postalCode')}
+              name="postalCode"
+              value={form.postalCode}
+              onChange={handleChange}
+              required
+              rightIcon={isValid.postalCode && <FaCheckCircle className="text-green-500 text-lg" />}
+            />
+          </div>
+
+          <Input
+              placeholder={t_register('country')}
+            name="country"
+            value={form.country}
+            onChange={handleChange}
+            required
+            rightIcon={isValid.country && <FaCheckCircle className="text-green-500 text-lg" />}
+          />
+
+          {/* Erreur globale */}
             {formError && <div className="text-red-500 text-sm text-center">{t_register('formError')}</div>}
 
-            {/* Terms */}
-            <div className="flex items-center">
-              <input
-                id="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-              />
-              <label htmlFor="terms" className="ml-2 text-sm text-gray-700">
+          {/* Terms */}
+          <div className="flex items-center">
+            <input
+              id="terms"
+              type="checkbox"
+              required
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+            />
+            <label htmlFor="terms" className="ml-2 text-sm text-gray-700">
                 {t_register('terms')}{" "}
                 <a href="#" className="underline">{t_register('termsLink')}</a>{" "}
                 {t_register('and')}{" "}
                 <a href="#" className="underline">{t_register('privacyLink')}</a>
-              </label>
-            </div>
+            </label>
+          </div>
 
-            {/* Submit */}
-            <div className="flex justify-between gap-4">
-              <Button
-                type="button"
-                className="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800"
-                onClick={() => navigate('/login')}
-              >
+          {/* Submit */}
+          <div className="flex justify-between gap-4">
+            <Button 
+              type="button" 
+              className="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800" 
+              onClick={() => navigate('/login')}
+            >
                 {t_register('cancel')}
-              </Button>
-              <Button
-                type="submit"
-                className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={isLoading}
-                isLoading={isLoading}
-              >
+            </Button>
+            <Button 
+              type="submit" 
+              className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white" 
+              disabled={isLoading} 
+              isLoading={isLoading}
+            >
                 {t_register('submit')}
-              </Button>
-            </div>
+            </Button>
+          </div>
 
-            {/* Already have account */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+          {/* Already have account */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
                 {t_register('alreadyHaveAccount')}{" "}
-                <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
                   {t_register('signIn')}
-                </Link>
-              </p>
-            </div>
-          </form>
+              </Link>
+            </p>
+          </div>
+        </form>
         </div>
 
         <div className="w-full md:w-2/5 flex flex-col items-center justify-center p-8 text-white text-center"

@@ -41,7 +41,7 @@ export const Stock = () => {
     useEffect(() => {
         const checkStock = async () => {
             if (!selectedAssociation) {
-                navigate('/associations');
+                setIsLoading(false);
                 return;
             }
 
@@ -176,7 +176,24 @@ export const Stock = () => {
     };
 
     if (!selectedAssociation) {
-        return null;
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
+                        Aucune association sélectionnée
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                        Veuillez sélectionner une association pour accéder à la gestion des stocks.
+                    </p>
+                    <button
+                        onClick={() => navigate('/associations')}
+                        className="px-4 py-2 bg-maraudr-blue text-white rounded-md hover:bg-maraudr-orange transition-colors"
+                    >
+                        Sélectionner une association
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -605,4 +622,4 @@ export const Stock = () => {
             </Dialog>
         </div>
     );
-}; 
+};

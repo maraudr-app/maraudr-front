@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-const API_URL = 'http://localhost:8082';
+const API_URL = 'http://localhost:8080';
 
 interface AssoResponse {
     id?: string;
@@ -71,8 +71,9 @@ export const assoService = {
             }
 
             console.log('Fetching association for user:', user.sub);
-            const response = await axios.get(`${API_URL}/association/membership?id=${user.sub}`, {
-                withCredentials: true, // Inclure les cookies
+            const response = await axios.get(`${API_URL}/association/membership`, {
+                params: { id: user.sub },
+                withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -82,5 +83,16 @@ export const assoService = {
             console.error('Error getting user association:', error);
             throw error;
         }
-    }
+    },
+    getUserAssociations: async (userId: string) => {
+        try {
+            const response = await axios.get(`${API_URL}/association/membership`, {
+                params: { id: userId },
+                withCredentials: true
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 };
