@@ -23,7 +23,7 @@ interface FilterState {
 
 export const Stock = () => {
     const navigate = useNavigate();
-    const { t } = useTranslation();
+  const { t } = useTranslation();
     const [items, setItems] = useState<StockItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filter, setFilter] = useState<FilterState>({
