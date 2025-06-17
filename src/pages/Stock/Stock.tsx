@@ -12,6 +12,7 @@ import { Select } from '../../components/common/select/select';
 import { Input } from '../../components/common/input/input';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 
 interface FilterState {
     category: string;
@@ -22,6 +23,7 @@ interface FilterState {
 
 export const Stock = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [items, setItems] = useState<StockItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filter, setFilter] = useState<FilterState>({
@@ -34,14 +36,22 @@ export const Stock = () => {
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingItem, setEditingItem] = useState<StockItem | null>(null);
-    const selectedAssociation = useAssoStore(state => state.selectedAssociation);
+    const { selectedAssociation, associations, setSelectedAssociation } = useAssoStore();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
 
     useEffect(() => {
         const checkStock = async () => {
+            // Si aucune association n'est sélectionnée mais qu'il y en a dans la liste, sélectionner la première
+            if (!selectedAssociation && associations.length > 0) {
+                setSelectedAssociation(associations[0]);
+                return;
+            }
+
+            // Si aucune association n'est disponible, afficher un message et rediriger vers la création
             if (!selectedAssociation) {
-                setIsLoading(false);
+                toast.error(t('stock.noAssociation', 'Vous n\'avez pas encore d\'association'));
+                navigate('/create-asso');
                 return;
             }
 
@@ -61,7 +71,7 @@ export const Stock = () => {
         };
 
         checkStock();
-    }, [selectedAssociation, navigate]);
+    }, [selectedAssociation, associations, navigate, setSelectedAssociation, t]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -176,27 +186,10 @@ export const Stock = () => {
     };
 
     if (!selectedAssociation) {
-        return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
-                        Aucune association sélectionnée
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                        Veuillez sélectionner une association pour accéder à la gestion des stocks.
-                    </p>
-                    <button
-                        onClick={() => navigate('/associations')}
-                        className="px-4 py-2 bg-maraudr-blue text-white rounded-md hover:bg-maraudr-orange transition-colors"
-                    >
-                        Sélectionner une association
-                    </button>
-                </div>
-            </div>
-        );
+        return null;
     }
 
-    return (
+  return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <StockNavbar onItemAdded={fetchItems} isAddButtonDisabled={true} />
 
@@ -220,7 +213,7 @@ export const Stock = () => {
                                 onChange={handleFilterChange}
                                 placeholder="Rechercher un item"
                             />
-                            <div className="w-full">
+    <div className="w-full">
                                 <Select
                                     name="category"
                                     value={filter.category}
@@ -265,7 +258,7 @@ export const Stock = () => {
                             >
                                 Filtrer
                             </Button>
-                        </div>
+                </div>
                     </form>
 
                     {/* Tableau */}
@@ -273,13 +266,13 @@ export const Stock = () => {
                         {isLoading ? (
                             <div className="flex justify-center items-center h-64">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maraudr-blue"></div>
-                            </div>
+              </div>
                         ) : items.length === 0 ? (
                             <div className="text-center p-8">
                                 <p className="text-gray-500 dark:text-gray-400">
                                     Aucun item trouvé dans le stock
-                                </p>
-                            </div>
+              </p>
+            </div>
                         ) : (
                             <>
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -314,32 +307,32 @@ export const Stock = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-maraudr-darkText dark:text-maraudr-lightText">
                                                         {item.name}
-                                                    </div>
+          </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {item.description || '-'}
-                                                    </div>
+      </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {item.category}
-                                                    </div>
+              </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {item.quantity}
-                                                    </div>
+              </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {new Date(item.entryDate).toLocaleDateString()}
-                                                    </div>
+              </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {item.barCode || '-'}
-                                                    </div>
+            </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex justify-end space-x-2">
@@ -351,7 +344,7 @@ export const Stock = () => {
                                                                 >
                                                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                                    </svg>
+              </svg>
                                                                 </Button>
                                                                 <Button
                                                                     onClick={() => setShowEditModal(false)}
@@ -359,7 +352,7 @@ export const Stock = () => {
                                                                 >
                                                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
+              </svg>
                                                                 </Button>
                                                             </>
                                                         ) : (
@@ -378,7 +371,7 @@ export const Stock = () => {
                                                                 </Button>
                                                             </>
                                                         )}
-                                                    </div>
+            </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -403,7 +396,7 @@ export const Stock = () => {
                                             >
                                                 Suivant
                                             </Button>
-                                        </div>
+              </div>
                                         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                             <div>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -413,7 +406,7 @@ export const Stock = () => {
                                                     </span>{' '}
                                                     sur <span className="font-medium">{items.length}</span> résultats
                                                 </p>
-                                            </div>
+            </div>
                                             <div>
                                                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
                                                     <Button
@@ -431,7 +424,7 @@ export const Stock = () => {
                                                             pageNumber === totalPages ||
                                                             (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
                                                         ) {
-                                                            return (
+                    return (
                                                                 <Button
                                                                     key={pageNumber}
                                                                     onClick={() => handlePageChange(pageNumber)}
@@ -461,13 +454,13 @@ export const Stock = () => {
                                                         &raquo;
                                                     </Button>
                                                 </nav>
-                                            </div>
-                                        </div>
-                                    </div>
+              </div>
+            </div>
+          </div>
                                 )}
                             </>
                         )}
-                    </div>
+            </div>
                 </div>
             </main>
 
@@ -492,14 +485,14 @@ export const Stock = () => {
                                 >
                                     <XMarkIcon className="h-6 w-6" />
                                 </button>
-                            </div>
+            </div>
 
                             <form onSubmit={(e) => {
                                 e.preventDefault();
                                 handleEditSubmit(editingItem);
                             }} className="space-y-5">
                                 <div className="space-y-4">
-                                    <div>
+                <div>
                                         <Input
                                             name="name"
                                             value={editingItem.name}
@@ -507,18 +500,18 @@ export const Stock = () => {
                                             required
                                             placeholder="Entrez le nom de l'item"
                                         />
-                                    </div>
+              </div>
 
-                                    <div>
+                <div>
                                         <Input
                                             name="description"
                                             value={editingItem.description || ''}
                                             onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
                                             placeholder="Entrez une description (optionnel)"
                                         />
-                                    </div>
+                </div>
 
-                                    <div>
+                <div>
                                         <Select
                                             name="category"
                                             value={editingItem.category}
@@ -532,7 +525,7 @@ export const Stock = () => {
                                                 </option>
                                             ))}
                                         </Select>
-                                    </div>
+              </div>
 
                                     <div>
                                         <Input
@@ -544,7 +537,7 @@ export const Stock = () => {
                                             min="0"
                                             placeholder="Entrez la quantité"
                                         />
-                                    </div>
+      </div>
 
                                     <div>
                                         <Input
@@ -553,8 +546,8 @@ export const Stock = () => {
                                             onChange={(e) => setEditingItem({...editingItem, barCode: e.target.value})}
                                             placeholder="Entrez le code-barres (optionnel)"
                                         />
-                                    </div>
-                                </div>
+            </div>
+          </div>
 
                                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <Button
@@ -570,10 +563,10 @@ export const Stock = () => {
                                     >
                                         Valider
                                     </Button>
-                                </div>
+                  </div>
                             </form>
-                        </div>
-                    </div>
+                  </div>
+                </div>
                 </Dialog>
             )}
 
@@ -596,8 +589,8 @@ export const Stock = () => {
                                 className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
                             >
                                 <XMarkIcon className="h-6 w-6" />
-                            </button>
-                        </div>
+                  </button>
+        </div>
 
                         <p className="text-gray-500 dark:text-gray-400">
                             Êtes-vous sûr de vouloir supprimer cet item ? Cette action est irréversible.
@@ -616,10 +609,10 @@ export const Stock = () => {
                             >
                                 Supprimer
                             </Button>
-                        </div>
-                    </div>
+            </div>
+          </div>
                 </div>
             </Dialog>
-        </div>
-    );
+    </div>
+  );
 };

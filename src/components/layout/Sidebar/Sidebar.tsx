@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,11 +10,15 @@ import {
   UserCircleIcon,
   InformationCircleIcon,
   UsersIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { FiCalendar } from "react-icons/fi";
 import {ArrowRightOnRectangleIcon} from "@heroicons/react/20/solid";
 import { CiMap } from "react-icons/ci";
 import { useAssoStore } from '../../../store/assoStore';
+import { useAuthStore } from '../../../store/authStore';
+import { assoService } from '../../../services/assoService';
 
 interface SidebarItemProps {
   to: string;
@@ -46,7 +50,51 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, is
 const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   const { pathname } = useLocation();
   const { t } = useTranslation();
-  const { sidebarCollapsed, setSidebarCollapsed } = useAssoStore();
+  const { sidebarCollapsed, setSidebarCollapsed, selectedAssociation } = useAssoStore();
+  const [associationDetails, setAssociationDetails] = useState<any>(null);
+  const user = useAuthStore((state: any) => state.user);
+  const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
+  
+  // Debug logs pour le rôle
+  console.log('Sidebar - User:', user);
+  console.log('Sidebar - User userType:', user?.userType);
+  console.log('Sidebar - Is manager?', user?.userType === 'Manager');
+  console.log('Sidebar - Full user object:', JSON.stringify(user, null, 2));
+
+  // Recharger les données utilisateur si elles sont incomplètes
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (isAuthenticated && user) {
+        // Si l'utilisateur n'a pas userType, recharger les données
+        if (!user.userType || !user.firstName || !user.lastName) {
+          console.log('Sidebar - User data incomplete, reloading...');
+          await useAuthStore.getState().fetchUser();
+        }
+      }
+    };
+    loadUserData();
+  }, [isAuthenticated, user]);
+
+  // Fonction pour vérifier si l'utilisateur est manager
+  const isManager = () => {
+    if (!user?.userType) return false;
+    return user.userType === 'Manager';
+  };
+
+  useEffect(() => {
+    const fetchAssociationDetails = async () => {
+      if (selectedAssociation?.id) {
+        try {
+          const details = await assoService.getAssociation(selectedAssociation.id);
+          setAssociationDetails(details);
+        } catch (error) {
+          console.error('Error fetching association details:', error);
+        }
+      }
+    };
+
+    fetchAssociationDetails();
+  }, [selectedAssociation?.id]);
 
   const toggleSidebar = () => {
     const newState = !sidebarCollapsed;
@@ -61,39 +109,50 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       to: '/maraudApp/dashboard',
       icon: <ChartBarIcon className="w-5 h-5" />,
       label: t('sidebar.dashboard', 'Dashboard'),
-      key: 'dashboard'
+      key: 'dashboard',
+      showForManager: true
     },
     {
       to: '/maraudApp/stock',
       icon: <CubeIcon className="w-5 h-5" />,
       label: t('sidebar.stock', 'Stock'),
-      key: 'stock'
+      key: 'stock',
+      showForManager: true
     },
     {
       to: '/maraudApp/team',
       icon: <UsersIcon className="w-5 h-5" />,
       label: t('sidebar.team', 'Équipe'),
-      key: 'team'
+      key: 'team',
+      showForManager: false
     },
     {
       to: '/maraudApp/map',
       icon: <CiMap className="w-5 h-5" />,
       label: t('sidebar.map', 'Carte'),
-      key: 'map'
+      key: 'map',
+      showForManager: false
     },
     {
       to: '/maraudApp/about',
       icon: <InformationCircleIcon className="w-5 h-5" />,
       label: t('sidebar.about', 'À propos'),
-      key: 'about'
+      key: 'about',
+      showForManager: false
     },
     {
       to: '/maraudApp/planing',
       icon: <FiCalendar className="w-5 h-5" />,
       label: t('sidebar.about', 'Planing'),
-      key: 'planing'
+      key: 'planing',
+      showForManager: false
     }
   ];
+
+  // Filtrer les éléments selon le rôle
+  const filteredNavigationItems = navigationItems.filter(item => 
+    !item.showForManager || isManager()
+  );
 
   const bottomItems = [
     { 
@@ -131,48 +190,58 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       color:'#ffffff'
       }}
     >
-      <div>
-        <div className="flex justify-end p-2">
-          <button
-            onClick={toggleSidebar}
-            className="p-1 rounded-full bg-maraudr-blue/10 dark:bg-maraudr-orange/10 text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange"
-            aria-label={sidebarCollapsed ? t('sidebar.expand', 'Expand') : t('sidebar.collapse', 'Collapse')}
-          >
-            {sidebarCollapsed ? (
-              <ChevronRightIcon className="w-4 h-4" />
-            ) : (
-              <ChevronLeftIcon className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-
-        <nav className="px-2 mt-2">
-          {navigationItems.map((item) => (
-            <div key={item.key} className="mb-2">
-              <SidebarItem
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                isActive={checkIsActive(item.to)}
-                isCollapsed={sidebarCollapsed}
-              />
-            </div>
-          ))}
-        </nav>
+      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        {!sidebarCollapsed && (
+          <h1 className="text-xl font-bold text-white">maraudr</h1>
+        )}
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-md hover:bg-gray-700 transition-colors"
+        >
+          {sidebarCollapsed ? (
+            <Bars3Icon className="w-5 h-5 text-white" />
+          ) : (
+            <XMarkIcon className="w-5 h-5 text-white" />
+          )}
+        </button>
       </div>
 
-      <div className="mb-8 px-2">
-        {bottomItems.map((item) => (
-          <div key={item.key} className="mb-2">
-            <SidebarItem
-              to={item.to}
-              icon={item.icon}
-              label={item.label}
-              isActive={checkIsActive(item.to)}
-              isCollapsed={sidebarCollapsed}
-            />
-          </div>
-        ))}
+      <nav className="flex-1 py-4">
+        <ul className="space-y-2">
+          {filteredNavigationItems.map((item) => (
+            <li key={item.key}>
+              <Link
+                to={item.to}
+                className={`flex items-center px-4 py-3 text-white hover:bg-gray-700 transition-colors ${
+                  checkIsActive(item.to) ? 'bg-gray-700' : ''
+                }`}
+              >
+                {item.icon}
+                {!sidebarCollapsed && (
+                  <span className="ml-3">{item.label}</span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="border-t border-gray-700 p-4">
+        <ul className="space-y-2">
+          {bottomItems.map((item) => (
+            <li key={item.key}>
+              <Link
+                to={item.to}
+                className="flex items-center px-4 py-3 text-white hover:bg-gray-700 transition-colors"
+              >
+                {item.icon}
+                {!sidebarCollapsed && (
+                  <span className="ml-3">{item.label}</span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

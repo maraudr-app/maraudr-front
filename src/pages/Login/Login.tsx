@@ -42,49 +42,36 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
-    // Pour la simulation, on accepte tout email/mot de passe
-    try {
-      setIsLoading(true);
-      
-      // Validation simple
-      if (!email || !password) {
-        setError('Veuillez remplir tous les champs');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Appeler la fonction login du store
-      const success = await login(email, password);
+    setError('');
+    setIsLoading(true);
 
-      console.log(success);
-      console.log(email);
-      console.log(password);
-      console.log('ou est lerrereur ?');
-      
+    try {
+      const success = await login(email, password);
       if (success) {
-        if (rememberMe) {
-          localStorage.setItem('rememberMeEmail', email);
-        } else {
-          localStorage.removeItem('rememberMeEmail');
+        const user = useAuthStore.getState().user;
+        if (!user || !user.sub) {
+          throw new Error('User not authenticated or user ID not found.');
         }
-        // Récupérer les associations de l'utilisateur
-        const userAssociations = await assoService.getCurrentUserAssociation();
-        console.log("userAssociations:", userAssociations);
-        if (userAssociations.length === 0) {
-          // Redirection vers la page de création d'association si aucune association n'est trouvée
-          navigate('/create-asso');
+
+        // Vérifier l'appartenance à une association
+        const memberships = await assoService.checkMembership(user.sub);
+        
+        if (memberships.length === 0) {
+          // Si l'utilisateur n'appartient à aucune association, vérifier son rôle
+          if (user.userType === 'Manager') {
+            // Si c'est un manager, rediriger vers la création d'association
+            navigate('/create-asso');
+          } else {
+            // Si ce n'est pas un manager, rediriger vers le dashboard
+            navigate('/maraudApp/dashboard');
+          }
         } else {
-          // Redirection vers le dashboard si au moins une association est trouvée
+          // Si l'utilisateur appartient à au moins une association, rediriger vers le dashboard
           navigate('/maraudApp/dashboard');
         }
-      } else {
-        setError('Échec de la connexion. Veuillez réessayer.');
       }
-    } catch (err) {
-      setError('Échec de la connexion. Veuillez réessayer.');
-      console.error(err);
+    } catch (error) {
+      setError('Identifiants invalides');
     } finally {
       setIsLoading(false);
     }

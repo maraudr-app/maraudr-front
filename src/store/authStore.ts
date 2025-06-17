@@ -8,6 +8,7 @@ interface DecodedToken {
   email: string;
   firstName: string;
   lastName: string;
+  userType: string;
   exp: number;
   iat: number;
   nbf: number;
@@ -22,6 +23,7 @@ type User = {
   sub: string;  // sub est l'UUID de l'utilisateur
   firstName?: string;
   lastName?: string;
+  userType?: string;
   avatar?: string;
 };
 
@@ -33,7 +35,7 @@ interface AuthState {
   
   // Actions
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   fetchUser: () => Promise<void>;  // Nouvelle fonction
   setToken: (token: string | null) => void;
 }
@@ -55,6 +57,9 @@ export const useAuthStore = create<AuthState>()(
             // Décoder le token immédiatement
             const decodedToken = jwtDecode<DecodedToken>(response.accessToken);
             console.log('Decoded token in store:', decodedToken);
+            console.log('User role from JWT:', decodedToken.userType);
+            console.log('Role type:', typeof decodedToken.userType);
+            console.log('decoded',decodedToken)
             
             if (decodedToken) {
               const userData: User = {
@@ -62,8 +67,12 @@ export const useAuthStore = create<AuthState>()(
                 sub: decodedToken.sub,  // sub est l'UUID de l'utilisateur
                 firstName: decodedToken.firstName,
                 lastName: decodedToken.lastName,
+                userType: decodedToken.userType,
                 avatar: `https://ui-avatars.com/api/?name=${decodedToken.firstName}+${decodedToken.lastName}&background=random`
               };
+              
+              console.log('User data created:', userData);
+              console.log('Is manager?', userData.userType === 'Manager');
               
               // Sauvegarder le token
               authService.setToken(response.accessToken);
@@ -85,16 +94,14 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       
-      logout: () => {
-        // Effacer le token et les données d'authentification
-        authService.logout();
+      logout: async () => {
+        // Appeler le service de logout
+        await authService.logout();
         
-        // Effacer tous les stores du localStorage
-        localStorage.removeItem('auth-storage');  // Store d'authentification
-        localStorage.removeItem('asso-storage');  // Store des associations
-        localStorage.removeItem('token');         // Token JWT
-        localStorage.removeItem('user');          // Données utilisateur
-        localStorage.removeItem('rememberMeEmail'); // Email mémorisé
+        // Supprimer spécifiquement les stores Zustand
+        localStorage.removeItem('asso-storage');
+        localStorage.removeItem('auth-storage');
+        localStorage.clear();
         
         // Réinitialiser le state
         set({ 
@@ -121,6 +128,7 @@ export const useAuthStore = create<AuthState>()(
               ...currentUser,
               firstName: userData.firstname,
               lastName: userData.lastname,
+              userType: userData.userType,
               // On garde l'avatar existant ou on en crée un nouveau
               avatar: currentUser.avatar || `https://ui-avatars.com/api/?name=${userData.firstname}+${userData.lastname}&background=random`
             }
@@ -133,6 +141,17 @@ export const useAuthStore = create<AuthState>()(
 
       setToken: (token: string | null) => {
         set({ token });
+        
+        // Debug: décoder le token actuel
+        if (token) {
+          try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            console.log('Current token decoded:', decoded);
+            console.log('Current token userType:', decoded.userType);
+          } catch (error) {
+            console.error('Error decoding current token:', error);
+          }
+        }
       }
     }),
     {

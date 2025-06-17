@@ -9,7 +9,7 @@ interface AssoResponse {
 }
 
 export const assoService = {
-    createAssociation: async (name: string, logo?: string): Promise<string> => {
+    createAssociation: async (siret: string): Promise<string> => {
         const token = useAuthStore.getState().token;
         if (!token) {
             throw new Error('No authentication token available');
@@ -17,16 +17,14 @@ export const assoService = {
 
         const url = `${API_URL}/association`;
         try {
-            const response = await axios.post(url, {
-                name,
-                logo
-            }, {
+            const response = await axios.post(url, null, {
+                params: { siret },
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
                 withCredentials: true
             });
-
+            
             return response.data.id;
         } catch (error) {
             throw error;
@@ -34,20 +32,61 @@ export const assoService = {
     },
 
     getAssociation: async (id: string) => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        console.log('Calling getAssociation API with ID:', id);
         try {
             const response = await axios.get(`${API_URL}/association`, {
                 params: { id },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true
+            });
+            console.log('getAssociation response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Error getting association:', error);
+            throw error;
+        }
+    },
+
+    getAssociationById: async (id: string) => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        try {
+            const response = await axios.get(`${API_URL}/association/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 withCredentials: true
             });
             return response.data;
         } catch (error) {
+            console.error('Error getting association by ID:', error);
             throw error;
         }
     },
 
     updateAssociation: async (id: string, data: any) => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
         try {
-            const response = await axios.put(`${API_URL}/association/${id}`, data);
+            const response = await axios.put(`${API_URL}/association/${id}`, data, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true
+            });
             return response.data;
         } catch (error) {
             throw error;
@@ -55,39 +94,16 @@ export const assoService = {
     },
 
     deleteAssociation: async (id: string) => {
-        try {
-            const response = await axios.delete(`${API_URL}/association/${id}`);
-            return response.data;
-        } catch (error) {
-            throw error;
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
         }
-    },
 
-    getCurrentUserAssociation: async () => {
         try {
-            const user = useAuthStore.getState().user;
-            if (!user || !user.sub) {
-                throw new Error('No user ID found in store');
-            }
-
-            console.log('Fetching association for user:', user.sub);
-            const response = await axios.get(`${API_URL}/association/membership`, {
-                params: { id: user.sub },
-                withCredentials: true,
+            const response = await axios.delete(`${API_URL}/association/${id}`, {
                 headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Error getting user association:', error);
-            throw error;
-        }
-    },
-    getUserAssociations: async (userId: string) => {
-        try {
-            const response = await axios.get(`${API_URL}/association/membership`, {
-                params: { id: userId },
+                    'Authorization': `Bearer ${token}`
+                },
                 withCredentials: true
             });
             return response.data;
@@ -95,4 +111,25 @@ export const assoService = {
             throw error;
         }
     },
+
+    checkMembership: async (userId: string): Promise<string[]> => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        try {
+            const response = await axios.get(`${API_URL}/association/membership`, {
+                params: { id: userId },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error checking membership:', error);
+            return [];
+        }
+    }
 };

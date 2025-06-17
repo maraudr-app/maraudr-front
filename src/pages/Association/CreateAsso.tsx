@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '../../components/common/input/input';
 import { Button } from '../../components/common/button/button';
@@ -15,7 +15,37 @@ const CreateAsso = () => {
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { reloadAllData } = useAssoStore();
+  const user = useAuthStore(state => state.user);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+
+  // Vérifier si l'utilisateur est manager, sinon rediriger
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Si l'utilisateur n'a pas userType, recharger les données
+      if (!user.userType || !user.firstName || !user.lastName) {
+        console.log('User data incomplete, reloading...');
+        useAuthStore.getState().fetchUser().then(() => {
+          const updatedUser = useAuthStore.getState().user;
+          if (updatedUser && updatedUser.userType !== 'Manager') {
+            console.log('User is not manager, redirecting to dashboard');
+            toast.error('Vous n\'avez pas les permissions pour créer une association');
+            navigate('/maraudApp/dashboard');
+          }
+        });
+      } else if (user.userType !== 'Manager') {
+        console.log('User is not manager, redirecting to dashboard');
+        toast.error('Vous n\'avez pas les permissions pour créer une association');
+        navigate('/maraudApp/dashboard');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // Si l'utilisateur n'est pas connecté, rediriger vers login
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSiretChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 14);
@@ -43,12 +73,9 @@ const CreateAsso = () => {
         throw new Error('User not authenticated or user ID not found.');
       }
       
-      // Créer l'association
-      const response = await assoService.createAssociation(siret, user.sub);
+      // Créer l'association avec uniquement le SIRET
+      const response = await assoService.createAssociation(siret);
       toast.success('Association créée avec succès !');
-      
-      // Recharger toutes les données (user et associations)
-      await reloadAllData();
       
       navigate('/maraudApp/dashboard');
     } catch (error: any) {

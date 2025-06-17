@@ -8,6 +8,7 @@ import { LanguageSwitcher } from '../../../i18n/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../../store/authStore';
 import { useAssoStore } from '../../../store/assoStore';
+import { assoService } from '../../../services/assoService';
 import Button from '../../common/button/button';
 
 interface NavLink {
@@ -21,6 +22,7 @@ const Header = () => {
     const [showCreateAccount, setShowCreateAccount] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showAssociationsMenu, setShowAssociationsMenu] = useState(false);
+    const [associationDetails, setAssociationDetails] = useState<any>(null);
     const { t } = useTranslation(['common']);
     const location = useLocation();
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -30,31 +32,54 @@ const Header = () => {
     const isLoginPage = location.pathname === '/login';
     const sidebarCollapsed = useAssoStore(state => state.sidebarCollapsed);
 
+    // Debug logs pour le rôle
+    console.log('Header - User:', user);
+    console.log('Header - User userType:', user?.userType);
+    console.log('Header - Is manager?', user?.userType === 'Manager');
+    console.log('Header - Is authenticated:', isAuthenticated);
+    console.log('Header - Full user object:', JSON.stringify(user, null, 2));
+
+    // Fonction pour vérifier si l'utilisateur est manager
+    const isManager = () => {
+        if (!user?.userType) return false;
+        return user.userType === 'Manager';
+    };
+
     // Utiliser le store d'associations
-    const { associations, selectedAssociation, fetchUserAssociations, setSelectedAssociation, checkAndReloadIfNeeded } = useAssoStore();
+    const { associations, selectedAssociation, fetchUserAssociations, setSelectedAssociation } = useAssoStore();
 
+    // Recharger les données utilisateur si elles sont incomplètes
     useEffect(() => {
-        let isMounted = true;
-        
-        const checkData = async () => {
-            if (isAuthenticated && user && isMounted) {
-                const state = useAssoStore.getState();
-                const now = Date.now();
-                const MAX_CACHE_TIME = 5 * 60 * 1000; // 5 minutes
+        const loadData = async () => {
+            if (isAuthenticated && user) {
+                // Si l'utilisateur n'a pas userType, recharger les données
+                if (!user.userType || !user.firstName || !user.lastName) {
+                    console.log('User data incomplete, reloading...');
+                    await useAuthStore.getState().fetchUser();
+                }
+                await fetchUserAssociations();
+            }
+        };
+        loadData();
+    }, [isAuthenticated, user]);
 
-                // Ne recharger que si les données sont périmées ou manquantes
-                if (!state.lastFetchTime || (now - state.lastFetchTime > MAX_CACHE_TIME)) {
-                    await checkAndReloadIfNeeded();
+    // Effet pour charger les détails de l'association sélectionnée
+    useEffect(() => {
+        const fetchAssociationDetails = async () => {
+            if (selectedAssociation?.id && isAuthenticated) {
+                console.log('Selected Association ID:', selectedAssociation.id);
+                try {
+                    const details = await assoService.getAssociation(selectedAssociation.id);
+                    setAssociationDetails(details);
+                    console.log('Association details:', details);
+                } catch (error) {
+                    console.error('Error fetching association details:', error);
                 }
             }
         };
 
-        checkData();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [isAuthenticated, user]);
+        fetchAssociationDetails();
+    }, [selectedAssociation?.id, isAuthenticated]);
 
     const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
         if (!firstName || !lastName) return '';
@@ -128,22 +153,25 @@ const Header = () => {
     // Gérer la déconnexion
     const handleLogout = () => {
         logout();
+        localStorage.removeItem('asso-storage');
+        localStorage.removeItem('auth-storage');
+        localStorage.clear();
         window.location.href = '/login';
     };
 
     return (
-        <header className="fixed top-0 left-0 w-full bg-maraudr-lightBg dark:bg-maraudr-darkBg z-50 transition-colors font-sans" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
-            <div className={`transition-all duration-300 ${sidebarCollapsed ? 'ml-14' : 'ml-48'} p-2`}>
-                <div className="flex justify-between items-center h-16" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
-                    {/* Logo et Associations Dropdown */}
-                    <div className="flex items-center space-x-4" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
-                        {isAuthenticated && associations.length > 0 ? (
-                            <div className="relative" id="associations-menu">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    <div className="flex items-center">
+                        {isAuthenticated ? (
+                            <div className="relative">
                                 <button
                                     onClick={() => setShowAssociationsMenu(!showAssociationsMenu)}
-                                    className="flex items-center space-x-2 text-maraudr-blue dark:text-maraudr-orange font-header hover:text-maraudr-blue dark:hover:text-maraudr-orange"
+                                    className="flex items-center space-x-2 focus:outline-none"
+                                    id="associations-menu"
                                 >
-                                    {selectedAssociation ? (
+                                    {selectedAssociation && isAuthenticated ? (
                                         <div className="flex items-center space-x-2">
                                             <div className="h-9 w-9 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-bold text-xs">
                                                 {getAssociationInitials(selectedAssociation.name)}
@@ -155,17 +183,25 @@ const Header = () => {
                                     ) : (
                                         <span className="text-xl font-bold">maraudr</span>
                                     )}
-                                    {associations.length > 1 && <ChevronDownIcon className="h-5 w-5 ml-2" />}
+                                    {associations.length > 1 && isAuthenticated && <ChevronDownIcon className="h-5 w-5 ml-2" />}
                                 </button>
                                 
-                                {showAssociationsMenu && associations.length > 1 && (
+                                {showAssociationsMenu && associations.length > 1 && isAuthenticated && (
                                     <div className="absolute left-0 mt-2 w-64 rounded-md shadow-lg py-1 z-[100]" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
                                         {associations.map((association) => (
                                             <button
                                                 key={association.id}
-                                                onClick={() => {
+                                                onClick={async () => {
+                                                    console.log('Clicked association ID:', association.id);
                                                     setSelectedAssociation(association);
                                                     setShowAssociationsMenu(false);
+                                                    try {
+                                                        const details = await assoService.getAssociation(association.id);
+                                                        setAssociationDetails(details);
+                                                        console.log('Association details:', details);
+                                                    } catch (error) {
+                                                        console.error('Error fetching association details:', error);
+                                                    }
                                                 }}
                                                 className={`flex items-center space-x-2 w-full text-left px-4 py-2 text-sm ${
                                                     selectedAssociation?.id === association.id
@@ -188,84 +224,73 @@ const Header = () => {
                     </div>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center font-body">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.translationKey}
-                                to={link.path}
-                                className={`text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-blue dark:hover:text-maraudr-orange hover:font-semibold transition px-3 ${
-                                    location.pathname === link.path ? 'bg-maraudr-blue/20 dark:bg-maraudr-orange/20 rounded-md font-semibold' : ''
-                                }`}
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
+                    <nav className="hidden md:flex items-center space-x-4">
                         <ThemeToggle />
                         <LanguageSwitcher />
                         
                         {isAuthenticated && user ? (
-                            <div className="relative ml-3" id="user-menu">
-                                <button
-                                    onClick={() => setShowUserMenu(!showUserMenu)}
-                                    className="flex items-center space-x-2 text-sm focus:outline-none"
-                                >
-                                    <div className="text-maraudr-darkText dark:text-maraudr-lightText font-medium">
-                                        {getInitials(user.firstName, user.lastName)}
-                                    </div>
-                                    {user.avatar ? (
-                                        <img
-                                            src={user.avatar}
-                                            alt={`${user.firstName} ${user.lastName}`}
-                                            className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
-                                        />
-                                    ) : (
-                                        <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
-                                            {getInitials(user.firstName, user.lastName)}
+                            <>
+                                {/* Bouton Créer une association - seulement pour les managers */}
+                                {isManager() && (
+                                    <Link
+                                        to="/create-asso"
+                                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-sm"
+                                    >
+                                        {t('header.createAssociation', 'Créer une association')}
+                                    </Link>
+                                )}
+                                
+                                <div className="relative" id="user-menu">
+                                    <button
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="flex items-center space-x-2 focus:outline-none"
+                                    >
+                                        {user.avatar ? (
+                                            <img
+                                                src={user.avatar}
+                                                alt={`${user.firstName} ${user.lastName}`}
+                                                className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
+                                            />
+                                        ) : (
+                                            <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
+                                                {getInitials(user.firstName, user.lastName)}
+                                            </div>
+                                        )}
+                                    </button>
+                                    
+                                    {showUserMenu && (
+                                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
+                                            <Link
+                                                to="/maraudApp/profile"
+                                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
+                                            >
+                                                {t('sidebar.profile', 'Profil')}
+                                            </Link>
+                                            <Link
+                                                to="/settings"
+                                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
+                                            >
+                                                {t('sidebar.settings', 'Paramètres')}
+                                            </Link>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
+                                            >
+                                                {t('auth.logout', 'Déconnexion')}
+                                            </button>
                                         </div>
                                     )}
-                                </button>
-                                
-                                {showUserMenu && (
-                                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
-                                        <Link
-                                            to="/maraudApp/profile"
-                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
-                                        >
-                                            {t('sidebar.profile', 'Profil')}
-                                        </Link>
-                                        <Link
-                                            to="/settings"
-                                            className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
-                                        >
-                                            {t('sidebar.settings', 'Paramètres')}
-                                        </Link>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
-                                        >
-                                            {t('auth.logout', 'Déconnexion')}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                                </div>
+                            </>
                         ) : (
                             (showCreateAccount || !isHomePage) && !isLoginPage && (
                                 <Link
                                     to="/login"
-                                    className="ml-3 px-4 py-2 bg-maraudr-blue text-white font-medium text-center rounded-md hover:bg-maraudr-orange transition duration-300 text-sm"
+                                    className="block w-full text-left px-4 py-2 text-sm bg-maraudr-blue text-white font-medium rounded-md hover:bg-maraudr-orange transition duration-300"
                                 >
                                     {t('header.signup', 'Créer un compte')}
                                 </Link>
                             )
-                        )}
-
-                        {isAuthenticated && (
-                            <Button
-                                onClick={() => window.location.href = '/create-asso'}
-                                className="ml-3 px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium text-center rounded-md hover:bg-green-700 transition duration-300 text-sm"
-                            >
-                                {t('header.createAssociation', 'Créer une association')}
-                            </Button>
                         )}
                     </nav>
 
@@ -319,6 +344,17 @@ const Header = () => {
                     
                     {isAuthenticated && user ? (
                         <>
+                            {/* Bouton Créer une association - seulement pour les managers */}
+                            {isManager() && (
+                                <Link
+                                    to="/create-asso"
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300"
+                                >
+                                    {t('header.createAssociation', 'Créer une association')}
+                                </Link>
+                            )}
+                            
                             <div className="px-4 py-2 border-t dark:border-gray-700">
                                 <div className="flex items-center space-x-2">
                                     {user.avatar ? (

@@ -2,7 +2,9 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LoginResponse, DecodedToken, User } from '../types/auth/auth';
 
-const API_URL = 'http://localhost:8082';
+
+const API_URL = 'http://localhost:8082/api';
+
 
 interface ContactInfo {
   email: string;
@@ -20,7 +22,7 @@ interface Address {
 export const authService = {
   login: async (email: string, password: string): Promise<LoginResponse> => {
     try {
-      const response = await axios.post<LoginResponse>(`${API_URL}/auth/login`, {
+      const response = await axios.post<LoginResponse>(`${API_URL}/auth`, {
         email,
         password
       });
@@ -30,12 +32,27 @@ export const authService = {
     }
   },
 
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    // Supprimer l'intercepteur
-    if (authService.interceptorId) {
-      axios.interceptors.request.eject(authService.interceptorId);
+  logout: async () => {
+    try {
+      // Appeler le endpoint de logout
+      await axios.post(`${API_URL}/auth/logout`, {}, {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${authService.getToken()}`
+        }
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // On continue avec le nettoyage local même si l'appel API échoue
+    } finally {
+      // Supprimer spécifiquement les stores Zustand
+      localStorage.removeItem('asso-storage');
+      localStorage.removeItem('auth-storage');
+      
+      // Supprimer l'intercepteur
+      if (authService.interceptorId) {
+        axios.interceptors.request.eject(authService.interceptorId);
+      }
     }
   },
 
@@ -137,13 +154,14 @@ export const authService = {
       console.log('Token being used:', token ? 'Present' : 'Missing');
       
       const response = await axios.get(`${API_URL}/users/${uuid}`, {
-        withCredentials: true,
+        // withCredentials: true,
         headers: {
           Authorization: token ? `Bearer ${token}` : undefined
         }
       });
       console.log('Response headers:', response.headers);
       console.log('Response status:', response.status);
+      console.log('User data from API:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error getting user by ID:', error);
