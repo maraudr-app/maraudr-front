@@ -10,16 +10,28 @@ export const RecentStockHistory = ({ items }: RecentStockHistoryProps) => {
         new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime()
     ).slice(0, 5); // Prendre les 5 plus récents
 
+    // Fonction pour obtenir une couleur d'arrière-plan basée sur l'index
+    const getBackgroundColor = (index: number) => {
+        const colors = [
+            'bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-l-4 border-orange-300',
+            'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-l-4 border-blue-300',
+            'bg-gradient-to-r from-orange-50 to-blue-50 dark:from-orange-900/20 dark:to-blue-900/20 border-l-4 border-orange-300',
+            'bg-gradient-to-r from-blue-50 to-orange-50 dark:from-blue-900/20 dark:to-orange-900/20 border-l-4 border-blue-300',
+            'bg-gradient-to-r from-orange-100 via-blue-50 to-orange-50 dark:from-orange-900/25 dark:via-blue-900/15 dark:to-orange-900/20 border-l-4 border-orange-200'
+        ];
+        return colors[index % colors.length];
+    };
+
     return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow h-full">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Historique récent
             </h3>
             <div className="space-y-3">
-                {sortedItems.map((item) => (
+                {sortedItems.map((item, index) => (
                     <div 
                         key={item.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                        className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 hover:shadow-md ${getBackgroundColor(index)}`}
                     >
                         <div className="flex-1">
                             <p className="font-medium text-gray-900 dark:text-gray-100">

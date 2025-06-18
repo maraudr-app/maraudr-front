@@ -131,5 +131,51 @@ export const assoService = {
             console.error('Error checking membership:', error);
             return [];
         }
+    },
+
+    addMemberToAssociation: async (membershipData: { userId: string; associationId: string }) => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        try {
+            const response = await axios.post(`${API_URL}/association/member`, membershipData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error adding member to association:', error);
+            throw error;
+        }
+    },
+
+    // Vérifier si un utilisateur est membre d'une association spécifique avec la nouvelle API
+    isUserMemberOfAssociation: async (userId: string, associationId: string): Promise<boolean> => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        try {
+            const response = await axios.get(`${API_URL}/association/is-member/${associationId}/${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true
+            });
+            
+            console.log(`API is-member response for user ${userId} in association ${associationId}:`, response.data);
+            
+            // L'API retourne true/false directement
+            return response.data === true || response.data === 'true';
+        } catch (error) {
+            console.error('Error checking user membership with API:', error);
+            // En cas d'erreur, on considère que l'utilisateur n'est pas membre
+            return false;
+        }
     }
 };

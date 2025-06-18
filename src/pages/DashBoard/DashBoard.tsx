@@ -15,6 +15,9 @@ import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
 import { stockService } from '../../services/stockService';
 import { teamService } from '../../services/teamService';
+import { assoService } from '../../services/assoService';
+import MembershipStatusAlert from '../../components/common/alert/MembershipStatusAlert';
+import { Link } from 'react-router-dom';
 
 // Interfaces pour TypeScript
 interface RecentActivity {
@@ -32,6 +35,7 @@ interface DashboardData {
   upcomingEvents: number;
   activeDisponibilities: number;
   recentActivities: RecentActivity[];
+  isUserInAssociation: boolean;
 }
 
 const DashBoard = () => {
@@ -45,7 +49,8 @@ const DashBoard = () => {
     teamMembers: 0,
     upcomingEvents: 0,
     activeDisponibilities: 0,
-    recentActivities: []
+    recentActivities: [],
+    isUserInAssociation: true
   });
 
   const isManager = user?.userType === 'Manager';
@@ -73,12 +78,26 @@ const DashBoard = () => {
           }
         }
 
+        // Vérifier si l'utilisateur est dans l'association (seulement pour les utilisateurs simples)
+        let isInAssociation = true;
+        if (!isManager && user?.sub && selectedAssociation?.id) {
+          try {
+            isInAssociation = await assoService.isUserMemberOfAssociation(user.sub, selectedAssociation.id);
+            console.log(`Utilisateur ${user.sub} membre de l'association ${selectedAssociation.id}:`, isInAssociation);
+          } catch (error) {
+            console.log('Could not check association membership:', error);
+            // En cas d'erreur, on considère que l'utilisateur n'est pas encore membre
+            isInAssociation = false;
+          }
+        }
+
         setDashboardData({
           stockItems: stockItems.length,
           lowStockItems: lowStockItems.length,
           teamMembers: teamCount,
           upcomingEvents: 3, // Mock data
           activeDisponibilities: 5, // Mock data
+          isUserInAssociation: isInAssociation,
           recentActivities: [
             {
               id: 1,
@@ -163,7 +182,15 @@ const DashBoard = () => {
           isPositive: true,
           icon: <ClockIcon className="w-6 h-6 text-orange-500" />,
           iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-          description: 'Ce mois'
+          description: 'Ce mois',
+          action: (
+            <Link
+              to="/maraudApp/planing"
+              className="mt-2 inline-flex items-center text-xs text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
+            >
+              Modifier
+            </Link>
+          )
         },
         {
           title: 'Prochaines missions',
@@ -201,7 +228,15 @@ const DashBoard = () => {
   if (loading) {
     return (
       <div className="w-full flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
+            Chargement de votre dashboard...
+          </p>
+          <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+            Récupération des données en cours
+          </p>
+        </div>
       </div>
     );
   }
@@ -211,7 +246,7 @@ const DashBoard = () => {
       {/* En-tête de bienvenue */}
       <div className="bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl p-6 text-white">
         <h1 className="text-2xl font-bold mb-2">
-          Bonjour {user?.firstName} ! 👋
+          Bonjour {user?.firstName || user?.email?.split('@')[0] || 'Utilisateur'} ! 👋
         </h1>
         <p className="text-orange-100">
           {isManager 
@@ -225,6 +260,14 @@ const DashBoard = () => {
           </p>
         )}
       </div>
+
+      {/* Alerte de statut d'adhésion pour les utilisateurs simples */}
+      {!isManager && (
+        <MembershipStatusAlert 
+          isInAssociation={dashboardData.isUserInAssociation}
+          associationName={selectedAssociation?.name}
+        />
+      )}
 
       {/* Cartes de statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -250,6 +293,7 @@ const DashBoard = () => {
                     {card.description}
                   </span>
                 </div>
+                {(card as any).action && (card as any).action}
               </div>
               <div className={`p-3 rounded-lg ${card.iconBg}`}>
                 {card.icon}

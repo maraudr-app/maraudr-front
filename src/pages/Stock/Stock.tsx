@@ -39,6 +39,8 @@ export const Stock = () => {
     const { selectedAssociation, associations, setSelectedAssociation } = useAssoStore();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
+    const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+    const [highlightedItemName, setHighlightedItemName] = useState<string | null>(null);
 
     useEffect(() => {
         const checkStock = async () => {
@@ -51,20 +53,27 @@ export const Stock = () => {
             // Si aucune association n'est disponible, afficher un message et rediriger vers la création
             if (!selectedAssociation) {
                 toast.error(t('stock.noAssociation', 'Vous n\'avez pas encore d\'association'));
-                navigate('/create-asso');
+                navigate('/maraudApp/create-asso');
                 return;
             }
 
             setIsLoading(true);
             try {
-                const stockId = await stockService.getStockId(selectedAssociation.id);
+                console.log('Vérification du stock pour association:', selectedAssociation.id);
+                let stockId = await stockService.getStockId(selectedAssociation.id);
+                console.log('Stock ID trouvé:', stockId);
+                
                 if (!stockId) {
-                    await stockService.createStock(selectedAssociation.id);
+                    console.log('Aucun stock trouvé, création en cours...');
+                    stockId = await stockService.createStock(selectedAssociation.id);
+                    console.log('Stock créé avec ID:', stockId);
                 }
+                
+                console.log('Chargement des items pour le stock:', stockId);
                 await fetchItems();
             } catch (error) {
-                toast.error('Erreur lors de la vérification du stock');
-                console.error(error);
+                console.error('Erreur détaillée lors de la vérification du stock:', error);
+                toast.error('Erreur lors de la vérification du stock: ' + (error as Error).message);
             } finally {
                 setIsLoading(false);
             }
@@ -91,6 +100,33 @@ export const Stock = () => {
             setIsLoading(false);
         }
     };
+
+    const highlightNewItem = (itemName: string) => {
+        console.log('Highlighting item:', itemName);
+        // Stocker le nom de l'item à highlighter
+        setHighlightedItemName(itemName);
+    };
+
+    const onItemAdded = async () => {
+        console.log('onItemAdded called');
+        await fetchItems();
+    };
+
+    // UseEffect pour gérer le highlight après que les items soient mis à jour
+    useEffect(() => {
+        if (highlightedItemName && items.length > 0) {
+            const newItem = items.find(item => item.name === highlightedItemName);
+            console.log('Found item to highlight:', newItem);
+            if (newItem) {
+                setHighlightedItemId(newItem.id);
+                setHighlightedItemName(null); // Reset le nom
+                // Supprimer le highlight après 3 secondes
+                setTimeout(() => {
+                    setHighlightedItemId(null);
+                }, 3000);
+            }
+        }
+    }, [items, highlightedItemName]);
 
     const handleDeleteClick = (itemId: string) => {
         setItemToDelete(itemId);
@@ -130,7 +166,15 @@ export const Stock = () => {
                 newItems[index] = updatedItem;
                 setItems(newItems);
             }
+            
             toast.success('Item modifié avec succès');
+            
+            // Déclencher l'effet de highlight pour l'item modifié
+            setHighlightedItemId(updatedItem.id);
+            setTimeout(() => {
+                setHighlightedItemId(null);
+            }, 3000);
+            
             setShowEditModal(false);
             setEditingItem(null);
         } catch (error) {
@@ -191,7 +235,11 @@ export const Stock = () => {
 
   return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <StockNavbar onItemAdded={fetchItems} isAddButtonDisabled={true} />
+            <StockNavbar 
+                onItemAdded={onItemAdded} 
+                isAddButtonDisabled={false} 
+                onItemHighlight={highlightNewItem}
+            />
 
             <main className="pt-16">
                 {/* Graphique et Historique */}
@@ -264,9 +312,17 @@ export const Stock = () => {
                     {/* Tableau */}
                     <div className="overflow-x-auto">
                         {isLoading ? (
-                            <div className="flex justify-center items-center h-64">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maraudr-blue"></div>
-              </div>
+                            <div className="w-full flex items-center justify-center min-h-96">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                                    <p className="text-gray-600 dark:text-gray-400 text-lg">
+                                        Chargement de votre stock...
+                                    </p>
+                                    <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                                        Récupération des articles en cours
+                                    </p>
+                                </div>
+                            </div>
                         ) : items.length === 0 ? (
                             <div className="text-center p-8">
                                 <p className="text-gray-500 dark:text-gray-400">
@@ -302,8 +358,15 @@ export const Stock = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                        {currentItems.map((item, index) => (
-                                            <tr key={item.id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
+                                        {currentItems.map((item, index) => {
+                                            const isHighlighted = highlightedItemId === item.id;
+                                            const baseRowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700';
+                                            const highlightClass = isHighlighted 
+                                                ? 'bg-gradient-to-r from-green-50 via-orange-100 to-blue-50 dark:from-green-900/20 dark:via-orange-900/30 dark:to-blue-900/20 animate-pulse border-l-4 border-green-300' 
+                                                : '';
+                                            
+                                            return (
+                                            <tr key={item.id} className={`${baseRowClass} ${highlightClass} transition-all duration-500`}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm font-medium text-maraudr-darkText dark:text-maraudr-lightText">
                                                         {item.name}
@@ -374,7 +437,8 @@ export const Stock = () => {
             </div>
                                                 </td>
                                             </tr>
-                                        ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                                 

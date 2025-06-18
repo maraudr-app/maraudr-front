@@ -10,11 +10,15 @@ import {
     PhoneIcon,
     EnvelopeIcon,
     MapPinIcon,
-    GlobeAltIcon
+    GlobeAltIcon,
+    ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { teamService, TeamMember } from '../../services/teamService';
-import { userService, User, Disponibility } from '../../services/userService';
+import { userService } from '../../services/userService';
+import { User } from '../../types/user/user';
+import { Disponibility } from '../../types/disponibility/disponibility';
 import { useAuthStore } from '../../store/authStore';
+import { useAssoStore } from '../../store/assoStore';
 import { Button } from '../../components/common/button/button';
 import TeamToast from '../../components/team/TeamToast';
 import AddMemberModal from '../../components/team/AddMemberModal';
@@ -48,6 +52,10 @@ const Team: React.FC = () => {
 
     const navigate = useNavigate();
     const { user, isAuthenticated, logout } = useAuthStore();
+    const { sidebarCollapsed, selectedAssociation } = useAssoStore();
+    
+    // Définir la largeur de la sidebar en pixels comme dans Stock
+    const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
     // Vérifier l'authentification au chargement
     useEffect(() => {
@@ -175,15 +183,25 @@ const Team: React.FC = () => {
     }, [user?.sub, isAuthenticated, logout, navigate]);
 
     const handleViewDisponibilities = async (user: User) => {
+        if (!selectedAssociation?.id) {
+            console.error('Aucune association sélectionnée');
+            return;
+        }
+
         try {
             setLoadingDispos(true);
             setSelectedUser(user);
             
-            // Pour l'instant, on utilise un associationId fictif
-            // Vous devrez récupérer l'associationId du manager connecté
-            const associationId = "3fa85f64-5717-4562-b3fc-2c963f66afa6"; // À remplacer par l'ID réel
-            const disponibilities = await userService.getAllDisponibilities(associationId);
-            const userDispos = disponibilities.filter(d => d.userId === user.id);
+            console.log('Récupération des disponibilités pour l\'utilisateur:', user.id, 'dans l\'association:', selectedAssociation.id);
+            
+            // Utiliser getAllDisponibilities pour récupérer toutes les disponibilités de l'association
+            // puis filtrer par l'ID de l'utilisateur sélectionné
+            const allDisponibilities = await userService.getAllDisponibilities(selectedAssociation.id);
+            console.log('Toutes les disponibilités récupérées:', allDisponibilities);
+            
+            const userDispos = allDisponibilities.filter((d: Disponibility) => d.userId === user.id);
+            console.log('Disponibilités filtrées pour l\'utilisateur:', userDispos);
+            
             setUserDisponibilities(userDispos);
             setShowDisponibilities(true);
         } catch (err: any) {
@@ -250,7 +268,39 @@ const Team: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            {/* Navbar fixe style Stock */}
+            <nav className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300" style={{ left: sidebarWidth }}>
+                <div className="flex items-center justify-between h-16">
+                    <div className="flex items-center gap-3 pl-7">
+                        <UserGroupIcon className="w-5 h-5" />
+                        <div className="text-gray-900 dark:text-white">
+                            Gestion de l'équipe ({teamUsers.length})
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 px-4">
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-orange-500 rounded-md hover:from-blue-600 hover:to-orange-600 transition-colors"
+                        >
+                            <PlusIcon className="w-4 h-4 mr-2" />
+                            Ajouter membre
+                        </button>
+                        
+                        <button
+                            onClick={fetchTeamMembers}
+                            disabled={loading}
+                            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            <ArrowPathIcon className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                            Actualiser
+                        </button>
+                    </div>
+                </div>
+            </nav>
+            
+            <main className="pt-16 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
@@ -283,7 +333,7 @@ const Team: React.FC = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Membres Actifs</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    {teamUsers.filter(user => user.isActive).length}
+                                    {teamUsers.length}
                                 </p>
                             </div>
                         </div>
@@ -295,7 +345,7 @@ const Team: React.FC = () => {
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600">Dernière Connexion</p>
                                 <p className="text-sm font-bold text-gray-900">
-                                    {teamUsers.length > 0 ? formatDate(teamUsers[0].lastLoggedIn) : 'N/A'}
+                                    {teamUsers.length > 0 ? formatDate(teamUsers[0].createdAt) : 'N/A'}
                                 </p>
                             </div>
                         </div>
@@ -395,6 +445,7 @@ const Team: React.FC = () => {
                     </div>
                 )}
             </div>
+            </main>
         </div>
     );
 };

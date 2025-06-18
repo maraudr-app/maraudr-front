@@ -1,5 +1,6 @@
 import { UserToCreate } from '../types/user/userToCreate';
 import { User } from '../types/user/user';
+import { Disponibility, DisponibilityToCreate } from '../types/disponibility/disponibility';
 import { api } from './api';
 
 export const userService = {
@@ -77,7 +78,7 @@ export const userService = {
   },
 
   // Services pour les disponibilités - Utilise localhost:8080/api
-  createDisponibility: async (disponibilityData: any) => {
+  createDisponibility: async (disponibilityData: DisponibilityToCreate): Promise<Disponibility> => {
     try {
       // Utiliser l'instance api qui a déjà les en-têtes d'authentification
       const response = await api.post('/users/disponibilities', disponibilityData);
@@ -100,7 +101,7 @@ export const userService = {
     }
   },
 
-  getDisponibilities: async (associationId: string) => {
+  getDisponibilities: async (associationId: string): Promise<Disponibility[]> => {
     try {
       const response = await api.get(`/users/disponibilities/${associationId}`);
       return response.data;

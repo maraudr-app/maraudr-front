@@ -19,6 +19,7 @@ import CreateAsso from './pages/Association/CreateAsso.tsx';
 import { Toaster } from 'react-hot-toast';
 import AssoInformation from "./pages/Association/AssoInformation.tsx";
 import { Stock } from './pages/Stock/Stock.tsx';
+import NotificationManager from './pages/NotificationManager/NotificationManager.tsx';
 
 
 // Composant pour les routes protégées
@@ -49,7 +50,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<CreateAccount />} />
-            <Route path="/create-asso" element={<ProtectedRoute element={<CreateAsso />} />} />
+
             <Route
                 path="/maraudApp"
                 element={<ProtectedRoute element={<MaraudrApp />} />}
@@ -64,6 +65,8 @@ function App() {
               <Route path="team" element={<Team/>} />
               <Route path="planing" element={<ProtectedRoute element={<Planning/>} />} />
               <Route path="profile" element={<ProtectedRoute element={<Profile />} />} />
+              <Route path="notification-manager" element={<ProtectedRoute element={<NotificationManager />} />} />
+              <Route path="create-asso" element={<ProtectedRoute element={<CreateAsso />} />} />
             </Route>
             <Route path="/association-info" element={<AssoInformation/>} />
 

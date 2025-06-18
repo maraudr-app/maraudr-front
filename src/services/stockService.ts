@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 import { 
     StockItem, 
     CreateStockItemRequest, 
@@ -8,7 +9,7 @@ import {
     Category
 } from '../types/stock/StockItem';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'http://localhost:8081';
 
 // Données fictives pour le test
 const MOCK_ITEMS: StockItem[] = [
@@ -168,7 +169,7 @@ const MOCK_ITEMS: StockItem[] = [
 const simulateNetworkDelay = () => new Promise(resolve => setTimeout(resolve, 500));
 
 // Flag pour activer/désactiver le mode mock
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 export const stockService = {
     // Vérifier si un stock existe pour une association
@@ -178,9 +179,17 @@ export const stockService = {
             return 'stock-1'; // On simule toujours un stock existant
         }
 
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
         try {
             const response = await axios.get(`${API_URL}/stock/id`, {
                 params: { associationId },
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 withCredentials: true
             });
             return response.data.stockId;
@@ -199,10 +208,20 @@ export const stockService = {
             return 'stock-1';
         }
 
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
         const response = await axios.post<StockResponse>(
             `${API_URL}/create-stock`,
             { associationId },
-            { withCredentials: true }
+            { 
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true 
+            }
         );
         return response.data.stockId;
     },
@@ -229,10 +248,18 @@ export const stockService = {
             return filteredItems;
         }
 
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
         const response = await axios.get<StockItem[]>(`${API_URL}/stock/items`, {
             params: { 
                 associationId,
                 ...filter
+            },
+            headers: {
+                'Authorization': `Bearer ${token}`
             },
             withCredentials: true
         });
@@ -253,12 +280,49 @@ export const stockService = {
             return newItem.id;
         }
 
-        const response = await axios.post<{ id: string }>(
-            `${API_URL}/item`,
-            { ...item, associationId },
-            { withCredentials: true }
-        );
-        return response.data.id;
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        // D'abord, récupérer ou créer le stock pour cette association
+        let stockId = await stockService.getStockId(associationId);
+        if (!stockId) {
+            console.log('Aucun stock trouvé pour l\'association, création en cours...');
+            stockId = await stockService.createStock(associationId);
+        }
+
+        console.log('Création d\'item avec stockId:', stockId);
+
+        const requestData = { 
+            ...item, 
+            associationId,
+            stockId
+        };
+        console.log('Données envoyées à l\'API:', requestData);
+
+        try {
+            const response = await axios.post<{ id: string }>(
+                `${API_URL}/item`,
+                requestData,
+                { 
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true 
+                }
+            );
+            console.log('Réponse de l\'API:', response.data);
+            return response.data.id;
+        } catch (error) {
+            console.error('Erreur lors de la création de l\'item:', error);
+            if (axios.isAxiosError(error)) {
+                console.error('Détails de l\'erreur:', error.response?.data);
+                console.error('Status:', error.response?.status);
+            }
+            throw error;
+        }
     },
 
     // Supprimer un item
@@ -272,8 +336,16 @@ export const stockService = {
             return;
         }
 
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
         await axios.delete(`${API_URL}/stock/item`, {
             params: { associationId, itemId },
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             withCredentials: true
         });
     },

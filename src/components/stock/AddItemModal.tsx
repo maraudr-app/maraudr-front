@@ -13,9 +13,10 @@ interface AddItemModalProps {
     isOpen: boolean;
     onClose: () => void;
     onItemAdded: () => void;
+    onItemHighlight?: (itemName: string) => void;
 }
 
-export const AddItemModal = ({ isOpen, onClose, onItemAdded }: AddItemModalProps) => {
+export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: AddItemModalProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -37,12 +38,34 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded }: AddItemModalProps
 
         setIsLoading(true);
         try {
+            console.log('Tentative d\'ajout d\'item:', formData);
+            console.log('Association ID:', selectedAssociation.id);
+            
             await stockService.createItem(formData, selectedAssociation.id);
             toast.success('Item ajouté avec succès !');
+            
+            // Déclencher le highlight si la fonction est fournie
+            if (onItemHighlight) {
+                onItemHighlight(formData.name);
+            }
+            
             onItemAdded();
+            onClose();
+            
+            // Reset form
+            setFormData({
+                name: '',
+                description: '',
+                barCode: '',
+                category: Category.Unknown,
+                quantity: 1
+            });
         } catch (error) {
-            toast.error('Erreur lors de l\'ajout de l\'item');
-            console.error(error);
+            console.error('Erreur détaillée lors de l\'ajout:', error);
+            
+            // Afficher un message d'erreur plus détaillé
+            const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+            toast.error(`Erreur lors de l'ajout de l'item: ${errorMessage}`);
         } finally {
             setIsLoading(false);
         }

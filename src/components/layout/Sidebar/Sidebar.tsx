@@ -213,7 +213,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
               <Link
                 to={item.to}
                 className={`flex items-center px-4 py-3 text-white hover:bg-gray-700 transition-colors ${
-                  checkIsActive(item.to) ? 'bg-gray-700' : ''
+                  checkIsActive(item.to) ? 'bg-gradient-to-r from-orange-100/20 to-blue-100/20 border-l-4 border-orange-500' : ''
                 }`}
               >
                 {item.icon}
@@ -232,7 +232,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
             <li key={item.key}>
               <Link
               to={item.to}
-                className="flex items-center px-4 py-3 text-white hover:bg-gray-700 transition-colors"
+                className={`flex items-center px-4 py-3 text-white hover:bg-gray-700 transition-colors ${
+                  checkIsActive(item.to) ? 'bg-gradient-to-r from-orange-100/20 to-blue-100/20 border-l-4 border-orange-500' : ''
+                }`}
               >
                 {item.icon}
                 {!sidebarCollapsed && (

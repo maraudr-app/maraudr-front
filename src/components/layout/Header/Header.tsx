@@ -10,6 +10,8 @@ import { useAuthStore } from '../../../store/authStore';
 import { useAssoStore } from '../../../store/assoStore';
 import { assoService } from '../../../services/assoService';
 import Button from '../../common/button/button';
+import NotificationIcon from '../../common/notification/NotificationIcon';
+import { useNotifications } from '../../../hooks/useNotifications';
 
 interface NavLink {
     name: string;
@@ -31,6 +33,7 @@ const Header = () => {
     const isHomePage = location.pathname === '/';
     const isLoginPage = location.pathname === '/login';
     const sidebarCollapsed = useAssoStore(state => state.sidebarCollapsed);
+    const { notificationCount } = useNotifications();
 
     // Debug logs pour le rôle
     console.log('Header - User:', user);
@@ -230,10 +233,15 @@ const Header = () => {
                         
                         {isAuthenticated && user ? (
                             <>
+                                {/* Icône de notification pour les managers */}
+                                {isManager() && (
+                                    <NotificationIcon count={notificationCount} className="mr-4" />
+                                )}
+                                
                                 {/* Bouton Créer une association - seulement pour les managers */}
                                 {isManager() && (
                                     <Link
-                                        to="/create-asso"
+                                        to="/maraudApp/create-asso"
                                         className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-sm"
                                     >
                                         {t('header.createAssociation', 'Créer une association')}
@@ -347,7 +355,7 @@ const Header = () => {
                             {/* Bouton Créer une association - seulement pour les managers */}
                             {isManager() && (
                                 <Link
-                                    to="/create-asso"
+                                    to="/maraudApp/create-asso"
                                     onClick={() => setIsOpen(false)}
                                     className="block px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300"
                                 >

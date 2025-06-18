@@ -11,13 +11,15 @@ interface StockNavbarProps {
     showCreateStock?: boolean;
     onCreateStock?: () => void;
     isAddButtonDisabled?: boolean;
+    onItemHighlight?: (itemName: string) => void;
 }
 
 export const StockNavbar = ({ 
     onItemAdded, 
     showCreateStock, 
     onCreateStock,
-    isAddButtonDisabled = false 
+    isAddButtonDisabled = false,
+    onItemHighlight
 }: StockNavbarProps) => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -71,6 +73,7 @@ export const StockNavbar = ({
                     setShowAddModal(false);
                     onItemAdded();
                 }}
+                onItemHighlight={onItemHighlight}
             />
 
             <StockHistoryModal

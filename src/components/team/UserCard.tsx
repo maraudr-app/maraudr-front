@@ -1,41 +1,24 @@
 import React from "react";
 import { ClockIcon, MapPinIcon } from "@heroicons/react/24/outline";
 import { Button } from "../common/button/button";
-
-type User = {
-  id: string;
-  firstname: string;
-  lastname: string;
-  avatar?: string;
-  userType?: string;
-  city?: string;
-  country?: string;
-  isActive?: boolean;
-  createdAt?: string;
-  languages?: string[];
-  email?: string;
-  phoneNumber?: string;
-};
+import { User } from "../../types/user/user";
 
 interface UserCardProps {
   user: User;
-  handleViewDisponibilities: (user: User) => void;
+  handleViewDisponibilities: (user: User) => Promise<void>;
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user, handleViewDisponibilities }) => (
   <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center">
     <img
-      src={
-        user.avatar ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          user.firstname + " " + user.lastname
-        )}&background=random`
-      }
+      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+        user.firstname + " " + user.lastname
+      )}&background=random`}
       alt={`${user.firstname} ${user.lastname}`}
       className="w-16 h-16 rounded-full mb-3 object-cover"
     />
     <h3 className="font-bold text-lg">{user.firstname} {user.lastname}</h3>
-    <div className="text-gray-500 text-sm mb-1">{user.userType || "Membre"}</div>
+    <div className="text-gray-500 text-sm mb-1">{user.isManager ? "Manager" : "Membre"}</div>
     {(user.city || user.country) && (
       <div className="flex items-center justify-center text-gray-400 text-xs mb-2">
         <MapPinIcon className="h-4 w-4 mr-1" />
@@ -43,8 +26,8 @@ const UserCard: React.FC<UserCardProps> = ({ user, handleViewDisponibilities }) 
       </div>
     )}
     <div className="flex items-center justify-center mb-2">
-      <span className={`flex items-center px-2 py-1 rounded-full text-xs font-semibold ${user.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-        {user.isActive ? "Actif" : "Inactif"}
+      <span className="flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+        Actif
       </span>
     </div>
     {user.createdAt && (
