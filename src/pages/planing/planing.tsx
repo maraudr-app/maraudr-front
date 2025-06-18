@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     CalendarIcon,
     PlusIcon,
@@ -11,9 +11,14 @@ import {
 } from '@heroicons/react/24/outline';
 
 import {LockOpenIcon, XCircleIcon} from "@heroicons/react/24/solid";
+import { useAuthStore } from '../../store/authStore';
+import { useAssoStore } from '../../store/assoStore';
+import { userService } from '../../services/userService';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 
 // Types
-interface User {
+interface PlanningUser {
     id: number;
     name: string;
     avatar: string;
@@ -39,9 +44,477 @@ interface Event {
     volunteers: number[]; // IDs des bénévoles assignés
 }
 
+interface UserAvailability {
+    [date: string]: {
+        morning: boolean;
+        afternoon: boolean;
+        evening: boolean;
+    }
+}
+
+// Composant pour la vue utilisateur simple (disponibilités)
+const UserAvailabilityView: React.FC = () => {
+    const user = useAuthStore(state => state.user);
+    const selectedAssociation = useAssoStore(state => state.selectedAssociation);
+    const fetchUserAssociations = useAssoStore(state => state.fetchUserAssociations);
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [userAvailabilities, setUserAvailabilities] = useState<UserAvailability>({});
+    const [loading, setLoading] = useState(false);
+    
+    // États pour la sélection de période
+    const [isSelectingPeriod, setIsSelectingPeriod] = useState(false);
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
+    const [showTimeModal, setShowTimeModal] = useState(false);
+
+    // Charger les associations si nécessaire
+    useEffect(() => {
+        if (user && !selectedAssociation) {
+            console.log('Chargement des associations pour l\'utilisateur:', user.sub);
+            fetchUserAssociations();
+        }
+    }, [user, selectedAssociation, fetchUserAssociations]);
+
+    const getDaysInMonth = (date: Date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const days = [];
+
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            days.push(new Date(year, month, day));
+        }
+
+        return days;
+    };
+
+    const getMonthStartDay = (date: Date) => {
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        return firstDay.getDay();
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toISOString().split('T')[0];
+    };
+
+    const changeMonth = (increment: number) => {
+        setCurrentDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + increment, 1));
+    };
+
+    // Charger les disponibilités existantes
+    const loadUserAvailabilities = async () => {
+        try {
+            setLoading(true);
+            // TODO: Appeler l'API pour récupérer les disponibilités existantes
+            // const availabilities = await userService.getUserAvailabilities(user?.sub);
+            // setUserAvailabilities(availabilities);
+        } catch (error) {
+            console.error('Erreur lors du chargement des disponibilités:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadUserAvailabilities();
+    }, []);
+
+    // Gérer la sélection de dates
+    const handleDateClick = (date: Date) => {
+        if (!isSelectingPeriod) {
+            return;
+        }
+
+        if (!startDate) {
+            setStartDate(date);
+        } else if (!endDate && date >= startDate) {
+            setEndDate(date);
+            setShowTimeModal(true);
+        } else {
+            // Réinitialiser la sélection
+            setStartDate(date);
+            setEndDate(null);
+        }
+    };
+
+    // Démarrer la sélection de période
+    const startPeriodSelection = () => {
+        setIsSelectingPeriod(true);
+        setStartDate(null);
+        setEndDate(null);
+        setStartTime('');
+        setEndTime('');
+    };
+
+    // Annuler la sélection
+    const cancelSelection = () => {
+        setIsSelectingPeriod(false);
+        setStartDate(null);
+        setEndDate(null);
+        setStartTime('');
+        setEndTime('');
+        setShowTimeModal(false);
+    };
+
+    // Valider la disponibilité
+    const submitAvailability = async () => {
+        if (!startDate || !endDate || !startTime || !endTime) {
+            toast.error('Veuillez sélectionner une période et des heures');
+            return;
+        }
+
+        // Vérifier que l'utilisateur a une association sélectionnée
+        if (!selectedAssociation?.id) {
+            toast.error('Aucune association sélectionnée. Veuillez sélectionner une association dans le header.');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            
+            // Créer des objets Date avec les heures en timezone locale
+            const startDateTime = new Date(startDate);
+            startDateTime.setHours(parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]), 0, 0);
+            
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]), 0, 0);
+            
+            // S'assurer que la date est dans le futur en ajoutant quelques minutes si nécessaire
+            const now = new Date();
+            if (startDateTime <= now) {
+                // Si la date/heure est dans le passé ou maintenant, l'ajuster légèrement dans le futur
+                startDateTime.setMinutes(now.getMinutes() + 5);
+                endDateTime.setMinutes(endDateTime.getMinutes() + 5);
+            }
+            
+            // Formater sans UTC - utiliser le format local du serveur
+            const formatDateForAPI = (date: Date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                
+                // Format ISO sans timezone (assumant que le serveur est en local time)
+                return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+            };
+            
+            const disponibilityData = {
+                start: formatDateForAPI(startDateTime),
+                end: formatDateForAPI(endDateTime),
+                associationId: selectedAssociation.id // Utiliser l'ID de l'association sélectionnée
+            };
+
+            console.log('Données envoyées:', disponibilityData);
+            console.log('Association sélectionnée:', selectedAssociation);
+            console.log('Date/heure actuelle:', new Date());
+            console.log('Date de début:', startDateTime);
+            await userService.createDisponibility(disponibilityData);
+            
+            // Recharger les disponibilités
+            await loadUserAvailabilities();
+            
+            // Réinitialiser la sélection
+            cancelSelection();
+            
+            toast.success('Disponibilité ajoutée avec succès ! 🎉');
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout de la disponibilité:', error);
+            toast.error('Erreur lors de l\'ajout de la disponibilité');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const days = getDaysInMonth(currentDate);
+    const startDay = getMonthStartDay(currentDate);
+    const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+    // Fonction pour vérifier si une date est dans la période sélectionnée
+    const isDateInSelectedPeriod = (date: Date) => {
+        if (!startDate || !endDate) return false;
+        return date >= startDate && date <= endDate;
+    };
+
+    // Fonction pour vérifier si une date est sélectionnée comme début ou fin
+    const isDateSelected = (date: Date) => {
+        return (startDate && date.getTime() === startDate.getTime()) || 
+               (endDate && date.getTime() === endDate.getTime());
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            {/* En-tête */}
+            <header className="bg-white dark:bg-gray-800 shadow-sm p-4">
+                <div className="max-w-7xl mx-auto">
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+                        <CalendarIcon className="w-6 h-6 mr-2" />
+                        Mes Disponibilités
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-300 mt-1">
+                        Sélectionnez une période pour indiquer vos disponibilités
+                    </p>
+                </div>
+            </header>
+
+            {/* Contenu principal */}
+            <main className="max-w-7xl mx-auto p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    {/* Boutons d'action */}
+                    <div className="flex gap-4 mb-6">
+                        {!isSelectingPeriod ? (
+                            <button
+                                onClick={startPeriodSelection}
+                                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all duration-300"
+                                disabled={loading}
+                            >
+                                Ajouter une disponibilité
+                            </button>
+                        ) : (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={cancelSelection}
+                                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                                {startDate && endDate && (
+                                    <span className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-lg">
+                                        Du {startDate.toLocaleDateString()} au {endDate.toLocaleDateString()}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Instructions */}
+                    {isSelectingPeriod && (
+                        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p className="text-blue-800 dark:text-blue-200 text-sm">
+                                {!startDate ? 
+                                    "1. Cliquez sur la date de début de votre disponibilité" :
+                                    !endDate ?
+                                    "2. Cliquez sur la date de fin de votre disponibilité" :
+                                    "3. Définissez les heures dans la fenêtre qui s'ouvre"
+                                }
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Navigation du calendrier */}
+                    <div className="flex justify-between items-center mb-6">
+                        <button
+                            onClick={() => changeMonth(-1)}
+                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                            disabled={loading}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+
+                        <h2 className="text-xl font-semibold">
+                            {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                        </h2>
+
+                        <button
+                            onClick={() => changeMonth(1)}
+                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                            disabled={loading}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Jours de la semaine */}
+                    <div className="grid grid-cols-7 gap-2 mb-4">
+                        {daysOfWeek.map((day, index) => (
+                            <div
+                                key={index}
+                                className="text-center py-2 text-sm font-medium text-gray-500 dark:text-gray-400"
+                            >
+                                {day}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Grille du calendrier */}
+                    <div className="grid grid-cols-7 gap-2">
+                        {/* Jours vides du début du mois */}
+                        {Array.from({ length: startDay }).map((_, index) => (
+                            <div
+                                key={`empty-start-${index}`}
+                                className="aspect-square bg-gray-50 dark:bg-gray-700 rounded-md"
+                            />
+                        ))}
+
+                        {/* Jours du mois */}
+                        {days.map((day, index) => {
+                            const dateString = formatDate(day);
+                            const isToday = day.toDateString() === new Date().toDateString();
+                            const isSelected = isDateSelected(day);
+                            const isInPeriod = isDateInSelectedPeriod(day);
+                            const isPast = day < new Date(new Date().setHours(0, 0, 0, 0));
+                            const hasAvailability = userAvailabilities[dateString];
+
+                            return (
+                                <div
+                                    key={index}
+                                    className={`aspect-square border rounded-md p-2 transition-all cursor-pointer
+                                        ${isPast ? 'opacity-50 cursor-not-allowed' : ''}
+                                        ${isToday ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-600'}
+                                        ${isSelected ? 'border-orange-500 bg-orange-100 dark:bg-orange-900/30' : ''}
+                                        ${isInPeriod && !isSelected ? 'bg-orange-50 dark:bg-orange-900/10' : ''}
+                                        ${!isPast && !isSelectingPeriod ? 'hover:bg-gray-50 dark:hover:bg-gray-700' : ''}
+                                        ${!isPast && isSelectingPeriod ? 'hover:bg-orange-50 dark:hover:bg-orange-900/20' : ''}
+                                    `}
+                                    onClick={() => !isPast && handleDateClick(day)}
+                                >
+                                    <div className="h-full flex flex-col">
+                                        <div className={`text-right text-sm font-medium mb-2
+                                            ${isToday ? 'text-blue-600 dark:text-blue-400' : 
+                                              isSelected ? 'text-orange-600 dark:text-orange-400' :
+                                              'text-gray-700 dark:text-gray-300'}
+                                        `}>
+                                            {day.getDate()}
+                                        </div>
+
+                                        {/* Indicateur de disponibilité existante */}
+                                        {hasAvailability && (
+                                            <div className="flex-grow flex items-center justify-center">
+                                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {/* Jours vides de la fin du mois */}
+                        {Array.from({ length: (7 - (days.length + startDay) % 7) % 7 }).map((_, index) => (
+                            <div
+                                key={`empty-end-${index}`}
+                                className="aspect-square bg-gray-50 dark:bg-gray-700 rounded-md"
+                            />
+                        ))}
+                    </div>
+
+                    {/* Légende */}
+                    <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Légende :</h3>
+                        <div className="flex flex-wrap gap-4 text-sm">
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                                <span className="text-gray-600 dark:text-gray-400">Disponibilité existante</span>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-orange-100 dark:bg-orange-900/30 border border-orange-500 rounded mr-2"></div>
+                                <span className="text-gray-600 dark:text-gray-400">Période sélectionnée</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            {/* Modal de sélection d'heures */}
+            {showTimeModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Définir les heures de disponibilité
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Période sélectionnée
+                                </label>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Du {startDate?.toLocaleDateString()} au {endDate?.toLocaleDateString()}
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Heure de début *
+                                </label>
+                                <input
+                                    type="time"
+                                    value={startTime}
+                                    onChange={(e) => setStartTime(e.target.value)}
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Heure de fin *
+                                </label>
+                                <input
+                                    type="time"
+                                    value={endTime}
+                                    onChange={(e) => setEndTime(e.target.value)}
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                    onClick={cancelSelection}
+                                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
+                                    disabled={loading}
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={submitAvailability}
+                                    className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all duration-300"
+                                    disabled={loading || !startTime || !endTime}
+                                >
+                                    {loading ? 'Enregistrement...' : 'Valider'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // Composant principal
 const Planning: React.FC = () => {
-    // État
+    const user = useAuthStore(state => state.user);
+    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+
+    // Vérifier l'authentification
+    if (!isAuthenticated || !user) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <p className="text-gray-600 dark:text-gray-400">Vous devez être connecté pour accéder à cette page.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Si l'utilisateur n'est pas un manager, afficher la vue des disponibilités
+    // On vérifie le userType pour déterminer si c'est un manager
+    const isManager = user.userType === 'Manager';
+    if (!isManager) {
+        return <UserAvailabilityView />;
+    }
+
+    // État pour la vue manager (code existant)
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
@@ -51,93 +524,90 @@ const Planning: React.FC = () => {
     const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
     const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
 
-    // Mock data - utilisateurs bénévoles/maraudeurs
-    //Pour utiliser Random User pour les avatars, vous pouvez remplacer les URLs des avatars dans la liste des utilisateurs par des URLs générées dynamiquement à partir de l'API Random User. Voici la modification :
-
-const users: User[] = [
-    {
-        id: 1,
-        name: "Emma Martin",
-        avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-        role: "Maraudeur",
-        availability: {
-            "2025-04-02": { morning: true, afternoon: true, evening: false },
-            "2025-04-05": { morning: false, afternoon: true, evening: true },
-            "2025-04-10": { morning: true, afternoon: false, evening: false },
-            "2025-04-15": { morning: false, afternoon: false, evening: true },
-            "2025-04-20": { morning: true, afternoon: true, evening: true },
-            "2025-04-28": { morning: false, afternoon: true, evening: false },
+    // Mock data - utilisateurs bénévoles/maraudeurs (pour les managers)
+    const users: PlanningUser[] = [
+        {
+            id: 1,
+            name: "Emma Martin",
+            avatar: "https://randomuser.me/api/portraits/women/1.jpg",
+            role: "Maraudeur",
+            availability: {
+                "2025-04-02": { morning: true, afternoon: true, evening: false },
+                "2025-04-05": { morning: false, afternoon: true, evening: true },
+                "2025-04-10": { morning: true, afternoon: false, evening: false },
+                "2025-04-15": { morning: false, afternoon: false, evening: true },
+                "2025-04-20": { morning: true, afternoon: true, evening: true },
+                "2025-04-28": { morning: false, afternoon: true, evening: false },
+            }
+        },
+        {
+            id: 2,
+            name: "Lucas Dubois",
+            avatar: "https://randomuser.me/api/portraits/men/2.jpg",
+            role: "Maraudeur",
+            availability: {
+                "2025-04-01": { morning: false, afternoon: true, evening: true },
+                "2025-04-08": { morning: true, afternoon: true, evening: false },
+                "2025-04-12": { morning: false, afternoon: true, evening: false },
+                "2025-04-18": { morning: true, afternoon: false, evening: true },
+                "2025-04-25": { morning: false, afternoon: true, evening: true },
+                "2025-04-30": { morning: true, afternoon: false, evening: false },
+            }
+        },
+        {
+            id: 3,
+            name: "Camille Bernard",
+            avatar: "https://randomuser.me/api/portraits/women/3.jpg",
+            role: "Bénévole",
+            availability: {
+                "2025-04-03": { morning: true, afternoon: false, evening: false },
+                "2025-04-07": { morning: false, afternoon: true, evening: true },
+                "2025-04-14": { morning: true, afternoon: true, evening: false },
+                "2025-04-21": { morning: false, afternoon: true, evening: true },
+                "2025-04-27": { morning: true, afternoon: false, evening: false },
+            }
+        },
+        {
+            id: 4,
+            name: "Thomas Laurent",
+            avatar: "https://randomuser.me/api/portraits/men/4.jpg",
+            role: "Coordinateur",
+            availability: {
+                "2025-04-01": { morning: true, afternoon: true, evening: true },
+                "2025-04-04": { morning: true, afternoon: true, evening: false },
+                "2025-04-09": { morning: false, afternoon: true, evening: true },
+                "2025-04-16": { morning: true, afternoon: true, evening: false },
+                "2025-04-23": { morning: false, afternoon: true, evening: true },
+                "2025-04-29": { morning: true, afternoon: false, evening: false },
+            }
+        },
+        {
+            id: 5,
+            name: "Julie Petit",
+            avatar: "https://randomuser.me/api/portraits/women/5.jpg",
+            role: "Bénévole",
+            availability: {
+                "2025-04-02": { morning: false, afternoon: true, evening: false },
+                "2025-04-06": { morning: true, afternoon: false, evening: true },
+                "2025-04-11": { morning: false, afternoon: true, evening: false },
+                "2025-04-17": { morning: true, afternoon: false, evening: true },
+                "2025-04-24": { morning: false, afternoon: true, evening: false },
+            }
+        },
+        {
+            id: 6,
+            name: "Paul Moreau",
+            avatar: "https://randomuser.me/api/portraits/men/6.jpg",
+            role: "Maraudeur",
+            availability: {
+                "2025-04-05": { morning: true, afternoon: false, evening: false },
+                "2025-04-10": { morning: false, afternoon: true, evening: true },
+                "2025-04-15": { morning: true, afternoon: false, evening: false },
+                "2025-04-20": { morning: false, afternoon: true, evening: true },
+                "2025-04-26": { morning: true, afternoon: false, evening: false },
+            }
         }
-    },
-    {
-        id: 2,
-        name: "Lucas Dubois",
-        avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-        role: "Maraudeur",
-        availability: {
-            "2025-04-01": { morning: false, afternoon: true, evening: true },
-            "2025-04-08": { morning: true, afternoon: true, evening: false },
-            "2025-04-12": { morning: false, afternoon: true, evening: false },
-            "2025-04-18": { morning: true, afternoon: false, evening: true },
-            "2025-04-25": { morning: false, afternoon: true, evening: true },
-            "2025-04-30": { morning: true, afternoon: false, evening: false },
-        }
-    },
-    {
-        id: 3,
-        name: "Camille Bernard",
-        avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-        role: "Bénévole",
-        availability: {
-            "2025-04-03": { morning: true, afternoon: false, evening: false },
-            "2025-04-07": { morning: false, afternoon: true, evening: true },
-            "2025-04-14": { morning: true, afternoon: true, evening: false },
-            "2025-04-21": { morning: false, afternoon: true, evening: true },
-            "2025-04-27": { morning: true, afternoon: false, evening: false },
-        }
-    },
-    {
-        id: 4,
-        name: "Thomas Laurent",
-        avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-        role: "Coordinateur",
-        availability: {
-            "2025-04-01": { morning: true, afternoon: true, evening: true },
-            "2025-04-04": { morning: true, afternoon: true, evening: false },
-            "2025-04-09": { morning: false, afternoon: true, evening: true },
-            "2025-04-16": { morning: true, afternoon: true, evening: false },
-            "2025-04-23": { morning: false, afternoon: true, evening: true },
-            "2025-04-29": { morning: true, afternoon: false, evening: false },
-        }
-    },
-    {
-        id: 5,
-        name: "Julie Petit",
-        avatar: "https://randomuser.me/api/portraits/women/5.jpg",
-        role: "Bénévole",
-        availability: {
-            "2025-04-02": { morning: false, afternoon: true, evening: false },
-            "2025-04-06": { morning: true, afternoon: false, evening: true },
-            "2025-04-11": { morning: false, afternoon: true, evening: false },
-            "2025-04-17": { morning: true, afternoon: false, evening: true },
-            "2025-04-24": { morning: false, afternoon: true, evening: false },
-        }
-    },
-    {
-        id: 6,
-        name: "Paul Moreau",
-        avatar: "https://randomuser.me/api/portraits/men/6.jpg",
-        role: "Maraudeur",
-        availability: {
-            "2025-04-05": { morning: true, afternoon: false, evening: false },
-            "2025-04-10": { morning: false, afternoon: true, evening: true },
-            "2025-04-15": { morning: true, afternoon: false, evening: false },
-            "2025-04-20": { morning: false, afternoon: true, evening: true },
-            "2025-04-26": { morning: true, afternoon: false, evening: false },
-        }
-    }
-];
-
+    ];
 
     // Mock data - événements
     const [events, setEvents] = useState<Event[]>([
@@ -238,7 +708,11 @@ const users: User[] = [
     };
 
     // Gérer l'ajout d'un événement
-
+    const handleAddEvent = (newEvent: Event) => {
+        setEvents([...events, newEvent]);
+        setSelectedEvent(newEvent);
+        setIsAddingEvent(false);
+    };
 
     // Gérer la modification d'un événement
     const handleUpdateEvent = (updatedEvent: Event) => {

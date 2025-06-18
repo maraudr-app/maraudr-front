@@ -60,8 +60,8 @@ const Login = () => {
           // Si l'utilisateur n'appartient à aucune association, vérifier son rôle
           if (user.userType === 'Manager') {
             // Si c'est un manager, rediriger vers la création d'association
-            navigate('/create-asso');
-          } else {
+        navigate('/create-asso');
+      } else {
             // Si ce n'est pas un manager, rediriger vers le dashboard
             navigate('/maraudApp/dashboard');
           }

@@ -51,14 +51,14 @@ const Header = () => {
     // Recharger les données utilisateur si elles sont incomplètes
     useEffect(() => {
         const loadData = async () => {
-            if (isAuthenticated && user) {
+        if (isAuthenticated && user) {
                 // Si l'utilisateur n'a pas userType, recharger les données
                 if (!user.userType || !user.firstName || !user.lastName) {
                     console.log('User data incomplete, reloading...');
                     await useAuthStore.getState().fetchUser();
                 }
                 await fetchUserAssociations();
-            }
+        }
         };
         loadData();
     }, [isAuthenticated, user]);
@@ -72,9 +72,9 @@ const Header = () => {
                     const details = await assoService.getAssociation(selectedAssociation.id);
                     setAssociationDetails(details);
                     console.log('Association details:', details);
-                } catch (error) {
+        } catch (error) {
                     console.error('Error fetching association details:', error);
-                }
+        }
             }
         };
 
@@ -241,46 +241,46 @@ const Header = () => {
                                 )}
                                 
                                 <div className="relative" id="user-menu">
-                                    <button
-                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                <button
+                                    onClick={() => setShowUserMenu(!showUserMenu)}
                                         className="flex items-center space-x-2 focus:outline-none"
-                                    >
-                                        {user.avatar ? (
-                                            <img
-                                                src={user.avatar}
-                                                alt={`${user.firstName} ${user.lastName}`}
-                                                className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
-                                            />
-                                        ) : (
-                                            <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
-                                                {getInitials(user.firstName, user.lastName)}
-                                            </div>
-                                        )}
-                                    </button>
-                                    
-                                    {showUserMenu && (
-                                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
-                                            <Link
-                                                to="/maraudApp/profile"
-                                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
-                                            >
-                                                {t('sidebar.profile', 'Profil')}
-                                            </Link>
-                                            <Link
-                                                to="/settings"
-                                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
-                                            >
-                                                {t('sidebar.settings', 'Paramètres')}
-                                            </Link>
-                                            <button
-                                                onClick={handleLogout}
-                                                className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
-                                            >
-                                                {t('auth.logout', 'Déconnexion')}
-                                            </button>
+                                >
+                                    {user.avatar ? (
+                                        <img
+                                            src={user.avatar}
+                                            alt={`${user.firstName} ${user.lastName}`}
+                                            className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
+                                        />
+                                    ) : (
+                                        <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
+                                            {getInitials(user.firstName, user.lastName)}
                                         </div>
                                     )}
-                                </div>
+                                </button>
+                                
+                                {showUserMenu && (
+                                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10" style={{backgroundColor:'rgb(255 255 255 / 99%)'}}>
+                                        <Link
+                                            to="/maraudApp/profile"
+                                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
+                                        >
+                                            {t('sidebar.profile', 'Profil')}
+                                        </Link>
+                                        <Link
+                                            to="/settings"
+                                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
+                                        >
+                                            {t('sidebar.settings', 'Paramètres')}
+                                        </Link>
+                                        <button
+                                            onClick={handleLogout}
+                                                className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
+                                        >
+                                            {t('auth.logout', 'Déconnexion')}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             </>
                         ) : (
                             (showCreateAccount || !isHomePage) && !isLoginPage && (

@@ -194,17 +194,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
         {!sidebarCollapsed && (
           <h1 className="text-xl font-bold text-white">maraudr</h1>
         )}
-        <button
-          onClick={toggleSidebar}
+          <button
+            onClick={toggleSidebar}
           className="p-2 rounded-md hover:bg-gray-700 transition-colors"
-        >
+          >
           {sidebarCollapsed ? (
             <Bars3Icon className="w-5 h-5 text-white" />
-          ) : (
+            ) : (
             <XMarkIcon className="w-5 h-5 text-white" />
-          )}
-        </button>
-      </div>
+            )}
+          </button>
+        </div>
 
       <nav className="flex-1 py-4">
         <ul className="space-y-2">
@@ -224,14 +224,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
             </li>
           ))}
         </ul>
-      </nav>
+        </nav>
 
       <div className="border-t border-gray-700 p-4">
         <ul className="space-y-2">
-          {bottomItems.map((item) => (
+        {bottomItems.map((item) => (
             <li key={item.key}>
               <Link
-                to={item.to}
+              to={item.to}
                 className="flex items-center px-4 py-3 text-white hover:bg-gray-700 transition-colors"
               >
                 {item.icon}
@@ -240,7 +240,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
                 )}
               </Link>
             </li>
-          ))}
+        ))}
         </ul>
       </div>
     </div>

@@ -1,10 +1,6 @@
 import { UserToCreate } from '../types/user/userToCreate';
-import { User, Disponibility, CreateDisponibilityRequest, UpdateDisponibilityRequest } from '../types/user/user';
+import { User } from '../types/user/user';
 import { api } from './api';
-import axios from 'axios';
-
-// URL pour les disponibilités
-const DISPONIBILITY_API_URL = 'http://localhost:8082/api';
 
 export const userService = {
   createUser: async (userData: UserToCreate) => {
@@ -60,9 +56,9 @@ export const userService = {
     }
   },
 
-  updateUser: async (userId: string, userData: Partial<UserToCreate>) => {
+  updateUser: async (userSub: string, userData: any) => {
     try {
-      const response = await api.put(`/users/${userId}`, userData);
+      const response = await api.put(`/users/${userSub}`, userData);
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
@@ -80,62 +76,69 @@ export const userService = {
     }
   },
 
-  // Services pour les disponibilités - Utilise localhost:8082/api
-  createDisponibility: async (disponibilityData: CreateDisponibilityRequest): Promise<Disponibility> => {
+  // Services pour les disponibilités - Utilise localhost:8080/api
+  createDisponibility: async (disponibilityData: any) => {
     try {
-      const response = await axios.post(`${DISPONIBILITY_API_URL}/users/disponibilities`, disponibilityData);
+      // Utiliser l'instance api qui a déjà les en-têtes d'authentification
+      const response = await api.post('/users/disponibilities', disponibilityData);
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
+      console.error('Erreur détaillée:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
   },
 
-  updateDisponibility: async (disponibilityId: string, disponibilityData: UpdateDisponibilityRequest): Promise<Disponibility> => {
+  updateDisponibility: async (disponibilityId: string, disponibilityData: any) => {
     try {
-      const response = await axios.put(`${DISPONIBILITY_API_URL}/users/disponibilities/${disponibilityId}`, disponibilityData);
+      const response = await api.put(`/users/disponibilities/${disponibilityId}`, disponibilityData);
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
+      console.error('Erreur détaillée:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
   },
 
-  getDisponibilities: async (associationId: string): Promise<Disponibility[]> => {
+  getDisponibilities: async (associationId: string) => {
     try {
-      const response = await axios.get(`${DISPONIBILITY_API_URL}/users/disponibilities/${associationId}`);
+      const response = await api.get(`/users/disponibilities/${associationId}`);
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
+      console.error('Erreur détaillée:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
   },
 
-  getAllDisponibilities: async (associationId: string): Promise<Disponibility[]> => {
+  getAllDisponibilities: async (associationId: string) => {
     try {
-      const response = await axios.get(`${DISPONIBILITY_API_URL}/users/disponibilities/all/${associationId}`);
+      const response = await api.get(`/users/disponibilities/all/${associationId}`);
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
+      console.error('Erreur détaillée:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
   },
 
-  getFutureDisponibilities: async (associationId: string): Promise<Disponibility[]> => {
+  getFutureDisponibilities: async (associationId: string) => {
     try {
-      const response = await axios.get(`${DISPONIBILITY_API_URL}/users/disponibilities/futur/${associationId}`);
+      const response = await api.get(`/users/disponibilities/futur/${associationId}`);
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
+      console.error('Erreur détaillée:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
   },
 
   deleteDisponibility: async (disponibilityId: string): Promise<void> => {
     try {
-      await axios.delete(`${DISPONIBILITY_API_URL}/users/disponibilities/${disponibilityId}`);
+      await api.delete(`/users/disponibilities/${disponibilityId}`);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
+      console.error('Erreur détaillée:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
   }
