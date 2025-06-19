@@ -21,13 +21,13 @@ const MaraudrApp = () => {
     };
 
     return (
-        <div className="flex h-screen">
+        <div className="flex min-h-screen bg-white dark:bg-gray-900">
             {/* Sidebar */}
             <Sidebar onToggle={handleSidebarToggle} />
 
             {/* Contenu principal qui s'adapte à la taille de la sidebar */}
             <div 
-                className={`flex-1  dark:bg-gray-900 p-4 transition-all duration-300 ${
+                className={`flex-1 bg-white dark:bg-gray-900 p-4 transition-all duration-300 min-h-screen ${
                     sidebarCollapsed ? 'ml-14' : 'ml-48'
                 }`}
             >

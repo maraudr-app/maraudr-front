@@ -10,12 +10,10 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { StockItem, Category } from '../../types/stock/StockItem';
+import { StockItem, Category, getAllCategories, getCategoryName } from '../../types/stock/StockItem';
 import { useState, useEffect, useMemo } from 'react';
 import { Select } from '../common/select/select';
 import { RecentStockHistory } from './RecentStockHistory';
-// Import du Button plus nécessaire si on le supprime entièrement
-// import { Button } from '../common/button/button';
 import { MultiSelectDropdown } from '../common/multiSelectDropdown/multiSelectDropdown';
 
 // Enregistrer les composants nécessaires de Chart.js
@@ -58,7 +56,7 @@ export const StockChart = ({ items }: StockChartProps) => {
 
     const categories = useMemo(() => [
         { value: 'all', label: 'Toutes les catégories' },
-        ...Object.values(Category).map(cat => ({ value: cat, label: cat }))
+        ...getAllCategories().map(cat => ({ value: cat.value.toString(), label: cat.label }))
     ], []);
 
     // Initialiser les items sélectionnés en fonction du mode de vue et de la catégorie
@@ -74,12 +72,13 @@ export const StockChart = ({ items }: StockChartProps) => {
     const dataForChart = useMemo(() => {
         if (viewMode === 'byCategory') {
             const categoryQuantities = items.reduce((acc, item) => {
-                acc[item.category] = (acc[item.category] || 0) + item.quantity;
+                const categoryName = Object.keys(Category)[Object.values(Category).indexOf(item.category)];
+                acc[categoryName] = (acc[categoryName] || 0) + item.quantity;
                 return acc;
-            }, {} as Record<Category, number>);
+            }, {} as Record<string, number>);
 
-            const labels = Object.keys(categoryQuantities).filter(cat => cat !== Category.Default && cat !== Category.Unknown);
-            const data = labels.map(cat => categoryQuantities[cat as Category]);
+            const labels = Object.keys(categoryQuantities);
+            const data = Object.values(categoryQuantities);
 
             return {
                 labels,
@@ -197,11 +196,13 @@ export const StockChart = ({ items }: StockChartProps) => {
     };
 
     const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value as Category | 'all';
-        setSelectedCategory(value);
+        const value = e.target.value;
         if (value === 'all') {
+            setSelectedCategory('all');
             setViewMode('byCategory');
         } else {
+            const categoryValue = parseInt(value) as Category;
+            setSelectedCategory(categoryValue);
             setViewMode('byItem');
         }
     };

@@ -25,6 +25,7 @@ const Header = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showAssociationsMenu, setShowAssociationsMenu] = useState(false);
     const [associationDetails, setAssociationDetails] = useState<any>(null);
+    const [forceUpdate, setForceUpdate] = useState(0);
     const { t } = useTranslation(['common']);
     const location = useLocation();
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
@@ -70,19 +71,20 @@ const Header = () => {
     useEffect(() => {
         const fetchAssociationDetails = async () => {
             if (selectedAssociation?.id && isAuthenticated) {
-                console.log('Selected Association ID:', selectedAssociation.id);
+                console.log('Effect: Selected Association changed to:', selectedAssociation);
+                console.log('Effect: Selected Association ID:', selectedAssociation.id);
                 try {
                     const details = await assoService.getAssociation(selectedAssociation.id);
                     setAssociationDetails(details);
-                    console.log('Association details:', details);
+                    console.log('Effect: Association details loaded:', details);
         } catch (error) {
-                    console.error('Error fetching association details:', error);
+                    console.error('Effect: Error fetching association details:', error);
         }
             }
         };
 
         fetchAssociationDetails();
-    }, [selectedAssociation?.id, isAuthenticated]);
+    }, [selectedAssociation, isAuthenticated]);
 
     const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
         if (!firstName || !lastName) return '';
@@ -196,12 +198,18 @@ const Header = () => {
                                                 key={association.id}
                                                 onClick={async () => {
                                                     console.log('Clicked association ID:', association.id);
+                                                    console.log('Current selected:', selectedAssociation);
+                                                    console.log('Setting selected association:', association);
+                                                    
                                                     setSelectedAssociation(association);
                                                     setShowAssociationsMenu(false);
+                                                    setForceUpdate(prev => prev + 1);
+                                                    
+                                                    // Charger les détails de la nouvelle association
                                                     try {
                                                         const details = await assoService.getAssociation(association.id);
                                                         setAssociationDetails(details);
-                                                        console.log('Association details:', details);
+                                                        console.log('Association details loaded:', details);
                                                     } catch (error) {
                                                         console.error('Error fetching association details:', error);
                                                     }

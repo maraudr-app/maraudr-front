@@ -45,7 +45,7 @@ function App() {
     <ThemeProvider>
       <Router>
         <Header />
-        <main className="pt-16 px-4 min-h-screen bg-white dark:bg-gray-900 transition-colors">
+        <main className="pt-16 min-h-screen bg-white dark:bg-gray-900 transition-colors">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />

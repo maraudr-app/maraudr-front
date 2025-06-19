@@ -3,7 +3,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { stockService } from '../../services/stockService';
 import { useAssoStore } from '../../store/assoStore';
-import { StockItem } from '../../types/stock/StockItem';
+import { StockItem, getCategoryName } from '../../types/stock/StockItem';
 import { toast } from 'react-hot-toast';
 
 interface StockHistoryModalProps {
@@ -48,7 +48,7 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
             className="fixed inset-0 z-50 overflow-y-auto"
         >
             <div className="flex items-center justify-center min-h-screen">
-                <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+                <div className="fixed inset-0 bg-black opacity-30" aria-hidden="true" />
 
                 <div className="relative bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full mx-4 p-6">
                     {/* En-tête */}
@@ -110,7 +110,7 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                    {item.category}
+                                                    {getCategoryName(item.category)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                     {item.quantity}

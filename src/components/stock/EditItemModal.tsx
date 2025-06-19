@@ -1,23 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, QrCodeIcon } from '@heroicons/react/24/outline';
 import { Input } from '../common/input/input';
 import { Button } from '../common/button/button';
 import { Select } from '../common/select/select';
 import { QRScanner } from '../common/qr/QRScanner';
-import { Category, getAllCategories } from '../../types/stock/StockItem';
-import { stockService } from '../../services/stockService';
-import { useAssoStore } from '../../store/assoStore';
+import { Category, getAllCategories, StockItem } from '../../types/stock/StockItem';
 import { toast } from 'react-hot-toast';
 
-interface AddItemModalProps {
+interface EditItemModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onItemAdded: () => void;
-    onItemHighlight?: (itemName: string) => void;
+    onItemUpdated: (updatedItem: StockItem) => void;
+    item: StockItem | null;
 }
 
-export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: AddItemModalProps) => {
+export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItemModalProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [showQRScanner, setShowQRScanner] = useState(false);
     const [formData, setFormData] = useState({
@@ -28,46 +26,45 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
         quantity: 1
     });
 
-    const selectedAssociation = useAssoStore(state => state.selectedAssociation);
+    // Initialiser le formulaire avec les données de l'item
+    useEffect(() => {
+        if (item && isOpen) {
+            // S'assurer que la catégorie est un nombre
+            const categoryValue = typeof item.category === 'string' 
+                ? parseInt(item.category) as Category 
+                : item.category || Category.Food;
+                
+            setFormData({
+                name: item.name || '',
+                description: item.description || '',
+                barCode: item.barCode || '',
+                category: categoryValue,
+                quantity: item.quantity || 1
+            });
+        }
+    }, [item, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!selectedAssociation) {
-            toast.error('Aucune association sélectionnée');
+        if (!item) {
+            toast.error('Aucun item à modifier');
             return;
         }
 
         setIsLoading(true);
         try {
-            console.log('Tentative d\'ajout d\'item:', formData);
-            console.log('Association ID:', selectedAssociation.id);
-            
-            await stockService.createItem(formData, selectedAssociation.id);
-            toast.success('Item ajouté avec succès !');
-            
-            // Déclencher le highlight si la fonction est fournie
-            if (onItemHighlight) {
-                onItemHighlight(formData.name);
-            }
-            
-            onItemAdded();
+            const updatedItem: StockItem = {
+                ...item,
+                ...formData
+            };
+
+            onItemUpdated(updatedItem);
             onClose();
-            
-            // Reset form
-            setFormData({
-                name: '',
-                description: '',
-                barCode: '',
-                category: Category.Food,
-                quantity: 1
-            });
         } catch (error) {
-            console.error('Erreur détaillée lors de l\'ajout:', error);
-            
-            // Afficher un message d'erreur plus détaillé
+            console.error('Erreur lors de la modification:', error);
             const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-            toast.error(`Erreur lors de l'ajout de l'item: ${errorMessage}`);
+            toast.error(`Erreur lors de la modification: ${errorMessage}`);
         } finally {
             setIsLoading(false);
         }
@@ -105,7 +102,7 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
                     <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-auto p-6 space-y-6">
                         <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
                             <Dialog.Title className="text-xl font-semibold text-maraudr-darkText dark:text-maraudr-lightText">
-                                Ajouter un item
+                                Modifier l'item
                             </Dialog.Title>
                             <button
                                 onClick={onClose}
@@ -200,7 +197,7 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
                                     disabled={isLoading}
                                     className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
                                 >
-                                    {isLoading ? 'Ajout...' : 'Ajouter'}
+                                    {isLoading ? 'Modification...' : 'Modifier'}
                                 </Button>
                             </div>
                         </form>

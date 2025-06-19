@@ -236,20 +236,20 @@ const Team: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen">
-                <div className="text-red-600 text-xl mb-4">{error}</div>
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+                <div className="text-red-600 dark:text-red-400 text-xl mb-4">{error}</div>
                 <div className="space-x-4">
                     <Button 
                         onClick={() => window.location.reload()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                        className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all"
                     >
                         Réessayer
                     </Button>
@@ -258,7 +258,7 @@ const Team: React.FC = () => {
                             logout();
                             navigate('/login');
                         }}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
                     >
                         Se reconnecter
                     </Button>
@@ -268,13 +268,13 @@ const Team: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             {/* Navbar fixe style Stock */}
-            <nav className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300" style={{ left: sidebarWidth }}>
+            <nav className="fixed top-16 right-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm border-b border-orange-200/50 dark:border-gray-700 transition-all duration-300" style={{ left: sidebarWidth }}>
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center gap-3 pl-7">
-                        <UserGroupIcon className="w-5 h-5" />
-                        <div className="text-gray-900 dark:text-white">
+                        <UserGroupIcon className="w-5 h-5 text-orange-500" />
+                        <div className="text-gray-900 dark:text-white font-medium">
                             Gestion de l'équipe ({teamUsers.length})
                         </div>
                     </div>
@@ -282,7 +282,7 @@ const Team: React.FC = () => {
                     <div className="flex items-center space-x-3 px-4">
                         <button
                             onClick={() => setIsAddModalOpen(true)}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-orange-500 rounded-md hover:from-blue-600 hover:to-orange-600 transition-colors"
+                            className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all shadow-sm"
                         >
                             <PlusIcon className="w-4 h-4 mr-2" />
                             Ajouter membre
@@ -291,7 +291,7 @@ const Team: React.FC = () => {
                         <button
                             onClick={fetchTeamMembers}
                             disabled={loading}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
                         >
                             <ArrowPathIcon className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                             Actualiser
@@ -304,47 +304,53 @@ const Team: React.FC = () => {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent mb-2">
                         Gestion de l'Équipe
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 dark:text-gray-400">
                         Gérez votre équipe et consultez les disponibilités des membres
                     </p>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
                         Connecté en tant que: {user.firstName} {user.lastName} ({user.userType})
                     </p>
                 </div>
 
                 {/* Statistiques */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
                         <div className="flex items-center">
-                            <UserGroupIcon className="h-8 w-8 text-blue-600" />
+                            <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
+                                <UserGroupIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                            </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Total Membres</p>
-                                <p className="text-2xl font-bold text-gray-900">{teamUsers.length}</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Membres</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamUsers.length}</p>
                             </div>
                         </div>
                     </div>
                     
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-blue-200/50 dark:border-gray-700 p-6">
                         <div className="flex items-center">
-                            <MapIcon className="h-8 w-8 text-green-600" />
+                            <div className="p-2 bg-gradient-to-r from-blue-100 to-orange-100 dark:from-blue-900/20 dark:to-orange-900/20 rounded-lg">
+                                <MapIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                            </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Membres Actifs</p>
-                                <p className="text-2xl font-bold text-gray-900">
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Membres Actifs</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {teamUsers.length}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
                         <div className="flex items-center">
-                            <CalendarIcon className="h-8 w-8 text-purple-600" />
+                            <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
+                                <CalendarIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                            </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600">Dernière Connexion</p>
-                                <p className="text-sm font-bold text-gray-900">
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Dernière Connexion</p>
+                                <p className="text-sm font-bold text-gray-900 dark:text-white">
                                     {teamUsers.length > 0 ? formatDate(teamUsers[0].createdAt) : 'N/A'}
                                 </p>
                             </div>
@@ -362,67 +368,80 @@ const Team: React.FC = () => {
                 {/* Message si aucun utilisateur */}
                 {teamUsers.length === 0 && !loading && (
                     <div className="text-center py-12">
-                        <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun membre d'équipe</h3>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-full flex items-center justify-center mb-4">
+                            <UserGroupIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucun membre d'équipe</h3>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Commencez par ajouter des membres à votre équipe.
                         </p>
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all"
+                        >
+                            <PlusIcon className="w-4 h-4 mr-2" />
+                            Ajouter le premier membre
+                        </button>
                     </div>
                 )}
 
                 {/* Modal des disponibilités */}
                 {showDisponibilities && selectedUser && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                        <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+                        <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-orange-200/50 dark:border-gray-700">
                             <div className="mt-3">
-                                <div className="flex justify-between items-center mb-4">
+                                <div className="flex justify-between items-center mb-6">
                                     <div className="flex items-center">
-                                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mr-3">
-                                            <span className="text-white font-bold">
+                                        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-orange-500 to-blue-500 flex items-center justify-center mr-4">
+                                            <span className="text-white font-bold text-lg">
                                                 {selectedUser.firstname.charAt(0)}{selectedUser.lastname.charAt(0)}
                                             </span>
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-medium text-gray-900">
+                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                                                 Disponibilités de {selectedUser.firstname} {selectedUser.lastname}
                                             </h3>
-                                            <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{selectedUser.email}</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => setShowDisponibilities(false)}
-                                        className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                                     >
                                         <XMarkIcon className="h-6 w-6" />
                                     </button>
                                 </div>
                                 
                                 {userDisponibilities.length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-                                        <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune disponibilité</h3>
-                                        <p className="mt-1 text-sm text-gray-500">
+                                    <div className="text-center py-12">
+                                        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-full flex items-center justify-center mb-4">
+                                            <CalendarIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                                        </div>
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucune disponibilité</h3>
+                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                             {selectedUser.firstname} n'a pas encore enregistré de disponibilités.
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                                    <div className="space-y-4 max-h-96 overflow-y-auto">
                                         {userDisponibilities.map((dispo) => (
-                                            <div key={dispo.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
+                                            <div key={dispo.id} className="border border-orange-200/50 dark:border-gray-600 rounded-lg p-4 bg-gradient-to-r from-orange-50/50 to-blue-50/50 dark:from-orange-900/10 dark:to-blue-900/10 hover:from-orange-100/50 hover:to-blue-100/50 dark:hover:from-orange-900/20 dark:hover:to-blue-900/20 transition-all duration-200">
                                                 <div className="flex justify-between items-start">
                                                     <div className="flex-1">
-                                                        <div className="flex items-center mb-2">
-                                                            <CalendarIcon className="h-4 w-4 text-blue-600 mr-2" />
-                                                            <span className="text-sm font-medium text-gray-900">
+                                                        <div className="flex items-center mb-3">
+                                                            <div className="p-1 bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg mr-3">
+                                                                <CalendarIcon className="h-4 w-4 text-white" />
+                                                            </div>
+                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
                                                                 Disponibilité
                                                             </span>
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-sm text-gray-700">
-                                                                <span className="font-medium">Début:</span> {formatDate(dispo.start)}
+                                                        <div className="space-y-2 ml-7">
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                <span className="font-medium text-orange-600 dark:text-orange-400">Début:</span> {formatDate(dispo.start)}
                                                             </p>
-                                                            <p className="text-sm text-gray-700">
-                                                                <span className="font-medium">Fin:</span> {formatDate(dispo.end)}
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                <span className="font-medium text-blue-600 dark:text-blue-400">Fin:</span> {formatDate(dispo.end)}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -433,12 +452,12 @@ const Team: React.FC = () => {
                                 )}
                                 
                                 <div className="mt-6 flex justify-end">
-                                    <Button
+                                    <button
                                         onClick={() => setShowDisponibilities(false)}
-                                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors duration-200"
+                                        className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium"
                                     >
                                         Fermer
-                                    </Button>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -446,6 +465,35 @@ const Team: React.FC = () => {
                 )}
             </div>
             </main>
+
+            {/* Modals */}
+            {isAddModalOpen && user?.sub && (
+                <AddMemberModal
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onMemberAdded={handleMemberAdded}
+                    managerId={user.sub}
+                />
+            )}
+
+            {isDeleteModalOpen && memberToDelete && (
+                <ConfirmDeleteModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={() => confirmRemoveMember()}
+                    memberName={`${memberToDelete.firstname} ${memberToDelete.lastname}`}
+                    loading={deleting}
+                />
+            )}
+
+            {toast.isVisible && (
+                <TeamToast
+                    type={toast.type}
+                    message={toast.message}
+                    isVisible={toast.isVisible}
+                    onClose={hideToast}
+                />
+            )}
         </div>
     );
 };

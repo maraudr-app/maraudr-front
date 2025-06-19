@@ -34,7 +34,10 @@ export const useAssoStore = create<AssoState>()(
 
             setAssociations: (associations) => set({ associations }),
             
-            setSelectedAssociation: (association) => set({ selectedAssociation: association }),
+            setSelectedAssociation: (association) => {
+                console.log('Store: Setting selected association to:', association);
+                set({ selectedAssociation: association });
+            },
             
             setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
             

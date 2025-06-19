@@ -44,7 +44,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, handleViewDisponibilities }) 
     )}
     <Button
       onClick={() => handleViewDisponibilities(user)}
-      className="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+      className="w-full bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
     >
       <ClockIcon className="h-4 w-4 mr-2" />
       Voir disponibilités

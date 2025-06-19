@@ -1,4 +1,4 @@
-import { StockItem } from '../../types/stock/StockItem';
+import { StockItem, getCategoryName } from '../../types/stock/StockItem';
 
 interface RecentStockHistoryProps {
     items: StockItem[];
@@ -38,7 +38,7 @@ export const RecentStockHistory = ({ items }: RecentStockHistoryProps) => {
                                 {item.name}
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {item.category}
+                                {getCategoryName(item.category)}
                             </p>
                         </div>
                         <div className="text-right">

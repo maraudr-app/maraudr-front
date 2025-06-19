@@ -182,7 +182,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
 
   return (
     <div
-      className={`fixed top-0 left-0 h-screen bg-maraudr-lightBg dark:bg-maraudr-darkBg shadow-md transition-all duration-300 z-[60] flex flex-col justify-between font-body ${
+      className={`fixed top-0 left-0 h-screen shadow-md transition-all duration-300 z-[60] flex flex-col justify-between font-body ${
         sidebarCollapsed ? 'w-14' : 'w-48'
       }`}
       style={{

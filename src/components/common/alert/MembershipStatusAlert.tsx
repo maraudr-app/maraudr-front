@@ -6,7 +6,7 @@ interface MembershipStatusAlertProps {
     associationName?: string;
 }
 
-const MembershipStatusAlert: React.FC<MembershipStatusAlertProps> = ({ 
+export const MembershipStatusAlert: React.FC<MembershipStatusAlertProps> = ({ 
     isInAssociation, 
     associationName 
 }) => {
@@ -40,6 +40,4 @@ const MembershipStatusAlert: React.FC<MembershipStatusAlertProps> = ({
             </div>
         </div>
     );
-};
-
-export default MembershipStatusAlert; 
+}; 

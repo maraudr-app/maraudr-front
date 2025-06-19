@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StockNavbar } from '../../components/stock/StockNavbar';
 import { StockChart } from '../../components/stock/StockChart';
+import { EditItemModal } from '../../components/stock/EditItemModal';
 import { stockService } from '../../services/stockService';
 import { useAssoStore } from '../../store/assoStore';
-import { StockItem, Category } from '../../types/stock/StockItem';
+import { StockItem, Category, getAllCategories, getCategoryName } from '../../types/stock/StockItem';
 import { toast } from 'react-hot-toast';
 import { FaTrash, FaPencilAlt } from 'react-icons/fa';
 import { Button } from '../../components/common/button/button';
 import { Select } from '../../components/common/select/select';
 import { Input } from '../../components/common/input/input';
 import { Dialog } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
 interface FilterState {
@@ -158,8 +159,10 @@ export const Stock = () => {
         if (!selectedAssociation) return;
 
         try {
-            // TODO: Implémenter l'appel API pour la mise à jour
-            // Pour l'instant, on simule la mise à jour
+            // Appel API pour mettre à jour l'item
+            await stockService.updateItem(updatedItem, selectedAssociation.id);
+            
+            // Mettre à jour la liste locale
             const index = items.findIndex(item => item.id === updatedItem.id);
             if (index !== -1) {
                 const newItems = [...items];
@@ -242,6 +245,130 @@ export const Stock = () => {
             />
 
             <main className="pt-16">
+                {/* Section Stock Critique */}
+                {!isLoading && items.length > 0 && (
+                    <div className="mb-8 px-4 sm:px-6 lg:px-8">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <ExclamationTriangleIcon className="w-6 h-6 text-orange-500 mr-3" />
+                                Stock Critique
+                            </h2>
+                            
+                            {(() => {
+                                const criticalItems = items.filter(item => item.quantity <= 10);
+                                const lowStockItems = items.filter(item => item.quantity > 10 && item.quantity <= 20);
+                                
+                                return (
+                                    <div className="space-y-4">
+                                        {/* Articles critiques (≤ 10) */}
+                                        {criticalItems.length > 0 && (
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center">
+                                                    <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                                                    Stock critique (≤ 10 unités) - {criticalItems.length} articles
+                                                </h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {criticalItems.map(item => (
+                                                        <div key={item.id} className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <h4 className="font-medium text-red-900 dark:text-red-200">{item.name}</h4>
+                                                                <span className="text-sm font-bold text-red-700 dark:text-red-400">
+                                                                    {item.quantity} restant{item.quantity > 1 ? 's' : ''}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-sm text-red-600 dark:text-red-300 mb-2">
+                                                                Catégorie: {getCategoryName(item.category)}
+                                                            </p>
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-xs text-red-500 dark:text-red-400">
+                                                                    Réapprovisionnement urgent
+                                                                </span>
+                                                                <Button
+                                                                    onClick={() => handleEditClick(item)}
+                                                                    className="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+                                                                >
+                                                                    Réapprovisionner
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Articles en stock faible (11-20) */}
+                                        {lowStockItems.length > 0 && (
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-orange-700 dark:text-orange-400 mb-3 flex items-center">
+                                                    <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                                                    Stock faible (11-20 unités) - {lowStockItems.length} articles
+                                                </h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {lowStockItems.map(item => (
+                                                        <div key={item.id} className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <h4 className="font-medium text-orange-900 dark:text-orange-200">{item.name}</h4>
+                                                                <span className="text-sm font-bold text-orange-700 dark:text-orange-400">
+                                                                    {item.quantity} restant{item.quantity > 1 ? 's' : ''}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-sm text-orange-600 dark:text-orange-300 mb-2">
+                                                                Catégorie: {getCategoryName(item.category)}
+                                                            </p>
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-xs text-orange-500 dark:text-orange-400">
+                                                                    Surveillance recommandée
+                                                                </span>
+                                                                <Button
+                                                                    onClick={() => handleEditClick(item)}
+                                                                    className="text-xs px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
+                                                                >
+                                                                    Gérer
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Message si tout va bien */}
+                                        {criticalItems.length === 0 && lowStockItems.length === 0 && (
+                                            <div className="text-center py-8">
+                                                <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                                <h3 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-2">
+                                                    Excellent ! Tous les stocks sont suffisants
+                                                </h3>
+                                                <p className="text-green-600 dark:text-green-300">
+                                                    Aucun article ne nécessite de réapprovisionnement immédiat
+                                                </p>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Statistiques rapides */}
+                                        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{items.length}</div>
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400">Articles total</div>
+                                                </div>
+                                                <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">{criticalItems.length}</div>
+                                                    <div className="text-sm text-red-600 dark:text-red-400">Stock critique</div>
+                                                </div>
+                                                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{lowStockItems.length}</div>
+                                                    <div className="text-sm text-orange-600 dark:text-orange-400">Stock faible</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                )}
+
                 {/* Graphique et Historique */}
                 {!isLoading && items.length > 0 && (
                     <div className="mb-8">
@@ -270,9 +397,9 @@ export const Stock = () => {
                                     className="w-full"
                                 >
                                     <option value="">Toutes les catégories</option>
-                                    {Object.values(Category).map(category => (
-                                        <option key={category} value={category}>
-                                            {category}
+                                    {getAllCategories().map(category => (
+                                        <option key={category.value} value={category.value}>
+                                            {category.label}
                                         </option>
                                     ))}
                                 </Select>
@@ -379,7 +506,7 @@ export const Stock = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {item.category}
+                                                        {getCategoryName(item.category)}
               </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -529,110 +656,15 @@ export const Stock = () => {
             </main>
 
             {/* Modal de modification */}
-            {editingItem && (
-                <Dialog
-                    open={showEditModal}
-                    onClose={() => setShowEditModal(false)}
-                    className="fixed inset-0 z-50 overflow-y-auto"
-                >
-                    <div className="flex items-center justify-center min-h-screen px-4">
-                        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
-
-                        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-auto p-6 space-y-6">
-                            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
-                                <Dialog.Title className="text-xl font-semibold text-maraudr-darkText dark:text-maraudr-lightText">
-                                    Modifier l'item
-                                </Dialog.Title>
-                                <button
-                                    onClick={() => setShowEditModal(false)}
-                                    className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                                >
-                                    <XMarkIcon className="h-6 w-6" />
-                                </button>
-            </div>
-
-                            <form onSubmit={(e) => {
-                                e.preventDefault();
-                                handleEditSubmit(editingItem);
-                            }} className="space-y-5">
-                                <div className="space-y-4">
-                <div>
-                                        <Input
-                                            name="name"
-                                            value={editingItem.name}
-                                            onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
-                                            required
-                                            placeholder="Entrez le nom de l'item"
-                                        />
-              </div>
-
-                <div>
-                                        <Input
-                                            name="description"
-                                            value={editingItem.description || ''}
-                                            onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
-                                            placeholder="Entrez une description (optionnel)"
-                                        />
-                </div>
-
-                <div>
-                                        <Select
-                                            name="category"
-                                            value={editingItem.category}
-                                            onChange={(e) => setEditingItem({...editingItem, category: e.target.value as Category})}
-                                            required
-                                            placeholder="Sélectionnez une catégorie"
-                                        >
-                                            {Object.values(Category).map(category => (
-                                                <option key={category} value={category}>
-                                                    {category}
-                                                </option>
-                                            ))}
-                                        </Select>
-              </div>
-
-                                    <div>
-                                        <Input
-                                            type="number"
-                                            name="quantity"
-                                            value={editingItem.quantity.toString()}
-                                            onChange={(e) => setEditingItem({...editingItem, quantity: parseInt(e.target.value) || 0})}
-                                            required
-                                            min="0"
-                                            placeholder="Entrez la quantité"
-                                        />
-      </div>
-
-                                    <div>
-                                        <Input
-                                            name="barCode"
-                                            value={editingItem.barCode || ''}
-                                            onChange={(e) => setEditingItem({...editingItem, barCode: e.target.value})}
-                                            placeholder="Entrez le code-barres (optionnel)"
-                                        />
-            </div>
-          </div>
-
-                                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <Button
-                                        type="button"
-                                        onClick={() => setShowEditModal(false)}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                                    >
-                                        Annuler
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-lg transition-colors"
-                                    >
-                                        Valider
-                                    </Button>
-                  </div>
-                            </form>
-                  </div>
-                </div>
-                </Dialog>
-            )}
+            <EditItemModal
+                isOpen={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setEditingItem(null);
+                }}
+                onItemUpdated={handleEditSubmit}
+                item={editingItem}
+            />
 
             {/* Modal de confirmation de suppression */}
             <Dialog
