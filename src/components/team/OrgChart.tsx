@@ -202,9 +202,14 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         isCurrentUserCard 
                             ? 'border-orange-500 shadow-lg shadow-orange-200 dark:shadow-orange-900/50' 
                             : 'border-white dark:border-gray-800'
-                    } shadow-lg overflow-hidden bg-gray-200 cursor-pointer hover:scale-105 transition-transform`}
-                    onClick={() => handleShowUserDetails(member)}
-                    title="Voir les détails"
+                    } shadow-lg overflow-hidden bg-gray-200 ${
+                        isCurrentUserManager() ? 'cursor-pointer hover:scale-105' : 'cursor-default'
+                    } transition-transform z-30`}
+                    onClick={isCurrentUserManager() ? () => {
+                        console.log('Photo cliquée pour:', member.firstname, member.lastname);
+                        handleShowUserDetails(member);
+                    } : undefined}
+                    title={isCurrentUserManager() ? "Voir les détails" : ""}
                     >
                         <img 
                             src={profileImageUrl}
@@ -226,7 +231,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                     </div>
                     
                     {/* Rôle sous la photo */}
-                    <div className={`absolute left-1/2 transform -translate-x-1/2 ${isTopLevel ? 'top-20' : 'top-16'} z-20`}>
+                    <div className={`absolute left-1/2 transform -translate-x-1/2 ${isTopLevel ? 'top-20' : 'top-16'} z-20 pointer-events-none`}>
                         <span className={`${isTopLevel ? 'text-xs' : 'text-xs'} font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-0.5 rounded-full shadow-sm border border-gray-200 dark:border-gray-600 whitespace-nowrap`}>
                             {member.isManager ? 'Manager' : 'Membre'}
                         </span>
@@ -234,9 +239,12 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                     
                     {/* Icône calendrier disponibilité - visible seulement pour les managers */}
                     {isCurrentUserManager() && (
-                        <div className={`absolute left-1/2 transform -translate-x-1/2 ${isTopLevel ? 'top-28' : 'top-24'} z-20`}>
+                        <div className={`absolute left-1/2 transform -translate-x-1/2 ${isTopLevel ? 'top-28' : 'top-24'} z-40`}>
                             <button
-                                onClick={() => handleViewDisponibilities(member)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewDisponibilities(member);
+                                }}
                                 className="p-1 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full transition-colors group bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-600"
                                 title="Voir disponibilités"
                             >
@@ -427,8 +435,8 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                 type="danger"
             />
 
-            {/* Modal de détails utilisateur */}
-            {showUserDetailsModal && selectedMemberDetails && (
+            {/* Modal de détails utilisateur - visible seulement pour les managers */}
+            {showUserDetailsModal && selectedMemberDetails && isCurrentUserManager() && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
                     <div className="relative top-10 mx-auto p-6 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-orange-200/50 dark:border-gray-700 mb-10">
                         <div className="flex justify-between items-start mb-6">
@@ -578,38 +586,36 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         </div>
 
                         {/* Actions */}
-                        {isCurrentUserManager() && (
-                            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
-                                <div className="flex flex-wrap gap-3">
+                        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+                            <div className="flex flex-wrap gap-3">
+                                <button
+                                    onClick={() => {
+                                        handleViewDisponibilities(selectedMemberDetails);
+                                        setShowUserDetailsModal(false);
+                                    }}
+                                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    <CalendarIcon className="w-4 h-4 mr-2" />
+                                    Voir disponibilités
+                                </button>
+                                
+                                {!selectedMemberDetails.isManager && !isCurrentUser(selectedMemberDetails.id) && onRemoveMember && (
                                     <button
                                         onClick={() => {
-                                            handleViewDisponibilities(selectedMemberDetails);
+                                            handleRemoveMember(selectedMemberDetails);
                                             setShowUserDetailsModal(false);
                                         }}
-                                        className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                        className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                                     >
-                                        <CalendarIcon className="w-4 h-4 mr-2" />
-                                        Voir disponibilités
+                                        <TrashIcon className="w-4 h-4 mr-2" />
+                                        Retirer de l'équipe
                                     </button>
-                                    
-                                    {!selectedMemberDetails.isManager && !isCurrentUser(selectedMemberDetails.id) && onRemoveMember && (
-                                        <button
-                                            onClick={() => {
-                                                handleRemoveMember(selectedMemberDetails);
-                                                setShowUserDetailsModal(false);
-                                            }}
-                                            className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                                        >
-                                            <TrashIcon className="w-4 h-4 mr-2" />
-                                            Retirer de l'équipe
-                                        </button>
-                                    )}
-                                </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             )}
         </div>
     );
-}; 
+};

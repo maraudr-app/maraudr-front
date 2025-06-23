@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       icon: <ChartBarIcon className="w-5 h-5" />,
       label: t('sidebar.dashboard', 'Dashboard'),
       key: 'dashboard',
-      showForManager: true
+      showForManager: false
     },
     {
       to: '/maraudApp/stock',
