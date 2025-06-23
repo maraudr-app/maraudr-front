@@ -16,6 +16,8 @@ import Team from "./pages/team/team.tsx";
 import Planning from "./pages/planing/planing.tsx";
 import CreateAccount from './pages/Register/createAccount.tsx';
 import CreateAsso from './pages/Association/CreateAsso.tsx';
+import ForgotPassword from './pages/Login/ForgotPassword.tsx';
+import ResetPassword from './pages/Login/ResetPassword.tsx';
 import { Toaster } from 'react-hot-toast';
 import AssoInformation from "./pages/Association/AssoInformation.tsx";
 import { Stock } from './pages/Stock/Stock.tsx';
@@ -49,6 +51,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/register" element={<CreateAccount />} />
 
             <Route

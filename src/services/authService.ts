@@ -197,5 +197,30 @@ export const authService = {
       console.error('Error updating profile:', error);
       throw error;
     }
+  },
+
+  // Fonction pour réinitialiser le mot de passe
+  resetPassword: async (email: string): Promise<{ message: string }> => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/reset-password`, {
+        email
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de l\'envoi de l\'email de réinitialisation');
+    }
+  },
+
+  // Fonction pour confirmer la réinitialisation avec le token
+  confirmResetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/confirm-reset-password`, {
+        token,
+        newPassword
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la réinitialisation du mot de passe');
+    }
   }
 }; 

@@ -38,14 +38,11 @@ export const Stock = () => {
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingItem, setEditingItem] = useState<StockItem | null>(null);
-    const { selectedAssociation, associations, setSelectedAssociation, sidebarCollapsed } = useAssoStore();
+    const { selectedAssociation, associations, setSelectedAssociation } = useAssoStore();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
     const [highlightedItemName, setHighlightedItemName] = useState<string | null>(null);
-
-    // Définir la largeur de la sidebar en pixels comme dans Team
-    const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
     useEffect(() => {
         if (!selectedAssociation) {
@@ -61,7 +58,7 @@ export const Stock = () => {
             if (!selectedAssociation?.id) return;
 
             try {
-                let stockId = await stockService.getStockByAssociationId(selectedAssociation.id);
+                let stockId = await stockService.getStockId(selectedAssociation.id);
                 
                 if (!stockId) {
                     stockId = await stockService.createStock(selectedAssociation.id);
@@ -99,7 +96,7 @@ export const Stock = () => {
 
         try {
             setIsLoading(true);
-            const fetchedItems = await stockService.getItemsByAssociationId(selectedAssociation.id);
+            const fetchedItems = await stockService.getStockItems(selectedAssociation.id);
             setItems(fetchedItems);
         } catch (error) {
             // Erreur silencieuse

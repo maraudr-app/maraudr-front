@@ -13,6 +13,7 @@ export interface DecodedToken {
     email: string;
     firstName: string;
     lastName: string;
+    userType: string;
     exp: number;
 }
 

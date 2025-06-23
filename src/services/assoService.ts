@@ -1,11 +1,47 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import { userService } from './userService';
 
 const API_URL = 'http://localhost:8080';
 
 interface AssoResponse {
     id?: string;
     siret: string;
+}
+
+// Interface pour les membres d'association
+export interface AssociationMember {
+    id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    phoneNumber?: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+    languages?: string[];
+    isManager: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// Interface pour les données d'association retournées par l'API
+interface AssociationData {
+    id: string;
+    name: string;
+    managerId: string;
+    members: string[]; // Tableau des IDs des membres
+    address: {
+        street: string;
+        city: string;
+        postalCode: string;
+        country: string;
+    };
+    siret: {
+        value: string;
+    };
 }
 
 export const assoService = {
@@ -114,6 +150,75 @@ export const assoService = {
         } catch (error: any) {
             // Error silencieuse
             throw error;
+        }
+    },
+
+    // Méthode mise à jour pour récupérer les membres avec leurs détails complets
+    getAssociationMembers: async (associationId: string): Promise<AssociationMember[]> => {
+        try {
+            console.log('Récupération des membres pour l\'association:', associationId);
+            
+            // 1. Récupérer les données de l'association (qui contient les IDs des membres)
+            const associationResponse = await axios.get(`${API_URL}/association`, {
+                params: { id: associationId },
+                headers: {
+                    'Authorization': `Bearer ${useAuthStore.getState().token}`
+                },
+                withCredentials: true
+            });
+
+            const associationData: AssociationData = associationResponse.data;
+            console.log('Données association récupérées:', associationData);
+
+            if (!associationData.members || associationData.members.length === 0) {
+                console.log('Aucun membre trouvé dans l\'association');
+                return [];
+            }
+
+            // 2. Récupérer les détails de chaque membre via leur ID
+            const memberDetailsPromises = associationData.members.map(async (memberId: string) => {
+                try {
+                    const userDetails = await userService.getUser(memberId);
+                    console.log('Détails utilisateur récupérés pour', memberId, ':', userDetails);
+                    
+                    // Déterminer si l'utilisateur est le manager
+                    const isManager = memberId === associationData.managerId;
+                    
+                    // Convertir en format AssociationMember
+                    const associationMember: AssociationMember = {
+                        id: userDetails.id,
+                        firstname: userDetails.firstname,
+                        lastname: userDetails.lastname,
+                        email: userDetails.email,
+                        phoneNumber: userDetails.phoneNumber || userDetails.contactInfo?.phoneNumber,
+                        street: userDetails.street || userDetails.address?.street,
+                        city: userDetails.city || userDetails.address?.city,
+                        state: userDetails.state || userDetails.address?.state,
+                        postalCode: userDetails.postalCode || userDetails.address?.postalCode,
+                        country: userDetails.country || userDetails.address?.country,
+                        languages: userDetails.languages || [],
+                        isManager: isManager,
+                        createdAt: userDetails.createdAt,
+                        updatedAt: userDetails.updatedAt || userDetails.lastLoggedIn
+                    };
+                    
+                    return associationMember;
+                } catch (error) {
+                    console.error(`Erreur lors de la récupération des détails pour le membre ${memberId}:`, error);
+                    return null;
+                }
+            });
+
+            // 3. Attendre que tous les détails soient récupérés et filtrer les résultats null
+            const memberDetails = await Promise.all(memberDetailsPromises);
+            const validMembers = memberDetails.filter((member): member is AssociationMember => member !== null);
+            
+            console.log('Membres finaux récupérés:', validMembers);
+            return validMembers;
+
+        } catch (error: any) {
+            console.error('Erreur lors de la récupération des membres de l\'association:', error);
+            throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des membres');
         }
     },
 

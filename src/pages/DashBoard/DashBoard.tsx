@@ -12,6 +12,7 @@ import {
 import { assoService } from '../../services/assoService';
 import { teamService } from '../../services/teamService';
 import { stockService } from '../../services/stockService';
+import { userService } from '../../services/userService';
 import { MembershipStatusAlert } from '../../components/common/alert/MembershipStatusAlert';
 import { 
   UsersIcon, 
@@ -41,7 +42,7 @@ interface DashboardData {
 const DashBoard = () => {
   const { t } = useTranslation();
   const user = useAuthStore(state => state.user);
-  const { selectedAssociation, sidebarCollapsed } = useAssoStore();
+  const { selectedAssociation } = useAssoStore();
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [dashboardData, setDashboardData] = useState<DashboardData>({
@@ -55,9 +56,6 @@ const DashBoard = () => {
   });
 
   const isManager = user?.userType === 'Manager';
-
-  // Définir la largeur de la sidebar en pixels
-  const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
   // Fonctions pour la navigation des mois
   const getMonthName = (date: Date) => {
@@ -119,7 +117,8 @@ const DashBoard = () => {
       try {
         // Charger les données de stock
         const stockItems = await stockService.getStockItems(selectedAssociation.id);
-        const lowStockItems = stockItems.filter(item => item.quantity <= item.minThreshold);
+        // Pour l'instant, considérer qu'un item est en stock faible si quantity < 5
+        const lowStockItems = stockItems.filter(item => item.quantity < 5);
         setDashboardData({
           stockItems: stockItems.length,
           lowStockItems: lowStockItems.length,
