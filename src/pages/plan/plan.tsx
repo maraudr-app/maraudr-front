@@ -12,7 +12,8 @@ import {
     WifiIcon,
     ExclamationTriangleIcon,
     XMarkIcon,
-    MapIcon
+    MapIcon,
+    FireIcon
 } from '@heroicons/react/24/outline';
 import { useAssoStore } from '../../store/assoStore';
 import { useAuthStore } from '../../store/authStore';
@@ -21,6 +22,7 @@ import { Input } from '../../components/common/input/input';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/common/toast/Toast';
 import RouteInfoModal from '../../components/common/modal/RouteInfoModal';
+import HeatmapLayer from '../../components/common/map/HeatmapLayer';
 
 // Fix for default marker icons
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -85,6 +87,9 @@ const Plan: React.FC = () => {
     const [routeLoading, setRouteLoading] = useState(false);
     const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
     const [selectedPointForRoute, setSelectedPointForRoute] = useState<GeoPoint | null>(null);
+    
+    // États pour la heatmap
+    const [showHeatmap, setShowHeatmap] = useState(false);
     
     // Position par défaut (Paris)
     const [mapCenter] = useState<[number, number]>([48.8566, 2.3522]);
@@ -304,6 +309,19 @@ const Plan: React.FC = () => {
                             <option value={90}>3 derniers mois</option>
                         </select>
 
+                        {/* Bouton de heatmap */}
+                        <button
+                            onClick={() => setShowHeatmap(!showHeatmap)}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                                showHeatmap
+                                    ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                                    : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                            }`}
+                        >
+                            <FireIcon className="w-4 h-4" />
+                            <span>{showHeatmap ? 'Masquer heatmap' : 'Afficher heatmap'}</span>
+                        </button>
+
                         {/* Bouton d'ajout de point */}
                         <button
                             onClick={() => {
@@ -376,8 +394,22 @@ const Plan: React.FC = () => {
                             
                             <MapClickHandler onMapClick={handleMapClick} isAddingPoint={isAddingPoint} />
                             
-                            {/* Affichage des points existants */}
-                            {geoPoints.map((point, index) => (
+                            {/* Affichage de la heatmap */}
+                            {showHeatmap && geoPoints.length > 0 && (
+                                <HeatmapLayer 
+                                    points={geoPoints}
+                                    options={{
+                                        radius: 30,
+                                        blur: 20,
+                                        maxZoom: 17,
+                                        max: 2.0,
+                                        minOpacity: 0.3
+                                    }}
+                                />
+                            )}
+                            
+                            {/* Affichage des points existants (masqués si heatmap active) */}
+                            {!showHeatmap && geoPoints.map((point, index) => (
                                 <Marker
                                     key={point.id || index}
                                     position={[point.latitude, point.longitude]}
@@ -431,25 +463,57 @@ const Plan: React.FC = () => {
 
                     {/* Légende des couleurs */}
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Légende</h3>
-                        <div className="space-y-2 text-xs">
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                                <span className="text-gray-600 dark:text-gray-400">Moins d'1 heure</span>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                            {showHeatmap ? 'Heatmap - Densité des points' : 'Légende par âge'}
+                        </h3>
+                        
+                        {showHeatmap ? (
+                            <div className="space-y-2 text-xs">
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Faible densité</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-cyan-400 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Densité modérée</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Densité moyenne</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Densité élevée</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Très haute densité</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Densité maximale</span>
+                                </div>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                                <span className="text-gray-600 dark:text-gray-400">Moins de 6 heures</span>
+                        ) : (
+                            <div className="space-y-2 text-xs">
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Moins d'1 heure</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Moins de 6 heures</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Aujourd'hui</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
+                                    <span className="text-gray-600 dark:text-gray-400">Plus ancien</span>
+                                </div>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                                <span className="text-gray-600 dark:text-gray-400">Aujourd'hui</span>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
-                                <span className="text-gray-600 dark:text-gray-400">Plus ancien</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Liste des points */}

@@ -35,8 +35,27 @@ export const useAssoStore = create<AssoState>()(
             setAssociations: (associations) => set({ associations }),
             
             setSelectedAssociation: (association) => {
-                console.log('Store: Setting selected association to:', association);
+                console.log('🔄 Store: Changement d\'association demandé');
+                console.log('   - Association actuelle:', get().selectedAssociation);
+                console.log('   - Nouvelle association:', association);
+                
+                // Mettre à jour l'état
                 set({ selectedAssociation: association });
+                
+                // Vérifier que le changement a bien eu lieu
+                const newState = get();
+                console.log('✅ Store: Association mise à jour vers:', newState.selectedAssociation);
+                
+                // Forcer un re-render en créant un nouvel objet si nécessaire
+                if (association) {
+                    const updatedAssociation = { ...association };
+                    set({ selectedAssociation: updatedAssociation });
+                }
+                
+                // Émettre un événement personnalisé pour notifier le changement
+                window.dispatchEvent(new CustomEvent('associationChanged', { 
+                    detail: { association } 
+                }));
             },
             
             setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),

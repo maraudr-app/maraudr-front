@@ -194,22 +194,22 @@ const CreateAccount = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-6xl w-full bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+      <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         {showSuccess ? (
           <div className="text-center">
             <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 mx-auto">
               <FaCheckCircle className="text-white text-3xl" />
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Client add successfully</h3>
-            <p className="text-gray-600">Redirecting to login page...</p>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Client add successfully</h3>
+            <p className="text-gray-600 dark:text-gray-400">Redirecting to login page...</p>
           </div>
         ) : (
           <>
             {/* Header */}
             <div className="text-left mb-8">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">Add new client or company</h1>
-              <p className="text-gray-600">create a profile here.</p>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Add new client or company</h1>
+              <p className="text-gray-600 dark:text-gray-400">create a profile here.</p>
             </div>
 
             {/* Main Content Layout */}
@@ -217,14 +217,14 @@ const CreateAccount = () => {
               {/* Left Section - Profile Picture (smaller, inline) */}
               <div className="lg:w-1/4 flex flex-col items-center">
                 <div className="relative mb-4">
-                  <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
-                    <UserCircleIcon className="w-20 h-20 text-gray-500" />
+                  <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <UserCircleIcon className="w-20 h-20 text-gray-500 dark:text-gray-400" />
                   </div>
                   <button className="absolute bottom-0 right-0 bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold hover:bg-orange-600 transition-colors">
                     +
                   </button>
                 </div>
-                <button className="text-gray-500 hover:text-gray-700 text-sm font-medium">
+                <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm font-medium">
                   Change Profile Picture
                 </button>
               </div>
@@ -386,7 +386,7 @@ const CreateAccount = () => {
             </div>
 
             {/* Manager Fields */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-md border">
+            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
               <div className="flex items-center space-x-3 mb-4">
                 <input
                   type="checkbox"
@@ -396,7 +396,7 @@ const CreateAccount = () => {
                   onChange={handleChange}
                   className="h-4 w-4 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
                 />
-                <label htmlFor="isManager" className="text-sm font-medium text-gray-700">
+                <label htmlFor="isManager" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t_register('isManager')}
                 </label>
               </div>
@@ -415,10 +415,10 @@ const CreateAccount = () => {
             </div>
 
             {/* Erreur globale */}
-            {formError && <div className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg">{t_register('formError')}</div>}
+            {formError && <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">{t_register('formError')}</div>}
 
             {/* Terms */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="flex items-start space-x-3">
                 <input
                   id="terms"
@@ -426,11 +426,11 @@ const CreateAccount = () => {
                   required
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
                 />
-                <label htmlFor="terms" className="text-sm text-gray-700">
+                <label htmlFor="terms" className="text-sm text-gray-700 dark:text-gray-300">
                   {t_register('terms')}{" "}
-                  <a href="#" className="text-blue-600 hover:text-blue-500 underline">{t_register('termsLink')}</a>{" "}
+                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline">{t_register('termsLink')}</a>{" "}
                   {t_register('and')}{" "}
-                  <a href="#" className="text-blue-600 hover:text-blue-500 underline">{t_register('privacyLink')}</a>
+                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline">{t_register('privacyLink')}</a>
                 </label>
               </div>
             </div>
@@ -449,9 +449,9 @@ const CreateAccount = () => {
 
             {/* Already have account */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t_register('alreadyHaveAccount')}{" "}
-                <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link to="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                   {t_register('signIn')}
                 </Link>
               </p>

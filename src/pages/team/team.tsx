@@ -68,18 +68,25 @@ const Team: React.FC = () => {
 
     const fetchTeamMembers = async () => {
         if (!user?.sub) {
+            console.log('❌ Team: Aucun utilisateur connecté');
             setError('Utilisateur non connecté');
             setLoading(false);
             return;
         }
 
+        console.log('🔄 Team: Chargement des membres pour le manager:', user.sub);
+        if (selectedAssociation) {
+            console.log('📌 Team: Association sélectionnée:', selectedAssociation.name, '(ID:', selectedAssociation.id, ')');
+        }
+
         try {
             setLoading(true);
             const response = await teamService.getTeamMembers(user.sub);
-            console.log('Team response:', response);
+            console.log('✅ Team: Réponse équipe reçue:', response);
             setTeamMembers(response?.members || []);
+            console.log('📊 Team: Nombre de membres:', response?.members?.length || 0);
         } catch (err: any) {
-            console.error('Error fetching team:', err);
+            console.error('❌ Team: Erreur lors du chargement:', err);
             setError(err.message);
             setTeamMembers([]);
         } finally {
@@ -89,7 +96,21 @@ const Team: React.FC = () => {
 
     useEffect(() => {
         fetchTeamMembers();
-    }, [user?.sub]);
+    }, [user?.sub, selectedAssociation]);
+
+    // Ajouter un useEffect pour écouter les changements d'association
+    useEffect(() => {
+        const handleAssociationChange = (event: CustomEvent) => {
+            console.log('🎯 Team: Événement de changement d\'association reçu:', event.detail.association);
+            // Le useEffect ci-dessus va automatiquement se déclencher grâce à la dépendance selectedAssociation
+        };
+
+        window.addEventListener('associationChanged', handleAssociationChange as EventListener);
+        
+        return () => {
+            window.removeEventListener('associationChanged', handleAssociationChange as EventListener);
+        };
+    }, []);
 
     const handleSelectMember = (id: string) => {
         setSelectedMember(id === selectedMember ? null : id);

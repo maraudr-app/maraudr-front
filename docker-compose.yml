@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Frontend React/Vite
+  maraudr-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: maraudr-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8082
+      - VITE_ASSO_API_URL=http://localhost:8080
+      - VITE_STOCK_API_URL=http://localhost:8081
+      - VITE_GEO_API_URL=http://localhost:8084
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+
+  # Base de données PostgreSQL
+  maraudr-database:
+    image: postgres:15-alpine
+    container_name: maraudr-database
+    environment:
+      POSTGRES_DB: maraudr_db
+      POSTGRES_USER: maraudr_user
+      POSTGRES_PASSWORD: maraudr_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+
+  # Redis pour le cache
+  maraudr-redis:
+    image: redis:7-alpine
+    container_name: maraudr-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  maraudr-network:
+    driver: bridge 

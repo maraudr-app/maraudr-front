@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # Frontend React/Vite en production
+  maraudr-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: maraudr-frontend-prod
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://maraudr-backend:8082
+      - VITE_ASSO_API_URL=http://maraudr-asso-service:8080
+      - VITE_STOCK_API_URL=http://maraudr-stock-service:8081
+      - VITE_GEO_API_URL=http://maraudr-geo-service:8084
+    depends_on:
+      - maraudr-backend
+      - maraudr-asso-service
+      - maraudr-stock-service
+      - maraudr-geo-service
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+
+  # Base de données PostgreSQL
+  maraudr-database:
+    image: postgres:15-alpine
+    container_name: maraudr-database
+    environment:
+      POSTGRES_DB: maraudr_db
+      POSTGRES_USER: maraudr_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-maraudr_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maraudr_user -d maraudr_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis pour le cache et les sessions
+  maraudr-redis:
+    image: redis:7-alpine
+    container_name: maraudr-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Backend principale (Auth, Users, etc.)
+  maraudr-backend:
+    image: maraudr/backend:latest
+    container_name: maraudr-backend
+    ports:
+      - "8082:8082"
+    environment:
+      - DATABASE_URL=postgresql://maraudr_user:${POSTGRES_PASSWORD:-maraudr_password}@maraudr-database:5432/maraudr_db
+      - REDIS_URL=redis://maraudr-redis:6379
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - API_PORT=8082
+      - CORS_ORIGIN=http://localhost:80
+    depends_on:
+      maraudr-database:
+        condition: service_healthy
+      maraudr-redis:
+        condition: service_healthy
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service de gestion des associations
+  maraudr-asso-service:
+    image: maraudr/asso-service:latest
+    container_name: maraudr-asso-service
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://maraudr_user:${POSTGRES_PASSWORD:-maraudr_password}@maraudr-database:5432/maraudr_db
+      - REDIS_URL=redis://maraudr-redis:6379
+      - API_PORT=8080
+      - BACKEND_URL=http://maraudr-backend:8082
+    depends_on:
+      maraudr-database:
+        condition: service_healthy
+      maraudr-redis:
+        condition: service_healthy
+      maraudr-backend:
+        condition: service_healthy
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+
+  # Service de gestion des stocks
+  maraudr-stock-service:
+    image: maraudr/stock-service:latest
+    container_name: maraudr-stock-service
+    ports:
+      - "8081:8081"
+    environment:
+      - DATABASE_URL=postgresql://maraudr_user:${POSTGRES_PASSWORD:-maraudr_password}@maraudr-database:5432/maraudr_db
+      - REDIS_URL=redis://maraudr-redis:6379
+      - API_PORT=8081
+      - BACKEND_URL=http://maraudr-backend:8082
+    depends_on:
+      maraudr-database:
+        condition: service_healthy
+      maraudr-redis:
+        condition: service_healthy
+      maraudr-backend:
+        condition: service_healthy
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+
+  # Service de géolocalisation avec WebSockets
+  maraudr-geo-service:
+    image: maraudr/geo-service:latest
+    container_name: maraudr-geo-service
+    ports:
+      - "8084:8084"
+    environment:
+      - DATABASE_URL=postgresql://maraudr_user:${POSTGRES_PASSWORD:-maraudr_password}@maraudr-database:5432/maraudr_db
+      - REDIS_URL=redis://maraudr-redis:6379
+      - API_PORT=8084
+      - BACKEND_URL=http://maraudr-backend:8082
+    depends_on:
+      maraudr-database:
+        condition: service_healthy
+      maraudr-redis:
+        condition: service_healthy
+      maraudr-backend:
+        condition: service_healthy
+    networks:
+      - maraudr-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  maraudr-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

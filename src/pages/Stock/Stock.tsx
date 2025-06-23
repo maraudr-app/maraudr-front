@@ -14,6 +14,7 @@ import { Input } from '../../components/common/input/input';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import { AssociationDebug } from '../../components/debug/AssociationDebug';
 
 interface FilterState {
     category: string;
@@ -45,14 +46,18 @@ export const Stock = () => {
 
     useEffect(() => {
         const checkStock = async () => {
+            console.log('🔄 Stock: useEffect déclenché pour association:', selectedAssociation?.id);
+            
             // Si aucune association n'est sélectionnée mais qu'il y en a dans la liste, sélectionner la première
             if (!selectedAssociation && associations.length > 0) {
+                console.log('📌 Stock: Sélection automatique de la première association');
                 setSelectedAssociation(associations[0]);
                 return;
             }
 
             // Si aucune association n'est disponible, afficher un message et rediriger vers la création
             if (!selectedAssociation) {
+                console.log('❌ Stock: Aucune association disponible');
                 toast.error(t('stock.noAssociation', 'Vous n\'avez pas encore d\'association'));
                 navigate('/maraudApp/create-asso');
                 return;
@@ -60,20 +65,21 @@ export const Stock = () => {
 
             setIsLoading(true);
             try {
-                console.log('Vérification du stock pour association:', selectedAssociation.id);
+                console.log('🔍 Stock: Vérification du stock pour association:', selectedAssociation.id);
                 let stockId = await stockService.getStockId(selectedAssociation.id);
-                console.log('Stock ID trouvé:', stockId);
+                console.log('📦 Stock: Stock ID trouvé:', stockId);
                 
                 if (!stockId) {
-                    console.log('Aucun stock trouvé, création en cours...');
+                    console.log('🆕 Stock: Aucun stock trouvé, création en cours...');
                     stockId = await stockService.createStock(selectedAssociation.id);
-                    console.log('Stock créé avec ID:', stockId);
+                    console.log('✅ Stock: Stock créé avec ID:', stockId);
                 }
                 
-                console.log('Chargement des items pour le stock:', stockId);
+                console.log('📋 Stock: Chargement des items pour le stock:', stockId);
                 await fetchItems();
+                console.log('✅ Stock: Items chargés avec succès');
             } catch (error) {
-                console.error('Erreur détaillée lors de la vérification du stock:', error);
+                console.error('❌ Stock: Erreur détaillée lors de la vérification du stock:', error);
                 toast.error('Erreur lors de la vérification du stock: ' + (error as Error).message);
             } finally {
                 setIsLoading(false);
@@ -83,20 +89,39 @@ export const Stock = () => {
         checkStock();
     }, [selectedAssociation, associations, navigate, setSelectedAssociation, t]);
 
+    // Ajouter un useEffect pour écouter les changements d'association via l'événement personnalisé
+    useEffect(() => {
+        const handleAssociationChange = (event: CustomEvent) => {
+            console.log('🎯 Stock: Événement de changement d\'association reçu:', event.detail.association);
+            // Les useEffects ci-dessus vont automatiquement se déclencher grâce à la dépendance selectedAssociation
+        };
+
+        window.addEventListener('associationChanged', handleAssociationChange as EventListener);
+        
+        return () => {
+            window.removeEventListener('associationChanged', handleAssociationChange as EventListener);
+        };
+    }, []);
+
     useEffect(() => {
         setCurrentPage(1);
     }, [filter.category, filter.name]);
 
     const fetchItems = async () => {
-        if (!selectedAssociation) return;
+        if (!selectedAssociation) {
+            console.log('❌ fetchItems: Aucune association sélectionnée');
+            return;
+        }
 
+        console.log('🔄 fetchItems: Début du chargement pour association:', selectedAssociation.id);
         setIsLoading(true);
         try {
             const fetchedItems = await stockService.getStockItems(selectedAssociation.id, filter);
+            console.log('✅ fetchItems: Items récupérés:', fetchedItems.length, 'items');
             setItems(fetchedItems);
         } catch (error) {
+            console.error('❌ fetchItems: Erreur:', error);
             toast.error('Erreur lors du chargement des items');
-            console.error(error);
         } finally {
             setIsLoading(false);
         }

@@ -108,23 +108,34 @@ const DashBoard = () => {
   // Charger les données du dashboard
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!selectedAssociation?.id) return;
+      console.log('🔄 Dashboard: useEffect déclenché');
+      console.log('📌 Dashboard: Association sélectionnée:', selectedAssociation?.name, '(ID:', selectedAssociation?.id, ')');
+      
+      if (!selectedAssociation?.id) {
+        console.log('❌ Dashboard: Aucune association sélectionnée');
+        return;
+      }
       
       try {
+        console.log('🔄 Dashboard: Début du chargement des données');
         setLoading(true);
         
         // Charger les données de stock
+        console.log('📦 Dashboard: Chargement des données de stock...');
         const stockItems = await stockService.getStockItems(selectedAssociation.id);
         const lowStockItems = stockItems.filter(item => item.quantity < 10);
+        console.log('✅ Dashboard: Stock chargé -', stockItems.length, 'items,', lowStockItems.length, 'en rupture');
         
         // Charger les données d'équipe si manager
         let teamCount = 0;
         if (isManager) {
           try {
+            console.log('👥 Dashboard: Chargement des données d\'équipe...');
             const teamData = await teamService.getTeamMembers(selectedAssociation.id);
             teamCount = teamData.totalCount;
+            console.log('✅ Dashboard: Équipe chargée -', teamCount, 'membres');
           } catch (error) {
-            console.log('Team data not available');
+            console.log('⚠️ Dashboard: Données d\'équipe non disponibles');
           }
         }
 
@@ -132,15 +143,17 @@ const DashBoard = () => {
         let isInAssociation = true;
         if (!isManager && user?.sub && selectedAssociation?.id) {
           try {
+            console.log('🔍 Dashboard: Vérification de l\'adhésion à l\'association...');
             isInAssociation = await assoService.isUserMemberOfAssociation(user.sub, selectedAssociation.id);
-            console.log(`Utilisateur ${user.sub} membre de l'association ${selectedAssociation.id}:`, isInAssociation);
+            console.log(`✅ Dashboard: Utilisateur ${user.sub} membre de l'association ${selectedAssociation.id}:`, isInAssociation);
           } catch (error) {
-            console.log('Could not check association membership:', error);
+            console.log('⚠️ Dashboard: Impossible de vérifier l\'adhésion:', error);
             // En cas d'erreur, on considère que l'utilisateur n'est pas encore membre
             isInAssociation = false;
           }
         }
 
+        console.log('📊 Dashboard: Mise à jour des données du dashboard');
         setDashboardData({
           stockItems: stockItems.length,
           lowStockItems: lowStockItems.length,
@@ -150,15 +163,29 @@ const DashBoard = () => {
           isUserInAssociation: isInAssociation,
           stockItemsData: stockItems
         });
+        console.log('✅ Dashboard: Données chargées avec succès');
       } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
+        console.error('❌ Dashboard: Erreur lors du chargement des données:', error);
       } finally {
         setLoading(false);
       }
     };
 
     loadDashboardData();
-  }, [selectedAssociation?.id, isManager]);
+  }, [selectedAssociation?.id, isManager, user?.sub]);
+
+  // Ajouter un useEffect pour écouter les changements d'association
+  useEffect(() => {
+    const handleAssociationChange = (event: CustomEvent) => {
+      console.log('🎯 Dashboard: Événement de changement d\'association reçu:', event.detail.association);
+    };
+
+    window.addEventListener('associationChanged', handleAssociationChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('associationChanged', handleAssociationChange as EventListener);
+    };
+  }, []);
 
   // Données des cartes selon le rôle
   const getStatsCards = () => {
