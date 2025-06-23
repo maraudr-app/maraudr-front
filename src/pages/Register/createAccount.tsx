@@ -394,7 +394,7 @@ const CreateAccount = () => {
                   name="isManager"
                   checked={form.isManager}
                   onChange={handleChange}
-                  className="h-4 w-4 text-orange-500 rounded border-gray-300 focus:ring-orange-500"
+                  className="h-4 w-4 text-orange-500 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-orange-500"
                 />
                 <label htmlFor="isManager" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t_register('isManager')}
@@ -424,7 +424,7 @@ const CreateAccount = () => {
                   id="terms"
                   type="checkbox"
                   required
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
+                  className="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded focus:ring-blue-500 mt-1"
                 />
                 <label htmlFor="terms" className="text-sm text-gray-700 dark:text-gray-300">
                   {t_register('terms')}{" "}

@@ -41,7 +41,7 @@ interface DashboardData {
 const DashBoard = () => {
   const { t } = useTranslation();
   const user = useAuthStore(state => state.user);
-  const { selectedAssociation } = useAssoStore();
+  const { selectedAssociation, sidebarCollapsed } = useAssoStore();
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [dashboardData, setDashboardData] = useState<DashboardData>({
@@ -55,6 +55,9 @@ const DashBoard = () => {
   });
 
   const isManager = user?.userType === 'Manager';
+
+  // Définir la largeur de la sidebar en pixels
+  const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
   // Fonctions pour la navigation des mois
   const getMonthName = (date: Date) => {

@@ -14,7 +14,7 @@ import { Input } from '../../components/common/input/input';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
-import { AssociationDebug } from '../../components/debug/AssociationDebug';
+
 
 interface FilterState {
     category: string;
@@ -38,11 +38,14 @@ export const Stock = () => {
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingItem, setEditingItem] = useState<StockItem | null>(null);
-    const { selectedAssociation, associations, setSelectedAssociation } = useAssoStore();
+    const { selectedAssociation, associations, setSelectedAssociation, sidebarCollapsed } = useAssoStore();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
     const [highlightedItemName, setHighlightedItemName] = useState<string | null>(null);
+
+    // Définir la largeur de la sidebar en pixels comme dans Team
+    const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
     useEffect(() => {
         const checkStock = async () => {
@@ -734,6 +737,8 @@ export const Stock = () => {
           </div>
                 </div>
             </Dialog>
+            
+
     </div>
   );
 };

@@ -12,6 +12,7 @@ import { assoService } from '../../../services/assoService';
 import Button from '../../common/button/button';
 import NotificationIcon from '../../common/notification/NotificationIcon';
 import { useNotifications } from '../../../hooks/useNotifications';
+import { AssociationAvatar } from '../../common/avatar/AssociationAvatar';
 
 interface NavLink {
     name: string;
@@ -102,6 +103,8 @@ const Header = () => {
         return initials.toUpperCase();
     };
 
+
+
     // Vérifier si le scroll a dépassé la section héro
     useEffect(() => {
         if (!isHomePage) {
@@ -163,8 +166,20 @@ const Header = () => {
         window.location.href = '/login';
     };
 
+    // Calculer la largeur et la position du header selon l'état de la sidebar
+    const getHeaderStyle = () => {
+        // Si pas authentifié, header complet
+        if (!isAuthenticated) {
+            return "fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md";
+        }
+        
+        // Si authentifié, ajuster selon l'état de la sidebar - utilise les mêmes marges que MaraudrApp
+        const marginLeft = sidebarCollapsed ? 'ml-14' : 'ml-48';
+        return `fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md transition-all duration-300 ${marginLeft}`;
+    };
+
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md">
+        <header className={getHeaderStyle()}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     <div className="flex items-center">
@@ -177,9 +192,7 @@ const Header = () => {
                                 >
                                     {selectedAssociation && isAuthenticated ? (
                                         <div className="flex items-center space-x-2">
-                                            <div className="h-9 w-9 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-bold text-xs">
-                                                {getAssociationInitials(selectedAssociation.name)}
-                                            </div>
+                                            <AssociationAvatar name={selectedAssociation.name} size="md" />
                                             <span className="text-lg font-bold text-maraudr-darkText dark:text-maraudr-lightText">
                                                 {selectedAssociation.name.charAt(0).toUpperCase() + selectedAssociation.name.slice(1).toLowerCase()}
                                             </span>
@@ -218,9 +231,7 @@ const Header = () => {
                                                         : 'text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold'
                                                 }`}
                                             >
-                                                <div className="h-9 w-9 rounded-full border flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-bold text-xs">
-                                                    {getAssociationInitials(association.name)}
-                                                </div>
+                                                <AssociationAvatar name={association.name} size="md" />
                                                 <span>{association.name.toLowerCase()}</span>
                                             </button>
                                         ))}
