@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { TeamMember } from '../../services/teamService';
 import { useAuthStore } from '../../store/authStore';
-import { EllipsisHorizontalIcon, TrashIcon, CalendarIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { EllipsisHorizontalIcon, TrashIcon, CalendarIcon, PhoneIcon, MapPinIcon, XMarkIcon, UserIcon, EnvelopeIcon, GlobeAltIcon, LanguageIcon } from '@heroicons/react/24/outline';
 import ConfirmationModal from '../common/modal/ConfirmationModal';
 import { toast } from 'react-hot-toast';
+import { Language } from '../../types/enums/Language';
 
 interface OrgChartProps {
     members: TeamMember[];
@@ -17,6 +18,33 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [memberToDelete, setMemberToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
+    const [selectedMemberDetails, setSelectedMemberDetails] = useState<TeamMember | null>(null);
+    
+    // Mapping pour les langues - gère les nombres, strings et énumérations
+    const getLanguageLabel = (language: Language | string | number): string => {
+        // Si c'est un nombre, on le convertit selon l'index
+        if (typeof language === 'number') {
+            const languagesByIndex: Record<number, string> = {
+                0: 'Anglais',
+                1: 'Français', 
+                2: 'Espagnol',
+                3: 'Allemand',
+                4: 'Italien'
+            };
+            return languagesByIndex[language] || `Langue ${language}`;
+        }
+        
+        // Si c'est une string ou énumération
+        const languageMap: Record<string, string> = {
+            'French': 'Français',
+            'English': 'Anglais',
+            'Spanish': 'Espagnol',
+            'German': 'Allemand',
+            'Italian': 'Italien'
+        };
+        return languageMap[language as string] || (language as string);
+    };
     
     // Créer un objet pour le manager connecté s'il n'est pas dans la liste
     const currentManagerMember: TeamMember | undefined = user ? {
@@ -132,6 +160,13 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
         setOpenMenuId(null);
     };
 
+    const handleShowUserDetails = (member: TeamMember) => {
+        console.log('Member languages:', member.languages, 'Type:', typeof member.languages?.[0]);
+        setSelectedMemberDetails(member);
+        setShowUserDetailsModal(true);
+        setOpenMenuId(null);
+    };
+
     // Fonction pour générer une URL d'image de profil basée sur le nom
     const getProfileImageUrl = (member: TeamMember, isTopLevel: boolean = false) => {
         // Utiliser l'API randomuser.me avec un seed basé sur le nom pour avoir une image consistante
@@ -167,7 +202,10 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         isCurrentUserCard 
                             ? 'border-orange-500 shadow-lg shadow-orange-200 dark:shadow-orange-900/50' 
                             : 'border-white dark:border-gray-800'
-                    } shadow-lg overflow-hidden bg-gray-200`}>
+                    } shadow-lg overflow-hidden bg-gray-200 cursor-pointer hover:scale-105 transition-transform`}
+                    onClick={() => handleShowUserDetails(member)}
+                    title="Voir les détails"
+                    >
                         <img 
                             src={profileImageUrl}
                             alt={`${member.firstname} ${member.lastname}`}
@@ -213,8 +251,8 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         ? 'border-orange-500 shadow-lg shadow-orange-100 dark:shadow-orange-900/30' 
                         : 'border-gray-300 dark:border-gray-600 shadow-sm hover:shadow-md'
                 } transition-all ${
-                    isTopLevel ? 'w-80 h-28' : 'w-72 h-24'
-                } flex items-start rounded-lg ${isTopLevel ? 'pt-6 pl-28 pr-4 pb-4' : 'pt-4 pl-24 pr-4 pb-4'} overflow-hidden`}>
+                    isTopLevel ? 'w-80 h-36' : 'w-72 h-32'
+                } flex items-start rounded-lg py-6 ${isTopLevel ? 'pl-32 pr-6' : 'pl-28 pr-6'} overflow-hidden`}>
                     
 
 
@@ -388,6 +426,190 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                 cancelText="Annuler"
                 type="danger"
             />
+
+            {/* Modal de détails utilisateur */}
+            {showUserDetailsModal && selectedMemberDetails && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-10 mx-auto p-6 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-orange-200/50 dark:border-gray-700 mb-10">
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="flex items-center">
+                                <div className="w-16 h-16 rounded-full border-4 border-orange-500 shadow-lg overflow-hidden bg-gray-200 mr-4">
+                                    <img 
+                                        src={getProfileImageUrl(selectedMemberDetails)}
+                                        alt={`${selectedMemberDetails.firstname} ${selectedMemberDetails.lastname}`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                            target.nextElementSibling?.classList.remove('hidden');
+                                        }}
+                                    />
+                                    <div className="hidden w-full h-full bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center">
+                                        <span className="text-white font-bold text-lg">
+                                            {selectedMemberDetails.firstname.charAt(0).toUpperCase()}{selectedMemberDetails.lastname.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                        {selectedMemberDetails.firstname} {selectedMemberDetails.lastname}
+                                    </h2>
+                                    <div className="flex items-center mt-1">
+                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                            selectedMemberDetails.isManager 
+                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                        }`}>
+                                            {selectedMemberDetails.isManager ? 'Manager' : 'Membre'}
+                                        </span>
+                                        {isCurrentUser(selectedMemberDetails.id) && (
+                                            <span className="ml-2 text-xs bg-orange-500 text-white px-2 py-1 rounded-full">Vous</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowUserDetailsModal(false)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <XMarkIcon className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Informations personnelles */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                                    <UserIcon className="w-5 h-5 mr-2 text-orange-500" />
+                                    Informations personnelles
+                                </h3>
+                                
+                                <div className="space-y-3">
+                                    <div className="flex items-center">
+                                        <EnvelopeIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Email</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">{selectedMemberDetails.email}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <PhoneIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Téléphone</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">{selectedMemberDetails.phoneNumber || 'Non renseigné'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start">
+                                        <MapPinIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Adresse</p>
+                                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                                                {selectedMemberDetails.street && <p>{selectedMemberDetails.street}</p>}
+                                                <p>
+                                                    {[selectedMemberDetails.city, selectedMemberDetails.state, selectedMemberDetails.postalCode].filter(Boolean).join(', ')}
+                                                </p>
+                                                {selectedMemberDetails.country && <p>{selectedMemberDetails.country}</p>}
+                                                {!selectedMemberDetails.street && !selectedMemberDetails.city && !selectedMemberDetails.country && (
+                                                    <p>Non renseigné</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Informations additionnelles */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                                    <GlobeAltIcon className="w-5 h-5 mr-2 text-orange-500" />
+                                    Informations additionnelles
+                                </h3>
+                                
+                                <div className="space-y-3">
+                                    <div className="flex items-start">
+                                        <LanguageIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Langues</p>
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                {selectedMemberDetails.languages && selectedMemberDetails.languages.length > 0 ? (
+                                                    selectedMemberDetails.languages.map((lang, index) => (
+                                                        <span key={index} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs">
+                                                            {getLanguageLabel(lang)}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300">Non renseigné</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <CalendarIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Membre depuis</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                {new Date(selectedMemberDetails.createdAt).toLocaleDateString('fr-FR', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center">
+                                        <UserIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Dernière mise à jour</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                {new Date(selectedMemberDetails.updatedAt).toLocaleDateString('fr-FR', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        {isCurrentUserManager() && (
+                            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        onClick={() => {
+                                            handleViewDisponibilities(selectedMemberDetails);
+                                            setShowUserDetailsModal(false);
+                                        }}
+                                        className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    >
+                                        <CalendarIcon className="w-4 h-4 mr-2" />
+                                        Voir disponibilités
+                                    </button>
+                                    
+                                    {!selectedMemberDetails.isManager && !isCurrentUser(selectedMemberDetails.id) && onRemoveMember && (
+                                        <button
+                                            onClick={() => {
+                                                handleRemoveMember(selectedMemberDetails);
+                                                setShowUserDetailsModal(false);
+                                            }}
+                                            className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                        >
+                                            <TrashIcon className="w-4 h-4 mr-2" />
+                                            Retirer de l'équipe
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }; 

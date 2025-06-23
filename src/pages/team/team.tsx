@@ -40,7 +40,7 @@ const Team: React.FC = () => {
     const [userDisponibilities, setUserDisponibilities] = useState<Disponibility[]>([]);
     const [showDisponibilities, setShowDisponibilities] = useState(false);
     const [loadingDispos, setLoadingDispos] = useState(false);
-    const [showOrgChart, setShowOrgChart] = useState(false);
+    const [showOrgChart, setShowOrgChart] = useState(true);
 
     const navigate = useNavigate();
     const { user, isAuthenticated, logout } = useAuthStore();
@@ -154,7 +154,7 @@ const Team: React.FC = () => {
 
     const handleViewDisponibilities = async (memberId: string) => {
         const member = teamMembers.find(m => m.id === memberId);
-        if (!member) return;
+        if (!member || !selectedAssociation?.id) return;
 
         try {
             setLoadingDispos(true);
@@ -165,10 +165,20 @@ const Team: React.FC = () => {
                 email: member.email
             } as User);
             
-            setUserDisponibilities([]);
+            // Récupérer toutes les disponibilités de l'association
+            const allDisponibilities = await userService.getAllDisponibilities(selectedAssociation.id);
+            
+            // Filtrer les disponibilités de l'utilisateur sélectionné
+            const memberDisponibilities = allDisponibilities.filter((dispo: Disponibility) => dispo.userId === memberId);
+            
+            console.log(`Disponibilités trouvées pour ${member.firstname} ${member.lastname}:`, memberDisponibilities);
+            
+            setUserDisponibilities(memberDisponibilities);
             setShowDisponibilities(true);
-        } catch (err) {
-            // Erreur silencieuse
+        } catch (err: any) {
+            console.error('Erreur lors du chargement des disponibilités:', err);
+            showToast('error', 'Erreur lors du chargement des disponibilités');
+            setUserDisponibilities([]);
         } finally {
             setLoadingDispos(false);
         }
@@ -249,31 +259,18 @@ const Team: React.FC = () => {
                         <div className="text-gray-900 dark:text-white font-medium">
                             Gestion de l'équipe ({teamMembers.length})
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                            - {selectedAssociation.name}
-                        </div>
                     </div>
                     
                     <div className="flex items-center space-x-3 px-4">
-                        <button
-                            onClick={() => setShowOrgChart(!showOrgChart)}
-                            className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                                showOrgChart 
-                                    ? 'text-white bg-gradient-to-r from-orange-500 to-blue-500'
-                                    : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                            }`}
-                        >
-                            <ViewColumnsIcon className="w-4 h-4 mr-2" />
-                            {showOrgChart ? 'Vue Liste' : 'Organigramme'}
-                        </button>
-                        
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all shadow-sm"
-                        >
-                            <PlusIcon className="w-4 h-4 mr-2" />
-                            Ajouter membre
-                        </button>
+                        {user?.userType === 'Manager' && (
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all shadow-sm"
+                            >
+                                <PlusIcon className="w-4 h-4 mr-2" />
+                                Ajouter membre
+                            </button>
+                        )}
                         
                         <button
                             onClick={fetchTeamMembers}
@@ -287,138 +284,59 @@ const Team: React.FC = () => {
                 </div>
             </nav>
             
-            <main className="pt-16">
-                {showOrgChart ? (
-                    // Vue Organigramme
-                    <OrgChart 
-                        members={teamMembers} 
-                        onViewDisponibilities={handleViewDisponibilities}
-                        onRemoveMember={confirmRemoveMember}
-                        associationName={selectedAssociation?.name}
-                    />
-                ) : (
-                    // Vue Liste
-                    <div className="p-6">
-                        <div className="max-w-7xl mx-auto">
-                            {/* Header */}
-                            <div className="mb-8">
-                                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                                    Gestion de l'Équipe - {selectedAssociation.name}
-                                </h1>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Gérez votre équipe et consultez les disponibilités des membres
-                                </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                                    Connecté en tant que: {user?.firstName} {user?.lastName} ({user?.userType})
-                                </p>
-                            </div>
-
-                            {/* Statistiques */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
-                                    <div className="flex items-center">
-                                        <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
-                                            <UserGroupIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                                        </div>
-                                        <div className="ml-4">
-                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Membres</p>
-                                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.length}</p>
-                                        </div>
-                                    </div>
+            <main className="pt-4">
+                {/* Statistiques en haut */}
+                <div className="px-8 pb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
+                            <div className="flex items-center">
+                                <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
+                                    <UserGroupIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                                 </div>
-                                
-                                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-blue-200/50 dark:border-gray-700 p-6">
-                                    <div className="flex items-center">
-                                        <div className="p-2 bg-gradient-to-r from-blue-100 to-orange-100 dark:from-blue-900/20 dark:to-orange-900/20 rounded-lg">
-                                            <MapIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                        </div>
-                                        <div className="ml-4">
-                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Managers</p>
-                                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                                {teamMembers.filter(m => m.isManager).length}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
-                                    <div className="flex items-center">
-                                        <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
-                                            <CalendarIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                                        </div>
-                                        <div className="ml-4">
-                                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Membres Actifs</p>
-                                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                                {teamMembers.filter(m => !m.isManager).length}
-                                            </p>
-                                        </div>
-                                    </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Membres</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.length}</p>
                                 </div>
                             </div>
-
-                            {/* Liste simple des membres */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {teamMembers.map(member => (
-                                    <div key={member.id} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200/50 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-blue-500 rounded-full flex items-center justify-center">
-                                                <span className="text-white font-bold">
-                                                    {member.firstname.charAt(0)}{member.lastname.charAt(0)}
-                                                </span>
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-medium text-gray-900 dark:text-white">
-                                                    {member.firstname} {member.lastname}
-                                                </h3>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {member.isManager ? '👔 Manager' : '👤 Membre'}
-                                                </p>
-                                                <p className="text-xs text-gray-400 dark:text-gray-500">{member.email}</p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 space-y-2">
-                                            <button
-                                                onClick={() => handleViewDisponibilities(member.id)}
-                                                className="w-full text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
-                                            >
-                                                📅 Voir disponibilités
-                                            </button>
-                                            {!member.isManager && (
-                                                <button
-                                                    onClick={() => confirmRemoveMember(member.id)}
-                                                    disabled={deleting}
-                                                    className="w-full text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium"
-                                                >
-                                                    🗑️ Retirer de l'équipe
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Message si aucun membre */}
-                            {teamMembers.length === 0 && (
-                                <div className="text-center py-12">
-                                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-full flex items-center justify-center mb-4">
-                                        <UserGroupIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-                                    </div>
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucun membre d'équipe</h3>
-                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        Commencez par ajouter des membres à votre équipe.
+                        </div>
+                        
+                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-blue-200/50 dark:border-gray-700 p-6">
+                            <div className="flex items-center">
+                                <div className="p-2 bg-gradient-to-r from-blue-100 to-orange-100 dark:from-blue-900/20 dark:to-orange-900/20 rounded-lg">
+                                    <MapIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Managers</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                        {teamMembers.filter(m => m.isManager).length}
                                     </p>
-                                    <button
-                                        onClick={() => setIsAddModalOpen(true)}
-                                        className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all"
-                                    >
-                                        <PlusIcon className="w-4 h-4 mr-2" />
-                                        Ajouter le premier membre
-                                    </button>
                                 </div>
-                            )}
+                            </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
+                            <div className="flex items-center">
+                                <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
+                                    <CalendarIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                                </div>
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Membres Actifs</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                        {teamMembers.filter(m => !m.isManager).length}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                )}
+                </div>
+
+                {/* Organigramme */}
+                <OrgChart 
+                    members={teamMembers} 
+                    onViewDisponibilities={handleViewDisponibilities}
+                    onRemoveMember={confirmRemoveMember}
+                    associationName={selectedAssociation?.name}
+                />
 
                 {/* Modal des disponibilités */}
                 {showDisponibilities && selectedUser && (
@@ -447,15 +365,55 @@ const Team: React.FC = () => {
                                     </button>
                                 </div>
                                 
-                                <div className="text-center py-12">
-                                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-full flex items-center justify-center mb-4">
-                                        <CalendarIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                                {loadingDispos ? (
+                                    <div className="text-center py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Chargement des disponibilités...
+                                        </p>
                                     </div>
-                                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Fonctionnalité en développement</h3>
-                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        La consultation des disponibilités sera bientôt disponible.
-                                    </p>
-                                </div>
+                                ) : userDisponibilities.length > 0 ? (
+                                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                                        {userDisponibilities.map((dispo) => (
+                                            <div
+                                                key={dispo.id}
+                                                className="border border-green-200 dark:border-green-600 rounded-lg p-4 bg-green-50 dark:bg-green-900/20"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center mb-2">
+                                                            <CalendarIcon className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
+                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                Période de disponibilité
+                                                            </span>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                <span className="font-medium">Début:</span> {new Date(dispo.start).toLocaleString('fr-FR')}
+                                                            </p>
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                <span className="font-medium">Fin:</span> {new Date(dispo.end).toLocaleString('fr-FR')}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                                Durée: {Math.ceil((new Date(dispo.end).getTime() - new Date(dispo.start).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-full flex items-center justify-center mb-4">
+                                            <CalendarIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                                        </div>
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucune disponibilité</h3>
+                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            {selectedUser?.firstname} n'a pas encore enregistré de disponibilités.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
