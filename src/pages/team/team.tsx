@@ -136,12 +136,12 @@ const Team: React.FC = () => {
         showToast('success', 'Membre ajouté avec succès à l\'équipe');
     };
 
-    const confirmRemoveMember = async (member: TeamMember) => {
-        if (!user?.sub || !member) return;
+    const confirmRemoveMember = async (memberId: string) => {
+        if (!user?.sub || !memberId) return;
         
         try {
             setDeleting(true);
-            await teamService.removeTeamMember(user.sub, { userId: member.id });
+            await teamService.removeTeamMember(user.sub, { userId: memberId });
             await fetchTeamMembers();
             showToast('success', 'Membre retiré de l\'équipe avec succès');
         } catch (err: any) {
@@ -293,6 +293,7 @@ const Team: React.FC = () => {
                     <OrgChart 
                         members={teamMembers} 
                         onViewDisponibilities={handleViewDisponibilities}
+                        onRemoveMember={confirmRemoveMember}
                         associationName={selectedAssociation?.name}
                     />
                 ) : (
@@ -384,7 +385,7 @@ const Team: React.FC = () => {
                                             </button>
                                             {!member.isManager && (
                                                 <button
-                                                    onClick={() => confirmRemoveMember(member)}
+                                                    onClick={() => confirmRemoveMember(member.id)}
                                                     disabled={deleting}
                                                     className="w-full text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium"
                                                 >

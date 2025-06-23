@@ -223,7 +223,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
         </ul>
         </nav>
 
-      <div className="border-t border-gray-700 p-4">
+      <div className="border-t border-gray-700 py-4">
         <ul className="space-y-2">
         {bottomItems.map((item) => (
             <li key={item.key}>
