@@ -80,7 +80,7 @@ const Header = () => {
         };
 
         if (selectedAssociation) {
-            alert('fetchAssociationDetails');
+           
             fetchAssociationDetails();
         }
     }, [selectedAssociation]);
@@ -239,15 +239,16 @@ const Header = () => {
                                 
                                 {showAssociationsMenu && associations.length >= 1 && isAuthenticated && (
                                     <div className="absolute left-0 mt-2 w-64 rounded-md shadow-lg py-1 z-[100] bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
-                                        <div className="px-4 py-2 text-xs text-gray-500">
-                                            DEBUG: {associations.length} association(s) trouvée(s)
-                                        </div>
+                                       
                                         {associations.map((association) => {
                                             return (
                                             <button
                                                 key={association.id}
-                                                onClick={async () => {
-                                                    alert('click');
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    
+                                                    
                                                     // ÉTAPE 1: Fermer le menu d'abord
                                                     setShowAssociationsMenu(false);
                                                     
@@ -260,8 +261,6 @@ const Header = () => {
                                                     // ÉTAPE 4: Forcer un re-render
                                                     const newForceUpdate = forceUpdate + 1;
                                                     setForceUpdate(newForceUpdate);
-                                                    
-                                                  
                                                 }}
                                                 className={`flex items-center space-x-2 w-full text-left px-4 py-2 text-sm ${
                                                     selectedAssociation?.id === association.id
