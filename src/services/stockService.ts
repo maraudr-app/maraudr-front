@@ -95,27 +95,24 @@ export const stockService = {
             throw new Error('No authentication token available');
         }
 
-        // D'abord, récupérer ou créer le stock pour cette association
-        let stockId = await stockService.getStockId(associationId);
-        if (!stockId) {
-            console.log('Aucun stock trouvé pour l\'association, création en cours...');
-            stockId = await stockService.createStock(associationId);
-        }
-
-        console.log('Création d\'item avec stockId:', stockId);
-
-        // Préparer les données selon le format attendu par le backend
-        const requestData = { 
-            stockId: stockId,
-            name: item.name,
-            description: item.description || "",
-            barCode: item.barCode || "",
-            itemType: item.category,
-            quantity: item.quantity
-        };
-        console.log('Données envoyées à l\'API:', requestData);
-
         try {
+            // D'abord, vérifier si un stock existe pour cette association
+            let stockId = await stockService.getStockId(associationId);
+            
+            if (!stockId) {
+                // Si aucun stock n'existe, en créer un
+                stockId = await stockService.createStock(associationId);
+            }
+
+            const requestData = {
+                name: item.name,
+                category: item.category,
+                quantity: item.quantity,
+                unit: item.unit,
+                minThreshold: item.minThreshold,
+                stockId: stockId
+            };
+
             const response = await axios.post<{ id: string }>(
                 `${API_URL}/item`,
                 requestData,
@@ -127,14 +124,9 @@ export const stockService = {
                     withCredentials: true 
                 }
             );
-            console.log('Réponse de l\'API:', response.data);
             return response.data.id;
-        } catch (error) {
-            console.error('Erreur lors de la création de l\'item:', error);
-            if (axios.isAxiosError(error)) {
-                console.error('Détails de l\'erreur:', error.response?.data);
-                console.error('Status:', error.response?.status);
-            }
+        } catch (error: any) {
+            // Error silencieuse
             throw error;
         }
     },

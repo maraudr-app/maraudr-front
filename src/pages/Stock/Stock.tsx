@@ -48,59 +48,41 @@ export const Stock = () => {
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
     useEffect(() => {
-        const checkStock = async () => {
-            console.log('🔄 Stock: useEffect déclenché pour association:', selectedAssociation?.id);
-            
-            // Si aucune association n'est sélectionnée mais qu'il y en a dans la liste, sélectionner la première
-            if (!selectedAssociation && associations.length > 0) {
-                console.log('📌 Stock: Sélection automatique de la première association');
+        if (!selectedAssociation) {
+            if (associations.length > 0) {
                 setSelectedAssociation(associations[0]);
+            } else {
+                // Aucune association disponible
                 return;
             }
+        }
 
-            // Si aucune association n'est disponible, afficher un message et rediriger vers la création
-            if (!selectedAssociation) {
-                console.log('❌ Stock: Aucune association disponible');
-                toast.error(t('stock.noAssociation', 'Vous n\'avez pas encore d\'association'));
-                navigate('/maraudApp/create-asso');
-                return;
-            }
+        const initializeStock = async () => {
+            if (!selectedAssociation?.id) return;
 
-            setIsLoading(true);
             try {
-                console.log('🔍 Stock: Vérification du stock pour association:', selectedAssociation.id);
-                let stockId = await stockService.getStockId(selectedAssociation.id);
-                console.log('📦 Stock: Stock ID trouvé:', stockId);
+                let stockId = await stockService.getStockByAssociationId(selectedAssociation.id);
                 
                 if (!stockId) {
-                    console.log('🆕 Stock: Aucun stock trouvé, création en cours...');
                     stockId = await stockService.createStock(selectedAssociation.id);
-                    console.log('✅ Stock: Stock créé avec ID:', stockId);
                 }
                 
-                console.log('📋 Stock: Chargement des items pour le stock:', stockId);
                 await fetchItems();
-                console.log('✅ Stock: Items chargés avec succès');
             } catch (error) {
-                console.error('❌ Stock: Erreur détaillée lors de la vérification du stock:', error);
-                toast.error('Erreur lors de la vérification du stock: ' + (error as Error).message);
-            } finally {
-                setIsLoading(false);
+                // Erreur silencieuse
             }
         };
 
-        checkStock();
-    }, [selectedAssociation, associations, navigate, setSelectedAssociation, t]);
+        initializeStock();
+    }, [selectedAssociation, associations, setSelectedAssociation]);
 
-    // Ajouter un useEffect pour écouter les changements d'association via l'événement personnalisé
+    // Écouter les événements de changement d'association
     useEffect(() => {
         const handleAssociationChange = (event: CustomEvent) => {
-            console.log('🎯 Stock: Événement de changement d\'association reçu:', event.detail.association);
-            // Les useEffects ci-dessus vont automatiquement se déclencher grâce à la dépendance selectedAssociation
+            fetchItems();
         };
 
         window.addEventListener('associationChanged', handleAssociationChange as EventListener);
-        
         return () => {
             window.removeEventListener('associationChanged', handleAssociationChange as EventListener);
         };
@@ -111,41 +93,43 @@ export const Stock = () => {
     }, [filter.category, filter.name]);
 
     const fetchItems = async () => {
-        if (!selectedAssociation) {
-            console.log('❌ fetchItems: Aucune association sélectionnée');
+        if (!selectedAssociation?.id) {
             return;
         }
 
-        console.log('🔄 fetchItems: Début du chargement pour association:', selectedAssociation.id);
-        setIsLoading(true);
         try {
-            const fetchedItems = await stockService.getStockItems(selectedAssociation.id, filter);
-            console.log('✅ fetchItems: Items récupérés:', fetchedItems.length, 'items');
+            setIsLoading(true);
+            const fetchedItems = await stockService.getItemsByAssociationId(selectedAssociation.id);
             setItems(fetchedItems);
         } catch (error) {
-            console.error('❌ fetchItems: Erreur:', error);
-            toast.error('Erreur lors du chargement des items');
+            // Erreur silencieuse
         } finally {
             setIsLoading(false);
         }
     };
 
     const highlightNewItem = (itemName: string) => {
-        console.log('Highlighting item:', itemName);
-        // Stocker le nom de l'item à highlighter
-        setHighlightedItemName(itemName);
+        setTimeout(() => {
+            setHighlightedItemName(itemName);
+            setTimeout(() => setHighlightedItemName(null), 3000);
+        }, 100);
     };
 
-    const onItemAdded = async () => {
-        console.log('onItemAdded called');
-        await fetchItems();
+    const onItemAdded = () => {
+        fetchItems().then(() => {
+            if (highlightedItemName) {
+                const newItem = items.find(item => item.name.toLowerCase() === highlightedItemName.toLowerCase());
+                if (newItem) {
+                    highlightNewItem(newItem.name);
+                }
+            }
+        });
     };
 
     // UseEffect pour gérer le highlight après que les items soient mis à jour
     useEffect(() => {
         if (highlightedItemName && items.length > 0) {
             const newItem = items.find(item => item.name === highlightedItemName);
-            console.log('Found item to highlight:', newItem);
             if (newItem) {
                 setHighlightedItemId(newItem.id);
                 setHighlightedItemName(null); // Reset le nom
@@ -171,7 +155,6 @@ export const Stock = () => {
             await fetchItems();
         } catch (error) {
             toast.error('Erreur lors de la suppression de l\'item');
-            console.error(error);
         } finally {
             setShowDeleteConfirm(false);
             setItemToDelete(null);
@@ -210,7 +193,6 @@ export const Stock = () => {
             setEditingItem(null);
         } catch (error) {
             toast.error('Erreur lors de la modification de l\'item');
-            console.error(error);
         }
     };
 
@@ -265,7 +247,7 @@ export const Stock = () => {
     }
 
   return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen">
             <StockNavbar 
                 onItemAdded={onItemAdded} 
                 isAddButtonDisabled={false} 
@@ -275,7 +257,7 @@ export const Stock = () => {
             <main className="pt-16">
                 {/* Section Stock Critique */}
                 {!isLoading && items.length > 0 && (
-                    <div className="mb-8 px-4 sm:px-6 lg:px-8">
+                    <div className="mb-8">
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                                 <ExclamationTriangleIcon className="w-6 h-6 text-orange-500 mr-3" />

@@ -42,7 +42,6 @@ export const authService = {
         }
       });
     } catch (error) {
-      console.error('Error during logout:', error);
       // On continue avec le nettoyage local même si l'appel API échoue
     } finally {
       // Supprimer spécifiquement les stores Zustand
@@ -74,9 +73,21 @@ export const authService = {
 
   setToken: (token: string) => {
     try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      console.log('Setting token, decoded:', decoded);
       localStorage.setItem('token', token);
+      
+      // Décoder le token pour extraire les informations utilisateur
+      const decoded = jwtDecode<DecodedToken>(token);
+      
+      // Stocker les informations utilisateur décodées
+      const userData = {
+        sub: decoded.sub,
+        email: decoded.email,
+        firstName: decoded.firstName,
+        lastName: decoded.lastName,
+        userType: decoded.userType
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userData));
 
       // Supprimer l'ancien intercepteur s'il existe
       if (authService.interceptorId) {
@@ -94,8 +105,7 @@ export const authService = {
         }
       );
     } catch (error) {
-      console.error('Error setting token:', error);
-      throw new Error('Invalid token format');
+      // Error silencieuse
     }
   },
 
@@ -118,17 +128,17 @@ export const authService = {
   },
 
   isAuthenticated: (): boolean => {
-    const token = localStorage.getItem('token');
-    if (!token) return false;
-
     try {
+      const token = authService.getToken();
+      if (!token) return false;
+      
       const decoded = jwtDecode<DecodedToken>(token);
-      console.log('Checking authentication, token decoded:', decoded);
-      const isValid = decoded.exp * 1000 > Date.now();
-      console.log('Token is valid:', isValid);
+      const currentTime = Date.now() / 1000;
+      
+      const isValid = decoded.exp > currentTime;
       return isValid;
     } catch (error) {
-      console.error('Error checking authentication:', error);
+      // Error silencieuse
       return false;
     }
   },
@@ -139,41 +149,32 @@ export const authService = {
 
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      console.log('Getting decoded token:', decoded);
       return decoded;
     } catch (error) {
-      console.error('Error getting decoded token:', error);
+      // Error silencieuse
       return null;
     }
   },
 
   getUserById: async (uuid: string): Promise<User> => {
+    const token = authService.getToken();
+    
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
     try {
-      console.log('Fetching user with UUID:', uuid);
-      const token = authService.getToken();
-      console.log('Token being used:', token ? 'Present' : 'Missing');
-      
       const response = await axios.get(`${API_URL}/users/${uuid}`, {
-        // withCredentials: true,
         headers: {
-          Authorization: token ? `Bearer ${token}` : undefined
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
-      console.log('Response headers:', response.headers);
-      console.log('Response status:', response.status);
-      console.log('User data from API:', response.data);
+
       return response.data;
-    } catch (error) {
-      console.error('Error getting user by ID:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Error response:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          headers: error.response?.headers
-        });
-      }
-      throw error;
+    } catch (error: any) {
+      // Error silencieuse
+      throw new Error(error.response?.data?.message || 'Failed to fetch user data');
     }
   },
 

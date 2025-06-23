@@ -44,10 +44,9 @@ const UserAvailabilityView: React.FC = () => {
     // Charger les associations si nécessaire
     useEffect(() => {
         if (user && !selectedAssociation) {
-            console.log('Chargement des associations pour l\'utilisateur:', user.sub);
             fetchUserAssociations();
         }
-    }, [user, selectedAssociation, fetchUserAssociations]);
+    }, [user, fetchUserAssociations]); // SUPPRIMÉ selectedAssociation des dépendances
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -85,11 +84,9 @@ const UserAvailabilityView: React.FC = () => {
             
             // Récupérer toutes les disponibilités de l'association
             const allAvailabilities = await userService.getDisponibilities(selectedAssociation.id);
-            console.log('Toutes les disponibilités récupérées:', allAvailabilities);
             
             // Filtrer les disponibilités de l'utilisateur connecté
             const userDisponibilities = allAvailabilities.filter((dispo: Disponibility) => dispo.userId === user.sub);
-            console.log('Disponibilités de l\'utilisateur:', userDisponibilities);
             
             // Convertir en format pour le calendrier
             const availabilitiesMap: UserAvailability = {};
@@ -111,10 +108,8 @@ const UserAvailabilityView: React.FC = () => {
             });
             
             setUserAvailabilities(availabilitiesMap);
-            console.log('Disponibilités formatées pour le calendrier:', availabilitiesMap);
             
         } catch (error) {
-            console.error('Erreur lors du chargement des disponibilités:', error);
             toast.error('Erreur lors du chargement des disponibilités');
         } finally {
             setLoading(false);
@@ -192,8 +187,6 @@ const UserAvailabilityView: React.FC = () => {
                 associationId: selectedAssociation.id
             };
 
-            console.log('Données de disponibilité à envoyer:', disponibilityData);
-
             await userService.createDisponibility(disponibilityData);
             
             toast.success('Disponibilité ajoutée avec succès');
@@ -205,7 +198,6 @@ const UserAvailabilityView: React.FC = () => {
             cancelSelection();
             
         } catch (error: any) {
-            console.error('Erreur lors de l\'ajout de la disponibilité:', error);
             toast.error(error.message || 'Erreur lors de l\'ajout de la disponibilité');
         } finally {
             setLoading(false);
@@ -747,64 +739,79 @@ const Planning: React.FC = () => {
 
                                 {/* Jours du mois */}
                                 {days.map((day, index) => {
-                                    const dateString = formatDate(day);
+                                    const dateKey = formatDate(day);
                                     const isToday = new Date().toDateString() === day.toDateString();
                                     
-                                    // Logique pour afficher les disponibilités
-                                    let hasContent = false;
-                                    let userDisponibilities: Disponibility[] = [];
-                                    
+                                    // Mode utilisateur : afficher les disponibilités de l'utilisateur sélectionné
                                     if (selectedUser) {
-                                        // Afficher les disponibilités de l'utilisateur sélectionné
-                                        userDisponibilities = getDisponibilitiesByUser(selectedUser);
-                                        hasContent = userDisponibilities.some(dispo => {
-                                            const startDate = new Date(dispo.start);
-                                            const endDate = new Date(dispo.end);
-                                            return day >= startDate && day <= endDate;
+                                        const userDisponibilities = allDisponibilities.filter(dispo => dispo.userId === selectedUser);
+                                        const hasContent = userDisponibilities.some(dispo => {
+                                            const dispoStart = new Date(dispo.start);
+                                            const dispoEnd = new Date(dispo.end);
+                                            return day >= dispoStart && day <= dispoEnd;
                                         });
-                                        // Debug pour le premier jour du mois
-                                        if (day.getDate() === 1) {
-                                            console.log(`[UTILISATEUR MODE] Jour ${day.getDate()}: ${userDisponibilities.length} dispos pour user ${selectedUser}, hasContent: ${hasContent}`);
-                                        }
-                                    } else {
-                                        // Afficher toutes les disponibilités de l'association
-                                        hasContent = allDisponibilities.some(dispo => {
-                                            const startDate = new Date(dispo.start);
-                                            const endDate = new Date(dispo.end);
-                                            return day >= startDate && day <= endDate;
-                                        });
-                                        // Debug pour le premier jour du mois
-                                        if (day.getDate() === 1) {
-                                            console.log(`[ASSOCIATION MODE] Jour ${day.getDate()}: ${allDisponibilities.length} dispos totales, hasContent: ${hasContent}`);
-                                        }
-                                    }
 
-                                    return (
-                                        <div
-                                            key={index}
-                                            className={`aspect-square p-1 rounded-md border transition-all
-                                                ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
-                                                  'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
-                                                ${hasContent ? 'border-green-300 dark:border-green-600 hover:shadow-md' : ''}
-                                                cursor-pointer
-                                            `}
-                                        >
-                                            <div className="h-full flex flex-col">
-                                                <div className={`text-right text-sm p-1 font-medium
-                                                    ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
-                                                `}>
-                                                    {day.getDate()}
-                                                </div>
-
-                                                {/* Indicateur de disponibilités */}
-                                                {hasContent && (
-                                                    <div className="flex-grow flex items-center justify-center">
-                                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`aspect-square p-1 rounded-md border transition-all
+                                                    ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+                                                      'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
+                                                    ${hasContent ? 'border-green-300 dark:border-green-600 hover:shadow-md' : ''}
+                                                    cursor-pointer
+                                                `}
+                                            >
+                                                <div className="h-full flex flex-col">
+                                                    <div className={`text-right text-sm p-1 font-medium
+                                                        ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
+                                                    `}>
+                                                        {day.getDate()}
                                                     </div>
-                                                )}
+
+                                                    {/* Indicateur de disponibilités */}
+                                                    {hasContent && (
+                                                        <div className="flex-grow flex items-center justify-center">
+                                                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
+                                        );
+                                    } else {
+                                        // Mode association : afficher toutes les disponibilités
+                                        const hasContent = allDisponibilities.some(dispo => {
+                                            const dispoStart = new Date(dispo.start);
+                                            const dispoEnd = new Date(dispo.end);
+                                            return day >= dispoStart && day <= dispoEnd;
+                                        });
+
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`aspect-square p-1 rounded-md border transition-all
+                                                    ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+                                                      'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
+                                                    ${hasContent ? 'border-green-300 dark:border-green-600 hover:shadow-md' : ''}
+                                                    cursor-pointer
+                                                `}
+                                            >
+                                                <div className="h-full flex flex-col">
+                                                    <div className={`text-right text-sm p-1 font-medium
+                                                        ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
+                                                    `}>
+                                                        {day.getDate()}
+                                                    </div>
+
+                                                    {/* Indicateur de disponibilités */}
+                                                    {hasContent && (
+                                                        <div className="flex-grow flex items-center justify-center">
+                                                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
                                 })}
 
                                 {/* Jours vides de la fin du mois */}

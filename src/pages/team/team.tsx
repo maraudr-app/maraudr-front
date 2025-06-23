@@ -57,56 +57,47 @@ const Team: React.FC = () => {
     // Définir la largeur de la sidebar en pixels comme dans Stock
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
-    // Vérifier l'authentification au chargement
+    // Vérifier l'authentification au démarrage
     useEffect(() => {
-        if (!isAuthenticated || !user?.sub) {
-            console.log('Utilisateur non authentifié, redirection vers login');
+        if (!isAuthenticated || !user) {
             navigate('/login');
             return;
         }
     }, [isAuthenticated, user, navigate]);
 
-    const fetchTeamMembers = async () => {
-        if (!user?.sub) {
-            console.log('❌ Team: Aucun utilisateur connecté');
-            setError('Utilisateur non connecté');
-            setLoading(false);
+    useEffect(() => {
+        if (!user) {
             return;
         }
 
-        console.log('🔄 Team: Chargement des membres pour le manager:', user.sub);
-        if (selectedAssociation) {
-            console.log('📌 Team: Association sélectionnée:', selectedAssociation.name, '(ID:', selectedAssociation.id, ')');
-        }
+        const loadTeamData = async () => {
+            try {
+                setLoading(true);
 
-        try {
-            setLoading(true);
-            const response = await teamService.getTeamMembers(user.sub);
-            console.log('✅ Team: Réponse équipe reçue:', response);
-            setTeamMembers(response?.members || []);
-            console.log('📊 Team: Nombre de membres:', response?.members?.length || 0);
-        } catch (err: any) {
-            console.error('❌ Team: Erreur lors du chargement:', err);
-            setError(err.message);
-            setTeamMembers([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+                if (selectedAssociation?.id) {
+                    const response = await teamService.getTeamByAssociation(selectedAssociation.id);
+                    
+                    setTeamMembers(response?.members || []);
+                }
+            } catch (err) {
+                // Erreur silencieuse
+                setError('Erreur lors du chargement des données');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    useEffect(() => {
-        fetchTeamMembers();
-    }, [user?.sub, selectedAssociation]);
+        loadTeamData();
+    }, [user, selectedAssociation]);
 
-    // Ajouter un useEffect pour écouter les changements d'association
+    // Écouter les événements de changement d'association
     useEffect(() => {
         const handleAssociationChange = (event: CustomEvent) => {
-            console.log('🎯 Team: Événement de changement d\'association reçu:', event.detail.association);
-            // Le useEffect ci-dessus va automatiquement se déclencher grâce à la dépendance selectedAssociation
+            // Recharger les données pour la nouvelle association
+            window.location.reload();
         };
 
         window.addEventListener('associationChanged', handleAssociationChange as EventListener);
-        
         return () => {
             window.removeEventListener('associationChanged', handleAssociationChange as EventListener);
         };
@@ -171,41 +162,23 @@ const Team: React.FC = () => {
         };
     }, [teamMembers]);
 
+    const loadUsersForManager = async () => {
+        if (!user?.sub) return;
+
+        try {
+            const users = await teamService.getUsersFromTeam(user.sub);
+            setTeamUsers(users || []);
+        } catch (err) {
+            // Erreur silencieuse
+        }
+    };
+
     useEffect(() => {
-        const fetchTeamUsers = async () => {
-            if (!isAuthenticated || !user?.sub) {
-                setError('Utilisateur non connecté');
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                setError(null);
-                console.log('Récupération des utilisateurs pour le manager:', user.sub);
-                const users = await userService.getTeamUsers(user.sub);
-                console.log('Utilisateurs récupérés:', users);
-                setTeamUsers(users);
-            } catch (err: any) {
-                console.error('Erreur lors du chargement des utilisateurs:', err);
-                if (err.response?.status === 401) {
-                    setError('Session expirée. Veuillez vous reconnecter.');
-                    logout();
-                    navigate('/login');
-                } else {
-                    setError(err.message || 'Erreur lors du chargement des utilisateurs');
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchTeamUsers();
-    }, [user?.sub, isAuthenticated, logout, navigate]);
+        loadUsersForManager();
+    }, [user?.sub]);
 
     const handleViewDisponibilities = async (user: User) => {
         if (!selectedAssociation?.id) {
-            console.error('Aucune association sélectionnée');
             return;
         }
 
@@ -213,22 +186,29 @@ const Team: React.FC = () => {
             setLoadingDispos(true);
             setSelectedUser(user);
             
-            console.log('Récupération des disponibilités pour l\'utilisateur:', user.id, 'dans l\'association:', selectedAssociation.id);
-            
-            // Utiliser getAllDisponibilities pour récupérer toutes les disponibilités de l'association
-            // puis filtrer par l'ID de l'utilisateur sélectionné
-            const allDisponibilities = await userService.getAllDisponibilities(selectedAssociation.id);
-            console.log('Toutes les disponibilités récupérées:', allDisponibilities);
-            
-            const userDispos = allDisponibilities.filter((d: Disponibility) => d.userId === user.id);
-            console.log('Disponibilités filtrées pour l\'utilisateur:', userDispos);
-            
+            const userDispos = await getUserDisponibilities(user.id);
             setUserDisponibilities(userDispos);
             setShowDisponibilities(true);
-        } catch (err: any) {
-            console.error('Erreur lors du chargement des disponibilités:', err);
+        } catch (err) {
+            // Erreur silencieuse
         } finally {
             setLoadingDispos(false);
+        }
+    };
+
+    const getUserDisponibilities = async (userId: string) => {
+        if (!selectedAssociation?.id) {
+            return [];
+        }
+
+        try {
+            const allDisponibilities = await userService.getDisponibilities(selectedAssociation.id);
+            
+            const userDispos = allDisponibilities.filter((dispo: Disponibility) => dispo.userId === userId);
+            return userDispos;
+        } catch (err) {
+            // Erreur silencieuse
+            return [];
         }
     };
 

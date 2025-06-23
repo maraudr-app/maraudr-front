@@ -36,14 +36,14 @@ interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  fetchUser: () => Promise<void>;  // Nouvelle fonction
+  fetchUser: () => Promise<void>;
   setToken: (token: string | null) => void;
 }
 
 // Création du store avec persistance
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       isAuthenticated: false,
       user: null,
       token: null,
@@ -51,15 +51,10 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         try {
           const response = await authService.login(email, password);
-          console.log('Login response in store:', response);
           
           if (response && response.accessToken) {
             // Décoder le token immédiatement
             const decodedToken = jwtDecode<DecodedToken>(response.accessToken);
-            console.log('Decoded token in store:', decodedToken);
-            console.log('User role from JWT:', decodedToken.userType);
-            console.log('Role type:', typeof decodedToken.userType);
-            console.log('decoded',decodedToken)
             
             if (decodedToken) {
               const userData: User = {
@@ -70,9 +65,6 @@ export const useAuthStore = create<AuthState>()(
                 userType: decodedToken.userType,
                 avatar: `https://ui-avatars.com/api/?name=${decodedToken.firstName}+${decodedToken.lastName}&background=random`
               };
-              
-              console.log('User data created:', userData);
-              console.log('Is manager?', userData.userType === 'Manager');
               
               // Sauvegarder le token
               authService.setToken(response.accessToken);
@@ -88,8 +80,7 @@ export const useAuthStore = create<AuthState>()(
             }
           }
           return false;
-        } catch (error) {
-          console.error('Login error in store:', error);
+        } catch (error: any) {
           return false;
         }
       },
@@ -116,14 +107,13 @@ export const useAuthStore = create<AuthState>()(
         try {
           const currentUser = useAuthStore.getState().user;
           if (!currentUser || !currentUser.sub) {
-            console.error('No user ID found in store');
             return;
           }
 
           const userData = await authService.getUserById(currentUser.sub);
           
           // Mettre à jour le state avec les nouvelles données
-          set({
+          set({ 
             user: {
               ...currentUser,
               firstName: userData.firstname,
@@ -134,24 +124,12 @@ export const useAuthStore = create<AuthState>()(
             }
           });
         } catch (error) {
-          console.error('Error fetching user data:', error);
           // En cas d'erreur, on ne modifie pas le state
         }
       },
 
       setToken: (token: string | null) => {
         set({ token });
-        
-        // Debug: décoder le token actuel
-        if (token) {
-          try {
-            const decoded = jwtDecode<DecodedToken>(token);
-            console.log('Current token decoded:', decoded);
-            console.log('Current token userType:', decoded.userType);
-          } catch (error) {
-            console.error('Error decoding current token:', error);
-          }
-        }
       }
     }),
     {

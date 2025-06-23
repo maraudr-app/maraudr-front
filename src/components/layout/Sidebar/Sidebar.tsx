@@ -56,10 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
   
   // Debug logs pour le rôle
-  console.log('Sidebar - User:', user);
-  console.log('Sidebar - User userType:', user?.userType);
-  console.log('Sidebar - Is manager?', user?.userType === 'Manager');
-  console.log('Sidebar - Full user object:', JSON.stringify(user, null, 2));
+      // User information silencieuse
 
   // Recharger les données utilisateur si elles sont incomplètes
   useEffect(() => {
@@ -67,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       if (isAuthenticated && user) {
         // Si l'utilisateur n'a pas userType, recharger les données
         if (!user.userType || !user.firstName || !user.lastName) {
-          console.log('Sidebar - User data incomplete, reloading...');
+                      // User data incomplete, reloading silencieusement
           await useAuthStore.getState().fetchUser();
         }
       }

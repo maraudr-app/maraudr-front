@@ -32,44 +32,33 @@ export const assoService = {
     },
 
     getAssociation: async (id: string) => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
-        console.log('Calling getAssociation API with ID:', id);
         try {
             const response = await axios.get(`${API_URL}/association`, {
                 params: { id },
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${useAuthStore.getState().token}`
                 },
                 withCredentials: true
             });
-            console.log('getAssociation response:', response.data);
+            
             return response.data;
-        } catch (error) {
-            console.error('Error getting association:', error);
+        } catch (error: any) {
+            // Error silencieuse
             throw error;
         }
     },
 
     getAssociationById: async (id: string) => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
         try {
             const response = await axios.get(`${API_URL}/association/${id}`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${useAuthStore.getState().token}`
                 },
                 withCredentials: true
             });
             return response.data;
-        } catch (error) {
-            console.error('Error getting association by ID:', error);
+        } catch (error: any) {
+            // Error silencieuse
             throw error;
         }
     },
@@ -113,23 +102,18 @@ export const assoService = {
     },
 
     checkMembership: async (userId: string): Promise<string[]> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
         try {
             const response = await axios.get(`${API_URL}/association/membership`, {
                 params: { id: userId },
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${useAuthStore.getState().token}`
                 },
                 withCredentials: true
             });
-            return response.data;
-        } catch (error) {
-            console.error('Error checking membership:', error);
-            return [];
+            return response.data || [];
+        } catch (error: any) {
+            // Error silencieuse
+            throw error;
         }
     },
 
@@ -148,33 +132,24 @@ export const assoService = {
             });
             return response.data;
         } catch (error) {
-            console.error('Error adding member to association:', error);
+            // Error silencieuse
             throw error;
         }
     },
 
     // Vérifier si un utilisateur est membre d'une association spécifique avec la nouvelle API
     isUserMemberOfAssociation: async (userId: string, associationId: string): Promise<boolean> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
         try {
             const response = await axios.get(`${API_URL}/association/is-member/${associationId}/${userId}`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${useAuthStore.getState().token}`
                 },
                 withCredentials: true
             });
             
-            console.log(`API is-member response for user ${userId} in association ${associationId}:`, response.data);
-            
-            // L'API retourne true/false directement
             return response.data === true || response.data === 'true';
-        } catch (error) {
-            console.error('Error checking user membership with API:', error);
-            // En cas d'erreur, on considère que l'utilisateur n'est pas membre
+        } catch (error: any) {
+            // Error silencieuse
             return false;
         }
     }

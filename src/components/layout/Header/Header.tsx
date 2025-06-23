@@ -13,6 +13,7 @@ import Button from '../../common/button/button';
 import NotificationIcon from '../../common/notification/NotificationIcon';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { AssociationAvatar } from '../../common/avatar/AssociationAvatar';
+import AssociationInfoModal from '../../common/modal/AssociationInfoModal';
 
 interface NavLink {
     name: string;
@@ -25,27 +26,26 @@ const Header = () => {
     const [showCreateAccount, setShowCreateAccount] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showAssociationsMenu, setShowAssociationsMenu] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
+    const [forceUpdate, setForceUpdate] = useState(0);
     const [associationDetails, setAssociationDetails] = useState<any>(null);
+    const [localSelectedAssociation, setLocalSelectedAssociation] = useState<any>(null);
     const { t } = useTranslation(['common']);
     const location = useLocation();
-    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-    const user = useAuthStore(state => state.user);
-    const logout = useAuthStore(state => state.logout);
+    const { user, isAuthenticated, logout } = useAuthStore();
     const isHomePage = location.pathname === '/';
     const isLoginPage = location.pathname === '/login';
     const sidebarCollapsed = useAssoStore(state => state.sidebarCollapsed);
     const { notificationCount } = useNotifications();
 
     // Debug logs pour le rôle
-    console.log('Header - User:', user);
-    console.log('Header - User userType:', user?.userType);
-    console.log('Header - Is manager?', user?.userType === 'Manager');
-    console.log('Header - Is authenticated:', isAuthenticated);
-    console.log('Header - Full user object:', JSON.stringify(user, null, 2));
+    // User information silencieuse
 
     // Fonction pour vérifier si l'utilisateur est manager
     const isManager = () => {
-        if (!user?.userType) return false;
+        if (!user || !user.userType) {
+            return false;
+        }
         return user.userType === 'Manager';
     };
 
@@ -55,14 +55,13 @@ const Header = () => {
     // Recharger les données utilisateur si elles sont incomplètes
     useEffect(() => {
         const loadData = async () => {
-        if (isAuthenticated && user) {
-                // Si l'utilisateur n'a pas userType, recharger les données
-                if (!user.userType || !user.firstName || !user.lastName) {
-                    console.log('User data incomplete, reloading...');
+            if (isAuthenticated && user && (!user.firstName || !user.lastName)) {
+                try {
                     await useAuthStore.getState().fetchUser();
+                } catch (error) {
+                    // Error reloading user data silencieuse
                 }
-                await fetchUserAssociations();
-        }
+            }
         };
         loadData();
     }, [isAuthenticated, user]);
@@ -70,21 +69,21 @@ const Header = () => {
     // Effet pour charger les détails de l'association sélectionnée
     useEffect(() => {
         const fetchAssociationDetails = async () => {
-            if (selectedAssociation?.id && isAuthenticated) {
-                console.log('Effect: Selected Association changed to:', selectedAssociation);
-                console.log('Effect: Selected Association ID:', selectedAssociation.id);
+            if (selectedAssociation && selectedAssociation.id) {
                 try {
                     const details = await assoService.getAssociation(selectedAssociation.id);
                     setAssociationDetails(details);
-                    console.log('Effect: Association details loaded:', details);
-        } catch (error) {
-                    console.error('Effect: Error fetching association details:', error);
-        }
+                } catch (error) {
+                    // Error fetching association details silencieuse
+                }
             }
         };
 
-        fetchAssociationDetails();
-    }, [selectedAssociation, isAuthenticated]);
+        if (selectedAssociation) {
+            alert('fetchAssociationDetails');
+            fetchAssociationDetails();
+        }
+    }, [selectedAssociation]);
 
     const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
         if (!firstName || !lastName) return '';
@@ -178,6 +177,39 @@ const Header = () => {
         return `fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md transition-all duration-300 ${marginLeft}`;
     };
 
+    // Fermer automatiquement la modal après 5 secondes
+    useEffect(() => {
+        if (showInfoModal) {
+            const timer = setTimeout(() => {
+                setShowInfoModal(false);
+            }, 5000); // 5 secondes
+
+            return () => clearTimeout(timer);
+        }
+    }, [showInfoModal]);
+
+    // Surveiller les changements d'association pour débugger
+    useEffect(() => {        
+        // Synchroniser l'état local avec le store
+        setLocalSelectedAssociation(selectedAssociation);
+    }, [selectedAssociation, forceUpdate]);
+
+    // DEBUG: Log quand le dropdown s'affiche
+    useEffect(() => {
+        if (showAssociationsMenu) {
+            associations.forEach(asso => {
+                // Association disponible silencieuse
+            });
+        }
+    }, [showAssociationsMenu, associations]);
+
+    // État de la modal silencieux
+
+    // Initialiser l'état local avec l'association du store au démarrage
+    if (selectedAssociation && !localSelectedAssociation) {
+        setLocalSelectedAssociation(selectedAssociation);
+    }
+
     return (
         <header className={getHeaderStyle()}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -186,44 +218,50 @@ const Header = () => {
                         {isAuthenticated ? (
                             <div className="relative">
                                 <button
-                                    onClick={() => setShowAssociationsMenu(!showAssociationsMenu)}
+                                    onClick={() => {
+                                        setShowAssociationsMenu(!showAssociationsMenu);
+                                    }}
                                     className="flex items-center space-x-2 focus:outline-none"
                                     id="associations-menu"
                                 >
-                                    {selectedAssociation && isAuthenticated ? (
+                                    {localSelectedAssociation && isAuthenticated ? (
                                         <div className="flex items-center space-x-2">
-                                            <AssociationAvatar name={selectedAssociation.name} size="md" />
+                                            <AssociationAvatar name={localSelectedAssociation.name} size="md" />
                                             <span className="text-lg font-bold text-maraudr-darkText dark:text-maraudr-lightText">
-                                                {selectedAssociation.name.charAt(0).toUpperCase() + selectedAssociation.name.slice(1).toLowerCase()}
+                                                {localSelectedAssociation.name.charAt(0).toUpperCase() + localSelectedAssociation.name.slice(1).toLowerCase()}
                                             </span>
                                         </div>
                                     ) : (
                                         <span className="text-xl font-bold">maraudr</span>
                                     )}
-                                    {associations.length > 1 && isAuthenticated && <ChevronDownIcon className="h-5 w-5 ml-2" />}
+                                    {associations.length >= 1 && isAuthenticated && <ChevronDownIcon className="h-5 w-5 ml-2" />}
                                 </button>
                                 
-                                {showAssociationsMenu && associations.length > 1 && isAuthenticated && (
+                                {showAssociationsMenu && associations.length >= 1 && isAuthenticated && (
                                     <div className="absolute left-0 mt-2 w-64 rounded-md shadow-lg py-1 z-[100] bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
-                                        {associations.map((association) => (
+                                        <div className="px-4 py-2 text-xs text-gray-500">
+                                            DEBUG: {associations.length} association(s) trouvée(s)
+                                        </div>
+                                        {associations.map((association) => {
+                                            return (
                                             <button
                                                 key={association.id}
                                                 onClick={async () => {
-                                                    console.log('🖱️ Header: Clic sur association:', association.name, '(ID:', association.id, ')');
-                                                    console.log('📌 Header: Association actuelle:', selectedAssociation?.name);
-                                                    console.log('🔄 Header: Changement vers:', association.name);
-                                                    
-                                                    setSelectedAssociation(association);
+                                                    alert('click');
+                                                    // ÉTAPE 1: Fermer le menu d'abord
                                                     setShowAssociationsMenu(false);
                                                     
-                                                    // Charger les détails de la nouvelle association
-                                                    try {
-                                                        const details = await assoService.getAssociation(association.id);
-                                                        setAssociationDetails(details);
-                                                        console.log('Association details loaded:', details);
-                                                    } catch (error) {
-                                                        console.error('Error fetching association details:', error);
-                                                    }
+                                                    // ÉTAPE 2: Changer l'association dans le store
+                                                    setSelectedAssociation(association);
+                                                    
+                                                    // ÉTAPE 3: Mettre à jour directement l'état local
+                                                    setLocalSelectedAssociation(association);
+                                                    
+                                                    // ÉTAPE 4: Forcer un re-render
+                                                    const newForceUpdate = forceUpdate + 1;
+                                                    setForceUpdate(newForceUpdate);
+                                                    
+                                                  
                                                 }}
                                                 className={`flex items-center space-x-2 w-full text-left px-4 py-2 text-sm ${
                                                     selectedAssociation?.id === association.id
@@ -234,7 +272,8 @@ const Header = () => {
                                                 <AssociationAvatar name={association.name} size="md" />
                                                 <span>{association.name.toLowerCase()}</span>
                                             </button>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -432,6 +471,14 @@ const Header = () => {
                     )}
                 </div>
             )}
+
+            {/* Modal de test pour afficher les infos d'association */}
+            <AssociationInfoModal
+                isOpen={showInfoModal}
+                onClose={() => setShowInfoModal(false)}
+                association={selectedAssociation}
+                associationDetails={associationDetails}
+            />
         </header>
     );
 };

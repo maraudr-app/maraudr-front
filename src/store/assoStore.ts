@@ -35,22 +35,43 @@ export const useAssoStore = create<AssoState>()(
             setAssociations: (associations) => set({ associations }),
             
             setSelectedAssociation: (association) => {
-                console.log('🔄 Store: Changement d\'association demandé');
-                console.log('   - Association actuelle:', get().selectedAssociation);
-                console.log('   - Nouvelle association:', association);
+                // Vérifier l'état du localStorage AVANT changement
+                const storageBefore = localStorage.getItem('asso-storage');
                 
                 // Mettre à jour l'état
                 set({ selectedAssociation: association });
                 
+                // FORCER la sauvegarde manuelle dans localStorage
+                const currentState = get();
+                const dataToSave = {
+                    state: {
+                        associations: currentState.associations,
+                        selectedAssociation: association,
+                        sidebarCollapsed: currentState.sidebarCollapsed
+                    },
+                    version: 0
+                };
+                
+                try {
+                    localStorage.setItem('asso-storage', JSON.stringify(dataToSave));
+                } catch (e) {
+                    // Erreur sauvegarde forcée silencieuse
+                }
+                
                 // Vérifier que le changement a bien eu lieu
                 const newState = get();
-                console.log('✅ Store: Association mise à jour vers:', newState.selectedAssociation);
                 
-                // Forcer un re-render en créant un nouvel objet si nécessaire
-                if (association) {
-                    const updatedAssociation = { ...association };
-                    set({ selectedAssociation: updatedAssociation });
-                }
+                // Vérifier l'état du localStorage APRÈS changement (avec délai)
+                setTimeout(() => {
+                    const storageAfter = localStorage.getItem('asso-storage');
+                    
+                    // Parser et vérifier le contenu
+                    try {
+                        const parsed = JSON.parse(storageAfter || '{}');
+                    } catch (e) {
+                        // Erreur parsing localStorage silencieuse
+                    }
+                }, 100);
                 
                 // Émettre un événement personnalisé pour notifier le changement
                 window.dispatchEvent(new CustomEvent('associationChanged', { 
@@ -71,13 +92,10 @@ export const useAssoStore = create<AssoState>()(
                         throw new Error('No user ID found in store');
                     }
 
-                    console.log('Checking membership for user:', user.sub);
                     // Vérifier les membreships de l'utilisateur
                     const memberships = await assoService.checkMembership(user.sub);
-                    console.log('Memberships received:', memberships);
                     
                     if (!memberships || memberships.length === 0) {
-                        console.log('No memberships found');
                         set({ 
                             associations: [], 
                             selectedAssociation: null,
@@ -92,7 +110,6 @@ export const useAssoStore = create<AssoState>()(
                             const details = await assoService.getAssociation(id);
                             return details;
                         } catch (error) {
-                            console.error(`Error fetching association ${id}:`, error);
                             return null;
                         }
                     });
@@ -102,8 +119,6 @@ export const useAssoStore = create<AssoState>()(
                         asso !== null && asso.id && asso.name && asso.siret
                     );
                     
-                    console.log('Valid associations:', validAssociations);
-                    
                     set({ 
                         associations: validAssociations,
                         isLoading: false
@@ -111,11 +126,9 @@ export const useAssoStore = create<AssoState>()(
                     
                     // Sélectionner la première association si aucune n'est sélectionnée
                     if (validAssociations.length > 0 && !state.selectedAssociation) {
-                        console.log('Setting first association as selected:', validAssociations[0]);
                         set({ selectedAssociation: validAssociations[0] });
                     }
                 } catch (error) {
-                    console.error('Error fetching user associations:', error);
                     set({ 
                         associations: [], 
                         selectedAssociation: null,
@@ -132,10 +145,13 @@ export const useAssoStore = create<AssoState>()(
         }),
         {
             name: 'asso-storage',
-            partialize: (state) => ({
-                associations: state.associations,
-                selectedAssociation: state.selectedAssociation
-            })
+            partialize: (state) => {
+                return {
+                    associations: state.associations,
+                    selectedAssociation: state.selectedAssociation,
+                    sidebarCollapsed: state.sidebarCollapsed
+                };
+            }
         }
     )
 ); 
