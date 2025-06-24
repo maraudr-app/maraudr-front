@@ -71,7 +71,7 @@ const CreateAccount = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | undefined>(undefined);
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+
 
   const passwordStrength = getPasswordStrength(form.password);
 
@@ -162,7 +162,17 @@ const CreateAccount = () => {
       const response = await userService.createAccount(userData);
       
       if (response) {
-        setShowSuccess(true);
+        // Toast de succès
+        toast.success('Compte créé avec succès ! Redirection vers la page de connexion...', {
+          duration: 3000,
+          position: 'top-center',
+          style: {
+            background: '#10b981',
+            color: '#fff',
+            padding: '16px',
+            borderRadius: '8px',
+          },
+        });
         
         // Naviguer vers login après 3 secondes
         setTimeout(() => {
@@ -196,16 +206,7 @@ const CreateAccount = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-6xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-        {showSuccess ? (
-          <div className="text-center">
-            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 mx-auto">
-              <FaCheckCircle className="text-white text-3xl" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">Client add successfully</h3>
-            <p className="text-gray-600 dark:text-gray-400">Redirecting to login page...</p>
-          </div>
-        ) : (
-          <>
+
             {/* Header */}
             <div className="text-left mb-8">
               <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Add new client or company</h1>
@@ -459,10 +460,8 @@ const CreateAccount = () => {
                 </form>
               </div>
             </div>
-          </>
-        )}
+        </div>
       </div>
-    </div>
   );
 };
 

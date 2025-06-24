@@ -97,15 +97,15 @@ export const stockService = {
 
         try {
             // D'abord, vérifier si un stock existe pour cette association
-            let stockId = await stockService.getStockId(associationId);
+        let stockId = await stockService.getStockId(associationId);
             
-            if (!stockId) {
+        if (!stockId) {
                 // Si aucun stock n'existe, en créer un
-                stockId = await stockService.createStock(associationId);
-            }
+            stockId = await stockService.createStock(associationId);
+        }
 
-            const requestData = {
-                name: item.name,
+        const requestData = { 
+            name: item.name,
                 category: item.category,
                 quantity: item.quantity,
                 unit: item.unit,

@@ -147,7 +147,7 @@ export const useAssoStore = create<AssoState>()(
             name: 'asso-storage',
             partialize: (state) => {
                 return {
-                    associations: state.associations,
+                associations: state.associations,
                     selectedAssociation: state.selectedAssociation,
                     sidebarCollapsed: state.sidebarCollapsed
                 };

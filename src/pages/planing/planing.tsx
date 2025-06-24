@@ -14,6 +14,9 @@ import { Disponibility } from '../../types/disponibility/disponibility';
 import { User } from '../../types/user/user';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import CreateEventModal from '../../components/planning/CreateEventModal';
+import { planningService } from '../../services/planningService';
+import { Event } from '../../types/planning/event';
 
 // Interface simplifiée pour les disponibilités par utilisateur
 interface UserAvailability {
@@ -482,6 +485,9 @@ const Planning: React.FC = () => {
     const [loadingDisponibilities, setLoadingDisponibilities] = useState(false);
     const [teamUsers, setTeamUsers] = useState<User[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
+    
+    // États pour le modal de création d'événement
+    const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
     // Charger toutes les disponibilités de l'association
     const loadAllDisponibilities = async () => {
@@ -530,7 +536,7 @@ const Planning: React.FC = () => {
             loadTeamUsers();
         }
     }, [selectedAssociation, user]);
-    
+
     // Effet initial pour s'assurer que les données sont chargées
     useEffect(() => {
         console.log('Planning initial load - isManager:', user?.userType === 'Manager');
@@ -544,6 +550,13 @@ const Planning: React.FC = () => {
     // Fonction pour filtrer les disponibilités par utilisateur
     const getDisponibilitiesByUser = (userId: string) => {
         return allDisponibilities.filter(dispo => dispo.userId === userId);
+    };
+
+    // Fonction appelée après création d'un événement
+    const handleEventCreated = () => {
+        // Optionnel: recharger les données si nécessaire
+        loadAllDisponibilities();
+        loadTeamUsers();
     };
 
     // Vérifier l'authentification
@@ -613,6 +626,14 @@ const Planning: React.FC = () => {
                     
                     <div className="flex items-center space-x-3 px-4">
                         <button
+                            onClick={() => setShowCreateEventModal(true)}
+                            className="flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                        >
+                            <PlusIcon className="w-4 h-4 mr-2" />
+                            Créer un événement
+                        </button>
+                        
+                        <button
                             onClick={() => {
                                 loadAllDisponibilities();
                                 loadTeamUsers();
@@ -636,7 +657,6 @@ const Planning: React.FC = () => {
                             Équipe ({teamUsers.length})
                         </h2>
                         
-
 
                         <div className="mb-6">
                             <button
@@ -714,7 +734,7 @@ const Planning: React.FC = () => {
                                     </svg>
                                 </button>
                             </div>
-
+                            
                             {/* Jours de la semaine */}
                             <div className="grid grid-cols-7 gap-1 mb-2">
                                 {daysOfWeek.map((day, index) => (
@@ -785,32 +805,32 @@ const Planning: React.FC = () => {
                                             return day >= dispoStart && day <= dispoEnd;
                                         });
 
-                                        return (
-                                            <div
-                                                key={index}
-                                                className={`aspect-square p-1 rounded-md border transition-all
-                                                    ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
-                                                      'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
-                                                    ${hasContent ? 'border-green-300 dark:border-green-600 hover:shadow-md' : ''}
-                                                    cursor-pointer
-                                                `}
-                                            >
-                                                <div className="h-full flex flex-col">
-                                                    <div className={`text-right text-sm p-1 font-medium
-                                                        ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
-                                                    `}>
-                                                        {day.getDate()}
-                                                    </div>
-
-                                                    {/* Indicateur de disponibilités */}
-                                                    {hasContent && (
-                                                        <div className="flex-grow flex items-center justify-center">
-                                                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                                        </div>
-                                                    )}
+                                    return (
+                                        <div
+                                            key={index}
+                                            className={`aspect-square p-1 rounded-md border transition-all
+                                                ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+                                                  'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
+                                                ${hasContent ? 'border-green-300 dark:border-green-600 hover:shadow-md' : ''}
+                                                cursor-pointer
+                                            `}
+                                        >
+                                            <div className="h-full flex flex-col">
+                                                <div className={`text-right text-sm p-1 font-medium
+                                                    ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
+                                                `}>
+                                                    {day.getDate()}
                                                 </div>
+
+                                                {/* Indicateur de disponibilités */}
+                                                {hasContent && (
+                                                    <div className="flex-grow flex items-center justify-center">
+                                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        );
+                                        </div>
+                                    );
                                     }
                                 })}
 
@@ -884,6 +904,13 @@ const Planning: React.FC = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Modal de création d'événement */}
+            <CreateEventModal
+                isOpen={showCreateEventModal}
+                onClose={() => setShowCreateEventModal(false)}
+                onEventCreated={handleEventCreated}
+            />
         </div>
     );
 };

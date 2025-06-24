@@ -21,6 +21,17 @@ export interface CreateEventRequest {
   location: string;
 }
 
+// Type pour l'API directe (sans planningId)
+export interface CreateEventDto {
+  associationId: string;
+  participantsIds: string[];
+  beginningDate: string;
+  endDate: string;
+  title: string;
+  description: string;
+  location: string;
+}
+
 export interface UpdateEventRequest {
   id: string;
   planningId?: string;

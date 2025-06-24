@@ -113,7 +113,7 @@ export const useAuthStore = create<AuthState>()(
           const userData = await authService.getUserById(currentUser.sub);
           
           // Mettre à jour le state avec les nouvelles données
-          set({ 
+          set({
             user: {
               ...currentUser,
               firstName: userData.firstname,

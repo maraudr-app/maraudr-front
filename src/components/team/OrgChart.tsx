@@ -60,7 +60,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
         country: '',
         languages: [],
         isManager: true,
-        managerId: null,
+        managerId: null, // Un manager n'a pas de managerId
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     } : undefined;
@@ -161,7 +161,6 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
     };
 
     const handleShowUserDetails = (member: TeamMember) => {
-        console.log('Member languages:', member.languages, 'Type:', typeof member.languages?.[0]);
         setSelectedMemberDetails(member);
         setShowUserDetailsModal(true);
         setOpenMenuId(null);
@@ -206,7 +205,6 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         isCurrentUserManager() ? 'cursor-pointer hover:scale-105' : 'cursor-default'
                     } transition-transform z-30`}
                     onClick={isCurrentUserManager() ? () => {
-                        console.log('Photo cliquée pour:', member.firstname, member.lastname);
                         handleShowUserDetails(member);
                     } : undefined}
                     title={isCurrentUserManager() ? "Voir les détails" : ""}
@@ -581,6 +579,8 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                             </p>
                                         </div>
                                     </div>
+
+
                                 </div>
                             </div>
                         </div>

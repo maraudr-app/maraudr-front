@@ -67,8 +67,31 @@ export const assoService = {
         }
     },
 
-    getAssociation: async (id: string) => {
+    getAssociation: async (id: string | any) => {
+        // 🔍 DEBUG: Capturer le problème id[id] et id[name]
+        console.log('🔍 getAssociation appelé avec:', {
+            id: id,
+            typeofId: typeof id,
+            stringified: JSON.stringify(id)
+        });
+
+        // Si c'est un objet, montrer la stack trace
+        if (typeof id === 'object' && id !== null) {
+            console.error('❌ ERREUR: Objet passé au lieu d\'un ID string!', id);
+            console.trace('📍 Stack trace pour trouver la source:');
+            
+            // Essayer de récupérer l'ID de l'objet si possible
+            if (id.id) {
+                console.warn('🔧 Tentative de récupération de l\'ID depuis l\'objet:', id.id);
+                // Utiliser l'ID de l'objet pour continuer
+                id = id.id;
+            } else {
+                throw new Error('Objet invalide passé à getAssociation - pas d\'ID trouvé');
+            }
+        }
+
         try {
+            console.log('📡 Envoi de la requête finale avec ID:', id);
             const response = await axios.get(`${API_URL}/association`, {
                 params: { id },
                 headers: {
@@ -79,7 +102,8 @@ export const assoService = {
             
             return response.data;
         } catch (error: any) {
-            // Error silencieuse
+            console.error('❌ Erreur dans getAssociation:', error);
+            console.error('URL générée:', error.config?.url);
             throw error;
         }
     },
@@ -203,7 +227,7 @@ export const assoService = {
                     };
                     
                     return associationMember;
-                } catch (error) {
+        } catch (error) {
                     console.error(`Erreur lors de la récupération des détails pour le membre ${memberId}:`, error);
                     return null;
                 }

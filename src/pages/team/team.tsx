@@ -107,7 +107,7 @@ const Team: React.FC = () => {
 
     useEffect(() => {
         if (user && selectedAssociation) {
-            fetchTeamMembers();
+        fetchTeamMembers();
         }
     }, [user, selectedAssociation]);
 
@@ -115,12 +115,12 @@ const Team: React.FC = () => {
     useEffect(() => {
         const handleAssociationChange = (event: CustomEvent) => {
             fetchTeamMembers();
-        };
+    };
 
         window.addEventListener('associationChanged', handleAssociationChange as EventListener);
         return () => {
             window.removeEventListener('associationChanged', handleAssociationChange as EventListener);
-        };
+    };
     }, []);
 
     const showToast = (type: 'success' | 'error', message: string) => {
@@ -213,22 +213,22 @@ const Team: React.FC = () => {
                 <div className="text-center">
                     <div className="text-red-500 text-lg mb-4">Erreur lors du chargement des données</div>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-                    <div className="space-x-4">
-                        <Button 
+                <div className="space-x-4">
+                    <Button 
                             onClick={() => fetchTeamMembers()}
-                            className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all"
-                        >
-                            Réessayer
-                        </Button>
-                        <Button 
-                            onClick={() => {
-                                logout();
-                                navigate('/login');
-                            }}
-                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
-                        >
-                            Se reconnecter
-                        </Button>
+                        className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all"
+                    >
+                        Réessayer
+                    </Button>
+                    <Button 
+                        onClick={() => {
+                            logout();
+                            navigate('/login');
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
+                    >
+                        Se reconnecter
+                    </Button>
                     </div>
                 </div>
             </div>
@@ -263,13 +263,13 @@ const Team: React.FC = () => {
                     
                     <div className="flex items-center space-x-3 px-4">
                         {user?.userType === 'Manager' && (
-                            <button
-                                onClick={() => setIsAddModalOpen(true)}
-                                className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all shadow-sm"
-                            >
-                                <PlusIcon className="w-4 h-4 mr-2" />
-                                Ajouter membre
-                            </button>
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all shadow-sm"
+                        >
+                            <PlusIcon className="w-4 h-4 mr-2" />
+                            Ajouter membre
+                        </button>
                         )}
                         
                         <button
@@ -288,42 +288,42 @@ const Team: React.FC = () => {
                 {/* Statistiques en haut */}
                 <div className="px-8 pb-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
-                                    <UserGroupIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Membres</p>
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
+                                <UserGroupIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Membres</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.length}</p>
-                                </div>
                             </div>
                         </div>
-                        
-                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-blue-200/50 dark:border-gray-700 p-6">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-gradient-to-r from-blue-100 to-orange-100 dark:from-blue-900/20 dark:to-orange-900/20 rounded-lg">
-                                    <MapIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div className="ml-4">
+                    </div>
+                    
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-blue-200/50 dark:border-gray-700 p-6">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-gradient-to-r from-blue-100 to-orange-100 dark:from-blue-900/20 dark:to-orange-900/20 rounded-lg">
+                                <MapIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="ml-4">
                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Managers</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {teamMembers.filter(m => m.isManager).length}
-                                    </p>
-                                </div>
+                                </p>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
-                                    <CalendarIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                                </div>
-                                <div className="ml-4">
+                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-sm border border-orange-200/50 dark:border-gray-700 p-6">
+                        <div className="flex items-center">
+                            <div className="p-2 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-lg">
+                                <CalendarIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <div className="ml-4">
                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Membres Actifs</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {teamMembers.filter(m => !m.isManager).length}
-                                    </p>
+                                </p>
                                 </div>
                             </div>
                         </div>
@@ -412,7 +412,7 @@ const Team: React.FC = () => {
                                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                             {selectedUser?.firstname} n'a pas encore enregistré de disponibilités.
                                         </p>
-                                    </div>
+                                </div>
                                 )}
                             </div>
                         </div>

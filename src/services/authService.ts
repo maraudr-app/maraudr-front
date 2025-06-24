@@ -157,7 +157,7 @@ export const authService = {
   },
 
   getUserById: async (uuid: string): Promise<User> => {
-    const token = authService.getToken();
+      const token = authService.getToken();
     
     if (!token) {
       throw new Error('No authentication token found');
