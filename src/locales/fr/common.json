@@ -30,7 +30,13 @@
     "or": "Ou continuer avec",
     "google": "Se connecter avec Google",
     "microsoft": "Se connecter avec Microsoft",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "invalidCredentials": "Identifiants invalides. Vérifiez votre email et mot de passe.",
+    "authenticationError": "Erreur d'authentification. Veuillez réessayer.",
+    "networkError": "Erreur de connexion. Vérifiez votre connexion internet.",
+    "accountBlocked": "Votre compte est temporairement bloqué.",
+    "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
+    "loginError": "Une erreur est survenue lors de la connexion."
   },
   "register": {
     "title": "Créer un compte",

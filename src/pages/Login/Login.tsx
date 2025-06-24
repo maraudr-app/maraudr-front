@@ -42,7 +42,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError(null);
     setIsLoading(true);
 
     try {
@@ -60,8 +60,8 @@ const Login = () => {
           // Si l'utilisateur n'appartient à aucune association, vérifier son rôle
           if (user.userType === 'Manager') {
             // Si c'est un manager, rediriger vers la création d'association
-        navigate('/maraudApp/create-asso');
-      } else {
+            navigate('/maraudApp/create-asso');
+          } else {
             // Si ce n'est pas un manager, rediriger vers le dashboard
             navigate('/maraudApp/dashboard');
           }
@@ -69,9 +69,27 @@ const Login = () => {
           // Si l'utilisateur appartient à au moins une association, rediriger vers le dashboard
           navigate('/maraudApp/dashboard');
         }
+      } else {
+        // Si login retourne false, c'est une erreur d'authentification
+        setError(t('auth.invalidCredentials'));
       }
-    } catch (error) {
-      setError('Identifiants invalides');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Gérer différents types d'erreurs
+      if (error.message?.includes('User not authenticated')) {
+        setError(t('auth.authenticationError'));
+      } else if (error.message?.includes('Network')) {
+        setError(t('auth.networkError'));
+      } else if (error.response?.status === 401) {
+        setError(t('auth.invalidCredentials'));
+      } else if (error.response?.status === 403) {
+        setError(t('auth.accountBlocked'));
+      } else if (error.response?.status >= 500) {
+        setError(t('auth.serverError'));
+      } else {
+        setError(t('auth.loginError'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -156,8 +174,19 @@ const Login = () => {
 
               {/* Afficher l'erreur s'il y en a une */}
               {error && (
-                <div className="text-red-500 text-sm mt-2 text-center">
-                  {error}
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mt-3">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                        {error}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
