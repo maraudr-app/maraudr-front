@@ -383,86 +383,90 @@ export const Stock = () => {
                     </div>
                 )}
 
-                {/* Section Tableau avec Filtres */}
-                <div className="bg-white dark:bg-gray-800 shadow">
-                    {/* Filtres */}
-                    <form onSubmit={handleFilterSubmit} className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <Input
-                                type="text"
-                                name="name"
-                                value={filter.name}
-                                onChange={handleFilterChange}
-                                placeholder="Rechercher un item"
-                            />
-    <div className="w-full">
-                                <Select
-                                    name="category"
-                                    value={filter.category}
-                                    onChange={handleFilterChange}
-                                    placeholder="Toutes les catégories"
-                                    className="w-full"
-                                >
-                                    <option value="">Toutes les catégories</option>
-                                    {getAllCategories().map(category => (
-                                        <option key={category.value} value={category.value}>
-                                            {category.label}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </div>
-                            <Input
-                                type="number"
-                                name="maxQuantity"
-                                value={filter.maxQuantity}
-                                onChange={handleFilterChange}
-                                placeholder="Quantité maximum"
-                            />
-                            <Input
-                                type="number"
-                                name="minQuantity"
-                                value={filter.minQuantity}
-                                onChange={handleFilterChange}
-                                placeholder="Quantité minimum"
-                            />
-                        </div>
-                        <div className="mt-4 flex justify-end space-x-2">
-                            <Button
-                                type="button"
-                                onClick={handleResetFilters}
-                                className="text-black bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                            >
-                                Réinitialiser
-                            </Button>
-                            <Button
-                                type="submit"
-                                className="text-black bg-maraudr-blue hover:bg-maraudr-orange"
-                            >
-                                Filtrer
-                            </Button>
-                </div>
-                    </form>
+                {/* Message d'état vide */}
+                {!isLoading && items.length === 0 && (
+                    <div className="text-center p-8">
+                        <p className="text-gray-500 dark:text-gray-400">
+                            Aucun item trouvé dans le stock
+                        </p>
+                    </div>
+                )}
 
-                    {/* Tableau */}
-                    <div className="overflow-x-auto">
-                        {isLoading ? (
-                            <div className="w-full flex items-center justify-center min-h-96">
-                                <div className="text-center">
-                                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                                    <p className="text-gray-600 dark:text-gray-400 text-lg">
-                                        Chargement de votre stock...
-                                    </p>
-                                    <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
-                                        Récupération des articles en cours
-                                    </p>
+                {/* Section Tableau avec Filtres - Affichée uniquement s'il y a des items */}
+                {!isLoading && items.length > 0 && (
+                    <div className="bg-white dark:bg-gray-800 shadow">
+                        {/* Filtres */}
+                        <form onSubmit={handleFilterSubmit} className="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <Input
+                                    type="text"
+                                    name="name"
+                                    value={filter.name}
+                                    onChange={handleFilterChange}
+                                    placeholder="Rechercher un item"
+                                />
+                                <div className="w-full">
+                                    <Select
+                                        name="category"
+                                        value={filter.category}
+                                        onChange={handleFilterChange}
+                                        placeholder="Toutes les catégories"
+                                        className="w-full"
+                                    >
+                                        <option value="">Toutes les catégories</option>
+                                        {getAllCategories().map(category => (
+                                            <option key={category.value} value={category.value}>
+                                                {category.label}
+                                            </option>
+                                        ))}
+                                    </Select>
                                 </div>
+                                <Input
+                                    type="number"
+                                    name="maxQuantity"
+                                    value={filter.maxQuantity}
+                                    onChange={handleFilterChange}
+                                    placeholder="Quantité maximum"
+                                />
+                                <Input
+                                    type="number"
+                                    name="minQuantity"
+                                    value={filter.minQuantity}
+                                    onChange={handleFilterChange}
+                                    placeholder="Quantité minimum"
+                                />
                             </div>
-                        ) : items.length === 0 ? (
-                            <div className="text-center p-8">
-                                <p className="text-gray-500 dark:text-gray-400">
-                                    Aucun item trouvé dans le stock
-              </p>
-            </div>
+                            <div className="mt-4 flex justify-end space-x-2">
+                                <Button
+                                    type="button"
+                                    onClick={handleResetFilters}
+                                    className="text-black bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                >
+                                    Réinitialiser
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    className="text-black bg-maraudr-blue hover:bg-maraudr-orange"
+                                >
+                                    Filtrer
+                                </Button>
+                            </div>
+                        </form>
+
+                        {/* Tableau */}
+                        <div className="overflow-x-auto">
+                            {isLoading ? (
+                                <div className="w-full flex items-center justify-center min-h-96">
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                                        <p className="text-gray-600 dark:text-gray-400 text-lg">
+                                            Chargement de votre stock...
+                                        </p>
+                                        <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                                            Récupération des articles en cours
+                                        </p>
+                                    </div>
+                                </div>
                         ) : (
                             <>
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -658,8 +662,28 @@ export const Stock = () => {
                                 )}
                             </>
                         )}
-            </div>
-                </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Loading state */}
+                {isLoading && (
+                    <div className="bg-white dark:bg-gray-800 shadow">
+                        <div className="overflow-x-auto">
+                            <div className="w-full flex items-center justify-center min-h-96">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                                    <p className="text-gray-600 dark:text-gray-400 text-lg">
+                                        Chargement de votre stock...
+                                    </p>
+                                    <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                                        Récupération des articles en cours
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
 
             {/* Modal de modification */}
