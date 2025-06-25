@@ -30,8 +30,7 @@ export const stockService = {
         }
 
         try {
-            const response = await axios.get(`${API_URL}/stock/id`, {
-                params: { associationId },
+            const response = await axios.get(`${API_URL}/stock/${associationId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
