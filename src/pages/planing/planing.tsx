@@ -17,6 +17,7 @@ import { toast } from 'react-hot-toast';
 import CreateEventModal from '../../components/planning/CreateEventModal';
 import { planningService } from '../../services/planningService';
 import { Event } from '../../types/planning/event';
+import { Input } from '../../components/common/input/input';
 
 // Interface simplifiée pour les disponibilités par utilisateur
 interface UserAvailability {
@@ -129,6 +130,17 @@ const UserAvailabilityView: React.FC = () => {
             return;
         }
 
+        // Empêcher la sélection de dates passées
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normaliser à minuit pour la comparaison
+        const clickedDate = new Date(date);
+        clickedDate.setHours(0, 0, 0, 0);
+
+        if (clickedDate < today) {
+            toast.error('Vous ne pouvez pas sélectionner une date passée');
+            return;
+        }
+
         if (!startDate) {
             setStartDate(date);
         } else if (!endDate && date >= startDate) {
@@ -183,10 +195,28 @@ const UserAvailabilityView: React.FC = () => {
                 return `${year}-${month}-${day}`;
             };
 
+            // Construire les dates/heures de début et de fin correctement
+            const startDateTime = `${formatDateForAPI(startDate)}T${startTime}:00`;
+            const endDateTime = `${formatDateForAPI(endDate)}T${endTime}:00`;
+
+            // Validation : vérifier que la fin est postérieure au début
+            const startDateTimeObj = new Date(startDateTime);
+            const endDateTimeObj = new Date(endDateTime);
+
+            if (endDateTimeObj <= startDateTimeObj) {
+                // Si c'est le même jour et que l'heure de fin est antérieure/égale à l'heure de début
+                if (startDate.toDateString() === endDate.toDateString()) {
+                    toast.error('Sur un même jour, l\'heure de fin doit être postérieure à l\'heure de début');
+                } else {
+                    toast.error('La date et heure de fin doivent être postérieures au début');
+                }
+                return;
+            }
+
             const disponibilityData = {
                 userId: user.sub,
-                start: `${formatDateForAPI(startDate)}T${startTime}:00`,
-                end: `${formatDateForAPI(endDate)}T${endTime}:00`,
+                start: startDateTime,
+                end: endDateTime,
                 associationId: selectedAssociation.id
             };
 
@@ -279,14 +309,19 @@ const UserAvailabilityView: React.FC = () => {
                 {/* Instructions */}
                 {isSelectingPeriod && (
                     <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-                        <p className="text-blue-800 dark:text-blue-200">
+                        <p className="text-blue-800 dark:text-blue-200 mb-2">
                             {!startDate ? 
                                 "Cliquez sur une date pour commencer la sélection de votre période de disponibilité." :
                                 !endDate ?
-                                "Cliquez sur une date de fin (après le " + startDate.toLocaleDateString() + ")." :
+                                "Cliquez sur une date de fin (après le " + startDate.toLocaleDateString() + "). Vous pouvez sélectionner plusieurs jours." :
                                 "Période sélectionnée du " + startDate.toLocaleDateString() + " au " + endDate.toLocaleDateString() + ". Définissez maintenant les heures."
                             }
                         </p>
+                        {!startDate && (
+                            <p className="text-sm text-blue-600 dark:text-blue-400">
+                                💡 <strong>Astuce :</strong> Vous pouvez créer des disponibilités sur une seule journée ou sur plusieurs jours consécutifs.
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -341,36 +376,61 @@ const UserAvailabilityView: React.FC = () => {
 
                         {/* Jours du mois */}
                         {days.map((day, index) => {
-                            const dateString = formatDate(day);
+                            const dateKey = formatDate(day);
                             const isToday = new Date().toDateString() === day.toDateString();
-                            const hasAvailability = userAvailabilities[dateString];
+                            const hasAvailability = userAvailabilities[dateKey];
                             const inSelectedPeriod = isDateInSelectedPeriod(day);
                             const isSelected = isDateSelected(day);
+                            
+                            // Vérifier si la date est passée
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const dayDate = new Date(day);
+                            dayDate.setHours(0, 0, 0, 0);
+                            const isPastDate = dayDate < today;
 
                             return (
                                 <div
                                     key={index}
-                                    className={`aspect-square p-1 rounded-md border transition-all cursor-pointer
-                                        ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
-                                          'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
+                                    className={`aspect-square p-1 rounded-md border transition-all 
+                                        ${isPastDate ? 
+                                            'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-50' :
+                                            `cursor-pointer hover:shadow-md ${
+                                                hasAvailability ? 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-600' :
+                                                isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+                                                'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                                            }`
+                                        }
                                         ${isSelected ? 'ring-2 ring-blue-500' : ''}
                                         ${inSelectedPeriod ? 'bg-blue-100 dark:bg-blue-900/30' : ''}
-                                        ${hasAvailability ? 'border-green-300 dark:border-green-600' : ''}
-                                        hover:shadow-md
                                     `}
-                                    onClick={() => handleDateClick(day)}
+                                    onClick={() => !isPastDate && handleDateClick(day)}
                                 >
                                     <div className="h-full flex flex-col">
                                         <div className={`text-right text-sm p-1 font-medium
-                                            ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
+                                            ${isPastDate ? 
+                                                'text-gray-400 dark:text-gray-500' :
+                                                isToday ? 'text-blue-600 dark:text-blue-400' : 
+                                                hasAvailability ? 'text-green-700 dark:text-green-300' :
+                                                'text-gray-700 dark:text-gray-300'
+                                            }
                                         `}>
                                             {day.getDate()}
                                         </div>
 
-                                        {/* Indicateur de disponibilité */}
-                                        {hasAvailability && (
+                                        {/* Indicateur de disponibilité avec texte */}
+                                        {hasAvailability && !isPastDate && (
+                                            <div className="flex-grow flex items-center justify-center px-1">
+                                                <span className="text-xs font-medium text-green-700 dark:text-green-300 text-center leading-tight">
+                                                    Disponible
+                                                </span>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Indicateur de date passée */}
+                                        {isPastDate && (
                                             <div className="flex-grow flex items-center justify-center">
-                                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                <div className="text-xs text-gray-400 dark:text-gray-500">×</div>
                                             </div>
                                         )}
                                     </div>
@@ -391,12 +451,16 @@ const UserAvailabilityView: React.FC = () => {
                 {/* Légende */}
                 <div className="mt-4 flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <div className="w-3 h-3 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-600 rounded mr-2"></div>
                         <span>Disponible</span>
                     </div>
                     <div className="flex items-center">
                         <div className="w-3 h-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 rounded mr-2"></div>
                         <span>Période sélectionnée</span>
+                    </div>
+                    <div className="flex items-center">
+                        <div className="w-3 h-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded mr-2 opacity-50"></div>
+                        <span className="text-gray-500">Dates passées (non sélectionnables)</span>
                     </div>
                 </div>
             </div>
@@ -412,6 +476,25 @@ const UserAvailabilityView: React.FC = () => {
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                             Période : du {startDate.toLocaleDateString()} au {endDate.toLocaleDateString()}
                         </p>
+
+                        {/* Note explicative */}
+                        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                            <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                                💡 <strong>Comment ça marche :</strong>
+                            </p>
+                            {startDate?.toDateString() === endDate?.toDateString() ? (
+                                <p className="text-xs text-blue-700 dark:text-blue-300">
+                                    • <strong>Même journée :</strong> Vous êtes disponible de {startTime || '[heure début]'} à {endTime || '[heure fin]'} le {startDate?.toLocaleDateString()}.
+                                </p>
+                            ) : (
+                                <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                                    <p>• <strong>Période multi-jours :</strong> Vous serez disponible :</p>
+                                    <p className="ml-4">- Le {startDate?.toLocaleDateString()} à partir de {startTime || '[heure début]'}</p>
+                                    <p className="ml-4">- Tous les jours intermédiaires (journée complète)</p>
+                                    <p className="ml-4">- Le {endDate?.toLocaleDateString()} jusqu'à {endTime || '[heure fin]'}</p>
+                                </div>
+                            )}
+                        </div>
 
                         <div className="space-y-4">
                             <div>
@@ -486,8 +569,32 @@ const Planning: React.FC = () => {
     const [teamUsers, setTeamUsers] = useState<User[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     
+    // États pour les événements
+    const [allEvents, setAllEvents] = useState<Event[]>([]);
+    const [loadingEvents, setLoadingEvents] = useState(false);
+    const [selectedDateEvents, setSelectedDateEvents] = useState<Event[]>([]);
+    const [showEventsModal, setShowEventsModal] = useState(false);
+    const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+    const [showEditEventModal, setShowEditEventModal] = useState(false);
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
+    const [updateLoading, setUpdateLoading] = useState(false);
+    
+    // États pour le formulaire d'édition
+    const [editFormData, setEditFormData] = useState({
+        title: '',
+        description: '',
+        location: '',
+        beginningDate: '',
+        endDate: ''
+    });
+    
     // États pour le modal de création d'événement
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+
+    // États pour la recherche et la gestion des participants
+    const [eventSearchQuery, setEventSearchQuery] = useState('');
+    const [editSelectedParticipants, setEditSelectedParticipants] = useState<string[]>([]);
 
     // Charger toutes les disponibilités de l'association
     const loadAllDisponibilities = async () => {
@@ -526,6 +633,28 @@ const Planning: React.FC = () => {
             setLoadingUsers(false);
         }
     };
+
+    // Charger tous les événements de l'association
+    const loadAllEvents = async () => {
+        if (!selectedAssociation?.id) {
+            console.log('loadAllEvents: Pas d\'association sélectionnée');
+            return;
+        }
+        
+        try {
+            setLoadingEvents(true);
+            console.log('loadAllEvents: Chargement pour association ID:', selectedAssociation.id);
+            const events = await planningService.getAllEvents(selectedAssociation.id);
+            console.log('Tous les événements chargés:', events);
+            console.log('Nombre d\'événements:', events?.length || 0);
+            setAllEvents(events || []);
+        } catch (error) {
+            console.error('Erreur lors du chargement des événements:', error);
+            setAllEvents([]);
+        } finally {
+            setLoadingEvents(false);
+        }
+    };
     
     // Charger les disponibilités et utilisateurs quand l'association change
     useEffect(() => {
@@ -534,6 +663,7 @@ const Planning: React.FC = () => {
         if (selectedAssociation?.id && user?.sub) {
             loadAllDisponibilities();
             loadTeamUsers();
+            loadAllEvents();
         }
     }, [selectedAssociation, user]);
 
@@ -544,6 +674,7 @@ const Planning: React.FC = () => {
             console.log('Loading initial data for manager...');
             loadAllDisponibilities();
             loadTeamUsers();
+            loadAllEvents();
         }
     }, []);
     
@@ -554,9 +685,123 @@ const Planning: React.FC = () => {
 
     // Fonction appelée après création d'un événement
     const handleEventCreated = () => {
-        // Optionnel: recharger les données si nécessaire
+        // Recharger les données 
         loadAllDisponibilities();
         loadTeamUsers();
+        loadAllEvents();
+    };
+
+    // Fonctions de gestion des événements
+    const canEditEvent = (event: Event): boolean => {        
+        if (!user) return false;
+        
+        // Manager peut modifier tous les événements (avec M majuscule)
+        if (user.userType === 'Manager') return true;
+        
+        // Organisateur peut modifier ses propres événements
+        if (event.organizerId === user.sub) return true;
+        
+        return false;
+    };
+
+    const handleEditEvent = (event: Event) => {
+        setEditingEvent(event);
+        setEditFormData({
+            title: event.title,
+            description: event.description || '',
+            location: event.location || '',
+            beginningDate: new Date(event.beginningDate).toISOString().slice(0, 16),
+            endDate: new Date(event.endDate).toISOString().slice(0, 16)
+        });
+        // Initialiser les participants sélectionnés
+        setEditSelectedParticipants(event.participantsIds || []);
+        setShowEditEventModal(true);
+    };
+
+    const handleDeleteEvent = (event: Event) => {
+        setEventToDelete(event);
+        setShowDeleteConfirmModal(true);
+        setShowEventsModal(false);
+    };
+
+    const confirmDeleteEvent = async () => {
+        if (!eventToDelete) return;
+        
+        try {
+            await planningService.deleteEvent(eventToDelete.id);
+            console.log('Événement supprimé avec succès');
+            
+            // Recharger les événements
+            loadAllEvents();
+            
+            // Fermer les modals
+            setShowDeleteConfirmModal(false);
+            setEventToDelete(null);
+            
+            toast.success('Événement supprimé avec succès');
+        } catch (error) {
+            console.error('Erreur lors de la suppression de l\'événement:', error);
+            toast.error('Erreur lors de la suppression de l\'événement');
+        }
+    };
+
+    const handleEventUpdated = () => {
+        // Recharger les données après modification
+        loadAllEvents();
+        setShowEditEventModal(false);
+        setEditingEvent(null);
+    };
+
+    // Fonctions d'aide pour les événements
+    const getEventsForDate = (date: Date): Event[] => {
+        const dateStr = formatDate(date);
+        return allEvents.filter(event => {
+            const eventStartDate = new Date(event.beginningDate);
+            const eventEndDate = new Date(event.endDate);
+            const currentDate = new Date(dateStr);
+            
+            // Normaliser les dates pour ne comparer que les jours (pas les heures)
+            const startDay = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
+            const endDay = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate());
+            const checkDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+            
+            // Vérifier si la date courante est dans la plage de l'événement
+            return checkDay >= startDay && checkDay <= endDay;
+        });
+    };
+
+    const getEventCountForDate = (date: Date): number => {
+        return getEventsForDate(date).length;
+    };
+
+    const getEventColorForDate = (date: Date): string => {
+        const count = getEventCountForDate(date);
+        if (count === 0) return 'bg-white dark:bg-gray-800';
+        if (count === 1) return 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-700';
+        if (count === 2) return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700';
+        return 'bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-700'; // 3+
+    };
+
+    const handleDateClick = (date: Date) => {
+        const eventsForDate = getEventsForDate(date);
+        if (eventsForDate.length > 0) {
+            setSelectedDateEvents(eventsForDate);
+            setEventSearchQuery(''); // Réinitialiser la recherche
+            setShowEventsModal(true);
+        }
+    };
+
+    // Fonction pour filtrer les événements par recherche
+    const getFilteredEvents = () => {
+        if (!eventSearchQuery.trim()) {
+            return selectedDateEvents;
+        }
+        
+        const query = eventSearchQuery.toLowerCase();
+        return selectedDateEvents.filter(event => 
+            event.title.toLowerCase().includes(query) ||
+            (event.description && event.description.toLowerCase().includes(query))
+        );
     };
 
     // Vérifier l'authentification
@@ -637,6 +882,7 @@ const Planning: React.FC = () => {
                             onClick={() => {
                                 loadAllDisponibilities();
                                 loadTeamUsers();
+                                loadAllEvents();
                             }}
                             className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                         >
@@ -708,31 +954,53 @@ const Planning: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Calendrier */}
+                    {/* Calendrier moderne dans la colonne du milieu */}
                     <div className="lg:col-span-2">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                            {/* Header avec titre et navigation */}
                             <div className="flex justify-between items-center mb-4">
-                                <button
-                                    onClick={() => changeMonth(-1)}
-                                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-
-                                <h2 className="text-xl font-semibold">
-                                    {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                    Activité de l'association
                                 </h2>
+                                <div className="flex items-center space-x-3">
+                                    <button
+                                        onClick={() => changeMonth(-1)}
+                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    
+                                    <h3 className="text-lg font-medium min-w-[130px] text-center text-gray-900 dark:text-white">
+                                        {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                                    </h3>
+                                    
+                                    <button
+                                        onClick={() => changeMonth(1)}
+                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
 
-                                <button
-                                    onClick={() => changeMonth(1)}
-                                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
+                            {/* Légende compacte */}
+                            <div className="flex items-center justify-center space-x-4 mb-4">
+                                <div className="flex items-center space-x-1">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">1-2</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">3-5</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">6+</span>
+                                </div>
                             </div>
                             
                             {/* Jours de la semaine */}
@@ -747,105 +1015,88 @@ const Planning: React.FC = () => {
                                 ))}
                             </div>
 
-                            {/* Grille du calendrier */}
+                            {/* Grille du calendrier moderne */}
                             <div className="grid grid-cols-7 gap-1">
                                 {/* Jours vides du début du mois */}
                                 {Array.from({ length: startDay }).map((_, index) => (
                                     <div
                                         key={`empty-start-${index}`}
-                                        className="aspect-square p-1 bg-gray-50 dark:bg-gray-700 rounded-md"
+                                        className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700"
                                     />
                                 ))}
 
-                                {/* Jours du mois */}
+                                {/* Jours du mois avec le nouveau style moderne */}
                                 {days.map((day, index) => {
-                                    const dateKey = formatDate(day);
                                     const isToday = new Date().toDateString() === day.toDateString();
+                                    const eventCount = getEventCountForDate(day);
                                     
-                                    // Mode utilisateur : afficher les disponibilités de l'utilisateur sélectionné
-                                    if (selectedUser) {
-                                        const userDisponibilities = allDisponibilities.filter(dispo => dispo.userId === selectedUser);
-                                        const hasContent = userDisponibilities.some(dispo => {
-                                            const dispoStart = new Date(dispo.start);
-                                            const dispoEnd = new Date(dispo.end);
-                                            return day >= dispoStart && day <= dispoEnd;
-                                        });
-
-                                        return (
-                                            <div
-                                                key={index}
-                                                className={`aspect-square p-1 rounded-md border transition-all
-                                                    ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
-                                                      'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
-                                                    ${hasContent ? 'border-green-300 dark:border-green-600 hover:shadow-md' : ''}
-                                                    cursor-pointer
-                                                `}
-                                            >
-                                                <div className="h-full flex flex-col">
-                                                    <div className={`text-right text-sm p-1 font-medium
-                                                        ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
-                                                    `}>
-                                                        {day.getDate()}
-                                                    </div>
-
-                                                    {/* Indicateur de disponibilités */}
-                                                    {hasContent && (
-                                                        <div className="flex-grow flex items-center justify-center">
-                                                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    } else {
-                                        // Mode association : afficher toutes les disponibilités
-                                        const hasContent = allDisponibilities.some(dispo => {
-                                            const dispoStart = new Date(dispo.start);
-                                            const dispoEnd = new Date(dispo.end);
-                                            return day >= dispoStart && day <= dispoEnd;
-                                        });
+                                    // Déterminer la couleur de fond selon l'activité
+                                    let bgColor = 'bg-white dark:bg-gray-800'; // Pas d'événements
+                                    let textColor = 'text-gray-700 dark:text-gray-300';
+                                    let borderColor = 'border-gray-100 dark:border-gray-700';
+                                    
+                                    if (eventCount >= 1 && eventCount <= 2) {
+                                        bgColor = 'bg-green-500';
+                                        textColor = 'text-white';
+                                        borderColor = 'border-green-500';
+                                    } else if (eventCount >= 3 && eventCount <= 5) {
+                                        bgColor = 'bg-orange-500';
+                                        textColor = 'text-white';
+                                        borderColor = 'border-orange-500';
+                                    } else if (eventCount >= 6) {
+                                        bgColor = 'bg-red-500';
+                                        textColor = 'text-white';
+                                        borderColor = 'border-red-500';
+                                    }
 
                                     return (
                                         <div
                                             key={index}
-                                            className={`aspect-square p-1 rounded-md border transition-all
-                                                ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
-                                                  'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}
-                                                ${hasContent ? 'border-green-300 dark:border-green-600 hover:shadow-md' : ''}
-                                                cursor-pointer
+                                            onClick={() => eventCount > 0 && handleDateClick(day)}
+                                            className={`aspect-square rounded-md border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md
+                                                ${bgColor} ${textColor} ${borderColor}
+                                                ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''}
+                                                ${eventCount > 0 ? 'hover:brightness-110 shadow-sm' : ''}
                                             `}
                                         >
-                                            <div className="h-full flex flex-col">
-                                                <div className={`text-right text-sm p-1 font-medium
-                                                    ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}
-                                                `}>
-                                                    {day.getDate()}
-                                                </div>
-
-                                                {/* Indicateur de disponibilités */}
-                                                {hasContent && (
-                                                    <div className="flex-grow flex items-center justify-center">
-                                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                            <div className="h-full flex flex-col items-center justify-center p-1">
+                                                <div className="text-sm font-semibold">{day.getDate()}</div>
+                                                {eventCount > 0 && (
+                                                    <div className="text-xs opacity-90 mt-0.5">
+                                                        {eventCount}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                     );
-                                    }
                                 })}
 
                                 {/* Jours vides de la fin du mois */}
                                 {Array.from({ length: (7 - (days.length + startDay) % 7) % 7 }).map((_, index) => (
                                     <div
                                         key={`empty-end-${index}`}
-                                        className="aspect-square p-1 bg-gray-50 dark:bg-gray-700 rounded-md"
+                                        className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700"
                                     />
                                 ))}
+                            </div>
+
+                            {/* Mini statistiques */}
+                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <div className="flex justify-center space-x-6 text-sm">
+                                    <div className="text-center">
+                                        <div className="text-lg font-bold text-green-500">{allEvents.length}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Événements</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-lg font-bold text-blue-500">{teamUsers.length}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Membres</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Liste des disponibilités - Colonne droite */}
+                    {/* Liste des disponibilités ou événements - Colonne droite */}
                     <div className="lg:col-span-1">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-fit">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -911,6 +1162,338 @@ const Planning: React.FC = () => {
                 onClose={() => setShowCreateEventModal(false)}
                 onEventCreated={handleEventCreated}
             />
+
+            {/* Modal de modification d'événement - Vraie version */}
+            {showEditEventModal && editingEvent && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
+                    <div className="relative top-10 mx-auto p-6 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <div className="mb-6">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                    Modifier l'événement
+                                </h3>
+                                <button
+                                    onClick={() => {
+                                        setShowEditEventModal(false);
+                                        setEditingEvent(null);
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Formulaire de modification */}
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            if (!editingEvent) return;
+                            
+                            const updatedEvent = {
+                                id: editingEvent.id,
+                                title: editFormData.title,
+                                description: editFormData.description,
+                                location: editFormData.location,
+                                beginningDate: editFormData.beginningDate,
+                                endDate: editFormData.endDate,
+                                participantsIds: editSelectedParticipants
+                            };
+                            
+                            try {
+                                setUpdateLoading(true);
+                                await planningService.updateEvent(editingEvent.id, updatedEvent);
+                                console.log('Événement mis à jour avec succès');
+                                
+                                // Recharger les événements
+                                loadAllEvents();
+                                
+                                // Fermer le modal
+                                setShowEditEventModal(false);
+                                setEditingEvent(null);
+                                
+                                toast.success('Événement mis à jour avec succès !');
+                            } catch (error) {
+                                console.error('Erreur lors de la mise à jour:', error);
+                                toast.error('Erreur lors de la mise à jour de l\'événement');
+                            } finally {
+                                setUpdateLoading(false);
+                            }
+                        }}>
+                            <div className="space-y-4">
+                                {/* Titre et Lieu sur la même ligne */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Input
+                                        name="title"
+                                        type="text"
+                                        placeholder="Titre de l'événement"
+                                        value={editFormData.title}
+                                        onChange={(e) => setEditFormData(prev => ({ ...prev, title: e.target.value }))}
+                                        required
+                                    />
+                                    <Input
+                                        name="location"
+                                        type="text"
+                                        placeholder="Lieu"
+                                        value={editFormData.location}
+                                        onChange={(e) => setEditFormData(prev => ({ ...prev, location: e.target.value }))}
+                                    />
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <textarea
+                                        name="description"
+                                        rows={3}
+                                        placeholder="Description"
+                                        value={editFormData.description}
+                                        onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
+
+                                {/* Dates */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Input
+                                        name="beginningDate"
+                                        type="datetime-local"
+                                        placeholder="Date de début"
+                                        value={editFormData.beginningDate}
+                                        onChange={(e) => setEditFormData(prev => ({ ...prev, beginningDate: e.target.value }))}
+                                        required
+                                    />
+                                    <Input
+                                        name="endDate"
+                                        type="datetime-local"
+                                        placeholder="Date de fin"
+                                        value={editFormData.endDate}
+                                        onChange={(e) => setEditFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                                        required
+                                    />
+                                </div>
+
+                                {/* Sélection des participants */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Participants ({editSelectedParticipants.length} sélectionné{editSelectedParticipants.length > 1 ? 's' : ''})
+                                    </label>
+                                    <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-gray-50 dark:bg-gray-700">
+                                        {teamUsers.map(user => (
+                                            <div key={user.id} className="flex items-center mb-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`edit-participant-${user.id}`}
+                                                    checked={editSelectedParticipants.includes(user.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setEditSelectedParticipants(prev => [...prev, user.id]);
+                                                        } else {
+                                                            setEditSelectedParticipants(prev => prev.filter(id => id !== user.id));
+                                                        }
+                                                    }}
+                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                                />
+                                                <label 
+                                                    htmlFor={`edit-participant-${user.id}`}
+                                                    className="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer flex items-center"
+                                                >
+                                                    <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
+                                                        {user.firstname ? user.firstname.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    {user.firstname ? `${user.firstname} ${user.lastname || ''}` : user.email}
+                                                </label>
+                                            </div>
+                                        ))}
+                                        {teamUsers.length === 0 && (
+                                            <p className="text-gray-500 dark:text-gray-400 text-sm">Aucun membre d'équipe disponible</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Boutons d'action */}
+                            <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowEditEventModal(false);
+                                        setEditingEvent(null);
+                                    }}
+                                    disabled={updateLoading}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={updateLoading}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center"
+                                >
+                                    {updateLoading ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Sauvegarde...
+                                        </>
+                                    ) : (
+                                        'Sauvegarder les modifications'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de confirmation de suppression */}
+            {showDeleteConfirmModal && eventToDelete && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
+                    <div className="relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 border w-11/12 md:w-96 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <div className="text-center">
+                            {/* Icône d'avertissement */}
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+                                <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                Supprimer l'événement
+                            </h3>
+                            
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                                Êtes-vous sûr de vouloir supprimer l'événement "{eventToDelete.title}" ? 
+                                Cette action est irréversible.
+                            </p>
+                            
+                            <div className="flex justify-center space-x-4">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteConfirmModal(false);
+                                        setEventToDelete(null);
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={confirmDeleteEvent}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                                >
+                                    Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de détail des événements */}
+            {showEventsModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[200]">
+                    <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <div className="mt-3">
+                            {/* Header */}
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                    Événements du jour ({selectedDateEvents.length})
+                                </h3>
+                                <button
+                                    onClick={() => setShowEventsModal(false)}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="space-y-4 max-h-96 overflow-y-auto">
+                                {selectedDateEvents.map((event, index) => (
+                                    <div
+                                        key={event.id}
+                                        className="border border-blue-200 dark:border-blue-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20"
+                                    >
+                                        <div className="flex justify-between items-start mb-3">
+                                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                                                {event.title}
+                                            </h4>
+                                            <div className="flex items-center space-x-2">
+                                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 rounded-full">
+                                                    Événement {index + 1}
+                                                </span>
+                                                
+                                                {/* Boutons d'action pour manager/organisateur */}
+                                                {canEditEvent(event) && (
+                                                    <div className="flex space-x-1">
+                                                        <button
+                                                            onClick={() => handleEditEvent(event)}
+                                                            className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded transition-colors"
+                                                            title="Modifier l'événement"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteEvent(event)}
+                                                            className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors"
+                                                            title="Supprimer l'événement"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                <CalendarIcon className="h-4 w-4 mr-2" />
+                                                <span>
+                                                    {new Date(event.beginningDate).toLocaleDateString('fr-FR')} 
+                                                    {' de '}
+                                                    {new Date(event.beginningDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                    {' à '}
+                                                    {new Date(event.endDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            
+                                            {event.description && (
+                                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                                    <span className="font-medium">Description:</span> {event.description}
+                                                </div>
+                                            )}
+                                            
+                                            {event.location && (
+                                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    <span>{event.location}</span>
+                                                </div>
+                                            )}
+                                            
+                                            {event.participantsIds && event.participantsIds.length > 0 && (
+                                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                    <span className="font-medium">Participants:</span> {event.participantsIds.length}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

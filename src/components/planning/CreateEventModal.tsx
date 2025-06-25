@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, CalendarIcon, UserGroupIcon, MapPinIcon, ClockIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, CalendarIcon, UserGroupIcon, MapPinIcon, ClockIcon, ChevronDownIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Button } from '../common/button/button';
 import { Input } from '../common/input/input';
 import { useAuthStore } from '../../store/authStore';
@@ -8,6 +8,7 @@ import { planningService } from '../../services/planningService';
 import { userService } from '../../services/userService';
 import { User } from '../../types/user/user';
 import { CreateEventDto } from '../../types/planning/event';
+import { Disponibility } from '../../types/disponibility/disponibility';
 import { toast } from 'react-hot-toast';
 
 interface CreateEventModalProps {
@@ -25,6 +26,13 @@ interface EventForm {
     participantsIds: string[];
 }
 
+// Interface pour les conflits de disponibilité
+interface AvailabilityConflict {
+    userId: string;
+    missingDates: string[];
+    hasPartialAvailability: boolean;
+}
+
 const CreateEventModal: React.FC<CreateEventModalProps> = ({
     isOpen,
     onClose,
@@ -40,6 +48,11 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
     // États pour la liste des membres
     const [teamMembers, setTeamMembers] = useState<User[]>([]);
     const [loadingMembers, setLoadingMembers] = useState(false);
+    
+    // États pour les disponibilités
+    const [allAvailabilities, setAllAvailabilities] = useState<Disponibility[]>([]);
+    const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
+    const [availabilityConflicts, setAvailabilityConflicts] = useState<AvailabilityConflict[]>([]);
     
     // États pour la liste déroulante des participants
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -70,9 +83,110 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         }
     };
 
+    // Charger toutes les disponibilités de l'association
+    const loadAvailabilities = async () => {
+        if (!selectedAssociation?.id) return;
+        
+        try {
+            setLoadingAvailabilities(true);
+            const availabilities = await userService.getAllDisponibilities(selectedAssociation.id);
+            setAllAvailabilities(availabilities || []);
+        } catch (error) {
+            console.error('Erreur lors du chargement des disponibilités:', error);
+            setAllAvailabilities([]);
+        } finally {
+            setLoadingAvailabilities(false);
+        }
+    };
+
+    // Vérifier les conflits de disponibilité pour un participant
+    const checkAvailabilityConflicts = (userId: string, eventStart: string, eventEnd: string): AvailabilityConflict | null => {
+        if (!eventStart || !eventEnd) return null;
+
+        const eventStartDate = new Date(eventStart);
+        const eventEndDate = new Date(eventEnd);
+        
+        // Récupérer les disponibilités de l'utilisateur
+        const userAvailabilities = allAvailabilities.filter(avail => avail.userId === userId);
+        
+        if (userAvailabilities.length === 0) {
+            // Aucune disponibilité enregistrée
+            return {
+                userId,
+                missingDates: [`Du ${eventStartDate.toLocaleDateString('fr-FR')} au ${eventEndDate.toLocaleDateString('fr-FR')}`],
+                hasPartialAvailability: false
+            };
+        }
+
+        // Vérifier si l'événement est entièrement couvert par les disponibilités
+        const missingDates: string[] = [];
+        let hasPartialAvailability = false;
+
+        // Générer tous les jours de l'événement
+        const eventDays: Date[] = [];
+        const currentDate = new Date(eventStartDate);
+        while (currentDate <= eventEndDate) {
+            eventDays.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        // Vérifier chaque jour de l'événement
+        for (const day of eventDays) {
+            const dayStart = new Date(day);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(day);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            // Chercher une disponibilité qui couvre ce jour
+            const isAvailable = userAvailabilities.some(avail => {
+                const availStart = new Date(avail.start);
+                const availEnd = new Date(avail.end);
+                
+                // Vérifier si la disponibilité couvre au moins une partie de ce jour
+                return availStart <= dayEnd && availEnd >= dayStart;
+            });
+
+            if (!isAvailable) {
+                missingDates.push(day.toLocaleDateString('fr-FR'));
+            } else {
+                hasPartialAvailability = true;
+            }
+        }
+
+        if (missingDates.length > 0) {
+            return {
+                userId,
+                missingDates,
+                hasPartialAvailability
+            };
+        }
+
+        return null; // Aucun conflit
+    };
+
+    // Mettre à jour les conflits de disponibilité
+    const updateAvailabilityConflicts = () => {
+        if (!eventForm.beginningDate || !eventForm.endDate || eventForm.participantsIds.length === 0) {
+            setAvailabilityConflicts([]);
+            return;
+        }
+
+        const conflicts: AvailabilityConflict[] = [];
+        
+        for (const participantId of eventForm.participantsIds) {
+            const conflict = checkAvailabilityConflicts(participantId, eventForm.beginningDate, eventForm.endDate);
+            if (conflict) {
+                conflicts.push(conflict);
+            }
+        }
+
+        setAvailabilityConflicts(conflicts);
+    };
+
     useEffect(() => {
         if (isOpen) {
             loadTeamMembers();
+            loadAvailabilities();
             // Reset du formulaire
             setEventForm({
                 title: '',
@@ -85,8 +199,14 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             setError(null);
             setSearchTerm('');
             setIsDropdownOpen(false);
+            setAvailabilityConflicts([]);
         }
     }, [isOpen, selectedAssociation]);
+
+    // Mettre à jour les conflits quand les participants ou les dates changent
+    useEffect(() => {
+        updateAvailabilityConflicts();
+    }, [eventForm.participantsIds, eventForm.beginningDate, eventForm.endDate, allAvailabilities]);
 
     // Fermer le dropdown quand on clique en dehors
     useEffect(() => {
@@ -113,6 +233,15 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         // Validation
         if (!eventForm.title.trim() || !eventForm.beginningDate || !eventForm.endDate) {
             setError('Veuillez remplir au moins le titre, la date de début et la date de fin');
+            return;
+        }
+
+        // Vérification des dates passées
+        const now = new Date();
+        const beginningDate = new Date(eventForm.beginningDate);
+        
+        if (beginningDate < now) {
+            setError('La date de début ne peut pas être dans le passé');
             return;
         }
 
@@ -238,6 +367,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                 placeholder="Date de début *"
                                 value={eventForm.beginningDate}
                                 onChange={(e) => handleFormChange('beginningDate', e.target.value)}
+                                min={new Date().toISOString().slice(0, 16)}
                                 className="w-full"
                             />
                             <Input
@@ -245,6 +375,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                 placeholder="Date de fin *"
                                 value={eventForm.endDate}
                                 onChange={(e) => handleFormChange('endDate', e.target.value)}
+                                min={eventForm.beginningDate || new Date().toISOString().slice(0, 16)}
                                 className="w-full"
                             />
                         </div>
@@ -355,6 +486,86 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                 </div>
                             )}
                         </div>
+
+                        {/* Avertissements de disponibilité */}
+                        {availabilityConflicts.length > 0 && (
+                            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                                <div className="flex items-start">
+                                    <ExclamationTriangleIcon className="w-5 h-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
+                                            ⚠️ Conflits de disponibilité détectés
+                                        </h4>
+                                        <div className="space-y-3">
+                                            {availabilityConflicts.map((conflict) => {
+                                                const member = teamMembers.find(m => m.id === conflict.userId);
+                                                if (!member) return null;
+                                                
+                                                return (
+                                                    <div key={conflict.userId} className="bg-white dark:bg-gray-800 rounded-md p-3 border border-orange-200 dark:border-orange-700">
+                                                        <div className="flex items-center mb-2">
+                                                            <img
+                                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstname + ' ' + member.lastname)}&background=random`}
+                                                                alt={`${member.firstname} ${member.lastname}`}
+                                                                className="w-6 h-6 rounded-full mr-2"
+                                                            />
+                                                            <span className="font-medium text-gray-900 dark:text-white">
+                                                                {member.firstname} {member.lastname}
+                                                            </span>
+                                                            {conflict.hasPartialAvailability && (
+                                                                <span className="ml-2 text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded">
+                                                                    Disponibilité partielle
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {conflict.missingDates.length === 1 && conflict.missingDates[0].startsWith('Du ') ? (
+                                                            <p className="text-sm text-orange-700 dark:text-orange-300">
+                                                                <span className="font-medium">Aucune disponibilité enregistrée</span> pour la période {conflict.missingDates[0].toLowerCase()}
+                                                            </p>
+                                                        ) : (
+                                                            <div className="text-sm text-orange-700 dark:text-orange-300">
+                                                                <span className="font-medium">Jours non disponibles :</span>
+                                                                <div className="mt-1 flex flex-wrap gap-1">
+                                                                    {conflict.missingDates.slice(0, 5).map((date, index) => (
+                                                                        <span 
+                                                                            key={index}
+                                                                            className="inline-block bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-200 px-2 py-1 text-xs rounded"
+                                                                        >
+                                                                            {date}
+                                                                        </span>
+                                                                    ))}
+                                                                    {conflict.missingDates.length > 5 && (
+                                                                        <span className="text-xs text-orange-600 dark:text-orange-400 px-2 py-1">
+                                                                            +{conflict.missingDates.length - 5} autres jours
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-3">
+                                            💡 Ces participants pourront toujours être ajoutés à l'événement, mais assurez-vous qu'ils soient informés des dates concernées.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Indicateur de chargement des disponibilités */}
+                        {loadingAvailabilities && eventForm.participantsIds.length > 0 && (
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                <div className="flex items-center">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                                    <span className="text-sm text-blue-700 dark:text-blue-300">
+                                        Vérification des disponibilités en cours...
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Informations sur l'association */}
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">

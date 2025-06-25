@@ -186,8 +186,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
             
             setSuccess('Utilisateur créé avec succès !');
             setTimeout(() => {
-                onMemberAdded();
-                onClose();
+            onMemberAdded();
+            onClose();
             }, 2000);
         } catch (err: any) {
             console.error('Erreur lors de la création de l\'utilisateur:', err);
@@ -276,7 +276,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                         <UserPlusIcon className="w-4 h-4" />
                         <span>Créer utilisateur</span>
                     </button>
-                </div>
+                    </div>
 
                 <div className="p-6 overflow-y-auto max-h-[75vh]">
                     {/* Messages d'erreur/succès */}

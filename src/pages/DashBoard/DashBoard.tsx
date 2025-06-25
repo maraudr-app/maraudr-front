@@ -7,26 +7,29 @@ import {
   CalendarDaysIcon, 
   MapPinIcon, 
   UserGroupIcon,
-  ClipboardDocumentListIcon 
+  ClipboardDocumentListIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  UsersIcon,
+  CubeIcon,
+  ExclamationTriangleIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { assoService } from '../../services/assoService';
 import { teamService } from '../../services/teamService';
 import { stockService } from '../../services/stockService';
 import { userService } from '../../services/userService';
+import { planningService } from '../../services/planningService';
+import { Event } from '../../types/planning/event';
 import { MembershipStatusAlert } from '../../components/common/alert/MembershipStatusAlert';
 import { 
-  UsersIcon, 
-  CubeIcon,
-  ChartBarIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
   ChevronDownIcon,
-  ChevronUpIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronUpIcon
 } from '@heroicons/react/24/outline';
-import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/20/solid';
 
 // Interfaces pour TypeScript
 interface DashboardData {
@@ -37,6 +40,7 @@ interface DashboardData {
   activeDisponibilities: number;
   isUserInAssociation: boolean;
   stockItemsData: any[];
+  userEvents: Event[];
 }
 
 const DashBoard = () => {
@@ -45,6 +49,8 @@ const DashBoard = () => {
   const { selectedAssociation } = useAssoStore();
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showEventModal, setShowEventModal] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     stockItems: 0,
     lowStockItems: 0,
@@ -52,7 +58,8 @@ const DashBoard = () => {
     upcomingEvents: 0,
     activeDisponibilities: 0,
     isUserInAssociation: true,
-    stockItemsData: []
+    stockItemsData: [],
+    userEvents: []
   });
 
   const isManager = user?.userType === 'Manager';
@@ -106,6 +113,65 @@ const DashBoard = () => {
     return activities;
   };
 
+  // Générer les vraies données d'activité basées sur les événements de l'utilisateur
+  const generateRealMonthActivities = (date: Date) => {
+    const daysInMonth = getDaysInMonth(date);
+    const activities = new Array(daysInMonth).fill(0);
+    
+    // Pour chaque événement de l'utilisateur
+    dashboardData.userEvents.forEach(event => {
+      const eventStart = new Date(event.beginningDate);
+      const eventEnd = new Date(event.endDate);
+      
+      // Vérifier si l'événement se déroule dans le mois sélectionné
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      
+      // Si l'événement chevauche avec le mois
+      if (eventStart <= monthEnd && eventEnd >= monthStart) {
+        // Calculer les jours où l'événement a lieu dans ce mois
+        const startDay = Math.max(1, eventStart.getDate());
+        const endDay = Math.min(daysInMonth, eventEnd.getDate());
+        
+        // Incrémenter le compteur pour chaque jour de l'événement
+        for (let day = startDay; day <= endDay; day++) {
+          const dayDate = new Date(date.getFullYear(), date.getMonth(), day);
+          if (dayDate >= eventStart && dayDate <= eventEnd) {
+            activities[day - 1]++;
+          }
+        }
+      }
+    });
+    
+    return activities;
+  };
+
+  // Obtenir les événements pour un jour spécifique
+  const getEventsForDay = (date: Date, dayNumber: number) => {
+    const dayDate = new Date(date.getFullYear(), date.getMonth(), dayNumber);
+    
+    return dashboardData.userEvents.filter(event => {
+      const eventStart = new Date(event.beginningDate);
+      const eventEnd = new Date(event.endDate);
+      
+      // Normaliser les dates pour la comparaison (ignorer les heures)
+      const eventStartDate = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
+      const eventEndDate = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate());
+      const targetDate = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+      
+      return targetDate >= eventStartDate && targetDate <= eventEndDate;
+    });
+  };
+
+  // Gérer le clic sur un jour du calendrier
+  const handleDayClick = (date: Date, dayNumber: number) => {
+    const eventsForDay = getEventsForDay(date, dayNumber);
+    if (eventsForDay.length > 0) {
+      setSelectedEvent(eventsForDay[0]); // Pour l'instant, on prend le premier événement
+      setShowEventModal(true);
+    }
+  };
+
   // Charger les données du dashboard
   useEffect(() => {
     if (!selectedAssociation?.id) {
@@ -126,7 +192,8 @@ const DashBoard = () => {
           upcomingEvents: 0,
           activeDisponibilities: 0,
           isUserInAssociation: true,
-          stockItemsData: stockItems
+          stockItemsData: stockItems,
+          userEvents: []
         });
 
         // Charger les données d'équipe si l'utilisateur est manager
@@ -139,6 +206,19 @@ const DashBoard = () => {
         // Charger les données de planning
         const availability = await userService.getDisponibilities(selectedAssociation.id);
         setDashboardData(prev => ({ ...prev, activeDisponibilities: availability?.length || 0 }));
+
+        // Charger les événements de l'utilisateur (pour tous les utilisateurs)
+        const userEvents = await planningService.getMyEventsByAssociation(selectedAssociation.id);
+        
+        // Calculer les prochaines missions (événements futurs)
+        const now = new Date();
+        const upcomingEvents = userEvents.filter(event => new Date(event.beginningDate) > now);
+        
+        setDashboardData(prev => ({ 
+          ...prev, 
+          upcomingEvents: upcomingEvents.length,
+          userEvents: userEvents 
+        }));
 
       } catch (error) {
         // Erreur silencieuse
@@ -225,12 +305,12 @@ const DashBoard = () => {
         },
         {
           title: 'Prochaines missions',
-          value: '2',
+          value: dashboardData.upcomingEvents.toString(),
           change: '+1',
           isPositive: true,
           icon: <MapPinIcon className="w-6 h-6 text-blue-500" />,
           iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-          description: 'Cette semaine'
+          description: 'À venir'
         },
         {
           title: 'Missions complétées',
@@ -389,7 +469,7 @@ const DashBoard = () => {
                              {/* Jours du mois avec activité */}
                {(() => {
                  const daysInMonth = getDaysInMonth(selectedMonth);
-                 const monthActivities = generateMonthActivities(selectedMonth);
+                 const monthActivities = generateRealMonthActivities(selectedMonth);
                  const today = new Date();
                  const isCurrentMonth = selectedMonth.getMonth() === today.getMonth() && 
                                        selectedMonth.getFullYear() === today.getFullYear();
@@ -411,6 +491,7 @@ const DashBoard = () => {
                          isToday ? 'ring-2 ring-blue-500 font-bold' : ''
                        }`}
                        title={`${dayNumber} ${getMonthName(selectedMonth).split(' ')[0]} - ${activities} activités`}
+                       onClick={() => handleDayClick(selectedMonth, dayNumber)}
                      >
                        {dayNumber}
                      </div>
@@ -422,16 +503,22 @@ const DashBoard = () => {
             {/* Statistiques rapides */}
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="text-center">
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">47</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Actions stock</div>
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {dashboardData.userEvents.length}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Mes missions</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">23</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Missions</div>
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">À venir</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">156</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Bénéficiaires</div>
+                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {dashboardData.userEvents.filter(event => new Date(event.endDate) < new Date()).length}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Terminées</div>
               </div>
             </div>
           </div>
@@ -475,38 +562,179 @@ const DashBoard = () => {
               </div>
             ) : (
               // Vue Membre : Prochaines missions
-              <>
-                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center">
-                    <MapPinIcon className="w-5 h-5 text-blue-500 mr-3" />
-                    <div>
-                      <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                        Maraude Centre-ville
-                      </p>
-                      <p className="text-xs text-blue-600 dark:text-blue-300">
-                        Demain 19h - 22h
-                      </p>
-                    </div>
+              <div className="space-y-3">
+                {dashboardData.userEvents
+                  .filter(event => new Date(event.beginningDate) > new Date())
+                  .slice(0, 3) // Afficher seulement les 3 prochaines
+                  .map((event, index) => {
+                    const eventDate = new Date(event.beginningDate);
+                    const endDate = new Date(event.endDate);
+                    const isToday = eventDate.toDateString() === new Date().toDateString();
+                    const isTomorrow = eventDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                    
+                    let dateText = '';
+                    if (isToday) {
+                      dateText = `Aujourd'hui ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                    } else if (isTomorrow) {
+                      dateText = `Demain ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                    } else {
+                      dateText = eventDate.toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        day: 'numeric', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+                    }
+                    
+                    return (
+                      <div 
+                        key={event.id} 
+                        className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setShowEventModal(true);
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <MapPinIcon className="w-5 h-5 text-blue-500 mr-3" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              {event.title}
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-300">
+                              {dateText}
+                            </p>
+                            {event.location && (
+                              <p className="text-xs text-blue-500 dark:text-blue-400">
+                                📍 {event.location}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                
+                {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length === 0 && (
+                  <div className="text-center py-8">
+                    <CalendarDaysIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      Aucune mission prévue
+                    </p>
+                    <Link
+                      to="/maraudApp/planing"
+                      className="inline-flex items-center mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    >
+                      Voir le planning
+                    </Link>
                   </div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex items-center">
-                    <CalendarDaysIcon className="w-5 h-5 text-green-500 mr-3" />
-                    <div>
-                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                        Distribution alimentaire
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-300">
-                        Samedi 14h - 17h
-                      </p>
-                    </div>
+                )}
+                
+                {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length > 3 && (
+                  <div className="text-center pt-2">
+                    <Link
+                      to="/maraudApp/planing"
+                      className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    >
+                      Voir toutes les missions ({dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length})
+                    </Link>
                   </div>
-                </div>
-              </>
+                )}
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Modal de détails d'événement */}
+      {showEventModal && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Détails de la mission
+              </h3>
+              <button
+                onClick={() => setShowEventModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                  {selectedEvent.title}
+                </h4>
+                {selectedEvent.description && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedEvent.description}
+                  </p>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-center text-sm">
+                  <CalendarDaysIcon className="w-4 h-4 text-gray-400 mr-2" />
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {new Date(selectedEvent.beginningDate).toLocaleDateString('fr-FR', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+                
+                <div className="flex items-center text-sm">
+                  <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {new Date(selectedEvent.beginningDate).toLocaleTimeString('fr-FR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })} - {new Date(selectedEvent.endDate).toLocaleTimeString('fr-FR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </div>
+                
+                {selectedEvent.location && (
+                  <div className="flex items-center text-sm">
+                    <MapPinIcon className="w-4 h-4 text-gray-400 mr-2" />
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {selectedEvent.location}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex items-center text-sm">
+                  <UserGroupIcon className="w-4 h-4 text-gray-400 mr-2" />
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {selectedEvent.participants?.length || 0} participant(s)
+                  </span>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Link
+                  to="/maraudApp/planing"
+                  className="w-full inline-flex justify-center items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-blue-600 transition-colors"
+                  onClick={() => setShowEventModal(false)}
+                >
+                  Voir dans le planning
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
