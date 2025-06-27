@@ -6,7 +6,9 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000
+    port: 3000,
+    // Optionnel: forcer HTTPS en développement (génère un certificat auto-signé)
+    // https: true
   },
   resolve: {
     alias: {

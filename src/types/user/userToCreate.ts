@@ -12,6 +12,7 @@ export interface UserToCreate {
     country: string;
     languages: Language[];
     managerId?: string | null;
+    managerToken?: string; // Token d'invitation du manager
     isManager: boolean;
     password: string;
 }

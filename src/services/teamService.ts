@@ -54,11 +54,19 @@ teamApi.interceptors.request.use((config) => {
 // Intercepteur pour gérer les erreurs
 teamApi.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
         if (error.response?.status === 401) {
-            // Token expiré ou invalide
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+            console.log('❌ Erreur 401 détectée dans teamService...');
+            try {
+                const { tokenManager } = await import('./tokenManager');
+                const newToken = await tokenManager.refreshToken();
+                if (newToken && error.config) {
+                    error.config.headers.Authorization = `Bearer ${newToken}`;
+                    return teamApi.request(error.config);
+                }
+            } catch (refreshError) {
+                console.error('❌ Impossible de refresh le token:', refreshError);
+            }
         }
         return Promise.reject(error);
     }

@@ -53,22 +53,9 @@ const Login = () => {
           throw new Error('User not authenticated or user ID not found.');
         }
 
-        // Vérifier l'appartenance à une association
-        const memberships = await assoService.checkMembership(user.sub);
-        
-        if (memberships.length === 0) {
-          // Si l'utilisateur n'appartient à aucune association, vérifier son rôle
-          if (user.userType === 'Manager') {
-            // Si c'est un manager, rediriger vers la création d'association
-        navigate('/maraudApp/create-asso');
-      } else {
-            // Si ce n'est pas un manager, rediriger vers le dashboard
-            navigate('/maraudApp/dashboard');
-          }
-        } else {
-          // Si l'utilisateur appartient à au moins une association, rediriger vers le dashboard
-          navigate('/maraudApp/dashboard');
-        }
+        // Toujours rediriger vers le dashboard après connexion
+        // Le dashboard et MaraudrApp géreront le chargement des associations
+        navigate('/maraudApp/dashboard');
       } else {
         // Si login retourne false, c'est une erreur d'authentification
         setError(t('auth.invalidCredentials'));

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, EnvelopeIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import { userService } from '../../services/userService';
+import { authService } from '../../services/authService';
 import { Input } from '../common/input/input';
 import { Button } from '../common/button/button';
 import { useAuthStore } from '../../store/authStore';
+import { useAssoStore } from '../../store/assoStore';
 
 interface AddMemberModalProps {
     isOpen: boolean;
@@ -19,10 +21,12 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     managerId
 }) => {
     const { user } = useAuthStore();
+    const { selectedAssociation } = useAssoStore();
     const [activeTab, setActiveTab] = useState<'invite' | 'create'>('invite');
     
     // États pour l'invitation par email
     const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteMessage, setInviteMessage] = useState('');
     const [inviteLoading, setInviteLoading] = useState(false);
     
     // États pour la création directe
@@ -48,6 +52,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
     useEffect(() => {
         if (!isOpen) {
             setInviteEmail('');
+            setInviteMessage('');
             setCreateForm({
                 firstname: '',
                 lastname: '',
@@ -79,14 +84,26 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
             return;
         }
 
+        // Vérifier qu'une association est sélectionnée
+        if (!selectedAssociation?.id) {
+            setError('Aucune association sélectionnée');
+            return;
+        }
+
         try {
             setInviteLoading(true);
             setError(null);
             setSuccess(null);
             
             // Appel API pour envoyer l'invitation
-            // await invitationService.sendInvitation(inviteEmail, managerId);
-            // TODO: Implémenter l'API d'invitation
+            const message = inviteMessage.trim() || 
+                `Vous êtes invité(e) à rejoindre l'association ${selectedAssociation.name}`;
+            
+            await authService.sendInvitation(
+                inviteEmail.trim().toLowerCase(),
+                selectedAssociation.id,
+                message
+            );
             
             setSuccess('Invitation envoyée avec succès !');
             setTimeout(() => {
@@ -305,6 +322,19 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                                 />
                                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                                     Un email d'invitation sera envoyé à cette adresse
+                                </p>
+                            </div>
+
+                            <div>
+                                <textarea
+                                    placeholder="Message personnalisé (optionnel)"
+                                    value={inviteMessage}
+                                    onChange={(e) => setInviteMessage(e.target.value)}
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 resize-none"
+                                />
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Si aucun message n'est spécifié, un message par défaut sera utilisé
                                 </p>
                             </div>
 

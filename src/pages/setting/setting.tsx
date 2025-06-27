@@ -18,6 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { useAssoStore } from '../../store/assoStore';
 import { subscriptionService, Plan, Subscription, PaymentMethod } from '../../services/subscriptionService';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/common/toast/Toast';
@@ -26,6 +27,7 @@ import { Input } from '../../components/common/input/input';
 const Setting: React.FC = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
+    const { selectedAssociation } = useAssoStore();
     const { toasts, removeToast, toast } = useToast();
     
     // États pour les sections
@@ -109,7 +111,7 @@ const Setting: React.FC = () => {
 
     // États pour les paramètres d'association
     const [associationSettings, setAssociationSettings] = useState({
-        name: 'Association Entraide',
+        name: selectedAssociation?.name || 'Association Entraide',
         description: 'Association d\'aide aux personnes en difficulté',
         address: '123 Rue de la Solidarité',
         city: 'Paris',
@@ -117,7 +119,7 @@ const Setting: React.FC = () => {
         phone: '01 23 45 67 89',
         email: 'contact@association-entraide.fr',
         website: 'www.association-entraide.fr',
-        siret: '12345678901234',
+        siret: selectedAssociation?.siret || '12345678901234',
         president: 'Jean Dupont',
         treasurer: 'Marie Martin'
     });
@@ -135,6 +137,17 @@ const Setting: React.FC = () => {
     });
 
     const isManager = user?.userType === 'Manager';
+
+    // Mettre à jour le nom et SIRET quand l'association change
+    useEffect(() => {
+        if (selectedAssociation) {
+            setAssociationSettings(prev => ({
+                ...prev,
+                name: selectedAssociation.name,
+                siret: selectedAssociation.siret
+            }));
+        }
+    }, [selectedAssociation]);
 
     // Charger les données d'abonnement
     useEffect(() => {

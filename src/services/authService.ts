@@ -44,13 +44,16 @@ export const authService = {
     } catch (error) {
       // On continue avec le nettoyage local même si l'appel API échoue
     } finally {
-      // Supprimer spécifiquement les stores Zustand
+      // Supprimer tous les tokens et données utilisateur
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
       localStorage.removeItem('asso-storage');
       localStorage.removeItem('auth-storage');
       
-    // Supprimer l'intercepteur
+      // Supprimer l'intercepteur
       if (authService.interceptorId) {
-    axios.interceptors.request.eject(authService.interceptorId);
+        axios.interceptors.request.eject(authService.interceptorId);
       }
     }
   },
@@ -71,9 +74,14 @@ export const authService = {
 
   interceptorId: 0,
 
-  setToken: (token: string) => {
+  setToken: (token: string, refreshToken?: string) => {
     try {
       localStorage.setItem('token', token);
+      
+      // Sauvegarder le refresh token s'il est fourni
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
       
       // Décoder le token pour extraire les informations utilisateur
       const decoded = jwtDecode<DecodedToken>(token);
@@ -196,6 +204,63 @@ export const authService = {
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
+    }
+  },
+
+  // Fonction pour envoyer une invitation par email
+  sendInvitation: async (invitedEmail: string, associationId: string, message?: string): Promise<void> => {
+    try {
+      const token = authService.getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const requestData = {
+        invitedEmail,
+        associationId,
+        message: message || ""
+      };
+
+      await axios.post(`${API_URL}/auth/invitation-link/send`, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      throw error;
+    }
+  },
+
+  // Fonction pour décoder le token d'invitation (via appel API au backend)
+  decodeInvitationToken: async (token: string): Promise<{ managerFirstName: string; managerLastName: string; associationName: string; associationId: string; invitedEmail: string }> => {
+    try {
+      console.log('Token reçu:', token);
+      console.log('Longueur du token:', token.length);
+      
+      // Utiliser l'endpoint correct selon le Swagger
+      const response = await axios.post(`${API_URL}/auth/invitation-token/validate/${token}`, {}, {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Données décodées par le backend:', response.data);
+      
+      // Adapter le mapping selon la réponse du backend
+      return {
+        managerFirstName: response.data.invitedByFirstName || '',
+        managerLastName: response.data.invitedByLastname || '',
+        associationName: '', // Le backend ne retourne pas le nom de l'association
+        associationId: response.data.associationId || '',
+        invitedEmail: '' // Le backend ne retourne pas l'email invité
+      };
+    } catch (error) {
+      console.error('Error decoding invitation token via backend:', error);
+      console.error('Token problématique:', token);
+      throw new Error('Invalid invitation token');
     }
   },
 

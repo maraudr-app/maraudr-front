@@ -8,7 +8,6 @@ import { toast } from 'react-hot-toast';
 import { assoService } from '../../services/assoService';
 import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 import createAssoImage from '../../assets/pictures/createAsso.jpg';
 
 const CreateAsso = () => {
@@ -89,29 +88,6 @@ const CreateAsso = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-blue-50 to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Header avec navigation */}
-      <div className="relative z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-orange-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg flex items-center justify-center">
-                <FaBuilding className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
-                Maraudr
-              </h1>
-            </div>
-            <button
-              onClick={() => navigate('/maraudApp/dashboard')}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
-            >
-              <XMarkIcon className="h-5 w-5" />
-              <span>Retour</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Contenu principal */}
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl w-full">

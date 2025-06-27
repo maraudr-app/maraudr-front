@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import { tokenManager } from './tokenManager';
 import { 
     StockItem, 
     CreateStockItemRequest, 
@@ -22,9 +23,9 @@ const mapBackendItemToFrontend = (backendItem: any): StockItem => {
 };
 
 export const stockService = {
-    // Vérifier si un stock existe pour une association
+    // Récupérer l'identifiant du stock d'une association
     getStockId: async (associationId: string): Promise<string | null> => {
-        const token = useAuthStore.getState().token;
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
@@ -36,7 +37,8 @@ export const stockService = {
                 },
                 withCredentials: true
             });
-            return response.data.stockId;
+            // Retourner directement la valeur string du stockId
+            return response.data.stockId || response.data;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response?.status === 404) {
                 return null;
@@ -45,38 +47,15 @@ export const stockService = {
         }
     },
 
-    // Créer un nouveau stock
-    createStock: async (associationId: string): Promise<string> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
-        const response = await axios.post<StockResponse>(
-            `${API_URL}/create-stock`,
-            { associationId },
-            { 
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                withCredentials: true 
-            }
-        );
-        return response.data.stockId;
-    },
-
-    // Récupérer les items d'un stock
+    // Récupérer tous les articles d'une association
     getStockItems: async (associationId: string, filter?: StockItemFilter): Promise<StockItem[]> => {
-        const token = useAuthStore.getState().token;
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
 
         const response = await axios.get<any[]>(`${API_URL}/stock/items`, {
-            params: { 
-                associationId,
-                ...filter
-            },
+            params: { associationId },
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -87,29 +66,67 @@ export const stockService = {
         return response.data.map(mapBackendItemToFrontend);
     },
 
-    // Créer un nouvel item
+    // Créer un article à partir d'un code-barres
+    createItemFromBarcode: async (barcode: string): Promise<string> => {
+        const token = await tokenManager.ensureValidToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const response = await axios.post<{ id: string }>(
+            `${API_URL}/item`,
+            { barcode },
+            { 
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true 
+            }
+        );
+        return response.data.id;
+    },
+
+    // Ajouter un article à une association
+    addItemToAssociation: async (barcode: string, associationId: string): Promise<void> => {
+        const token = await tokenManager.ensureValidToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        await axios.post(
+            `${API_URL}/item/${barcode}`,
+            { associationId },
+            { 
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true 
+            }
+        );
+    },
+
+    // Créer un nouvel item (garde l'ancienne fonction pour compatibilité)
     createItem: async (item: CreateStockItemRequest, associationId: string): Promise<string> => {
-        const token = useAuthStore.getState().token;
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
 
         try {
-            // D'abord, vérifier si un stock existe pour cette association
-        let stockId = await stockService.getStockId(associationId);
-            
-        if (!stockId) {
-                // Si aucun stock n'existe, en créer un
-            stockId = await stockService.createStock(associationId);
-        }
+            // D'abord, récupérer le stockId de l'association
+            const stockId = await stockService.getStockId(associationId);
+            if (!stockId) {
+                throw new Error('Stock non trouvé pour cette association');
+            }
 
-        const requestData = { 
-            name: item.name,
-                category: item.category,
-                quantity: item.quantity,
-                unit: item.unit,
-                minThreshold: item.minThreshold,
-                stockId: stockId
+            const requestData = { 
+                stockId: stockId,
+                name: item.name,
+                description: item.description || "",
+                barCode: item.barCode || "",
+                itemType: item.category
             };
 
             const response = await axios.post<{ id: string }>(
@@ -125,14 +142,33 @@ export const stockService = {
             );
             return response.data.id;
         } catch (error: any) {
-            // Error silencieuse
             throw error;
         }
     },
 
-    // Mettre à jour un item
+    // Réduire la quantité d'un article dans le stock
+    updateItemQuantity: async (itemId: string, quantity: number): Promise<void> => {
+        const token = await tokenManager.ensureValidToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        await axios.put(
+            `${API_URL}/stock/item/${itemId}`,
+            { quantity },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            }
+        );
+    },
+
+    // Mettre à jour un item (garde l'ancienne fonction pour compatibilité)
     updateItem: async (item: StockItem, associationId: string): Promise<void> => {
-        const token = useAuthStore.getState().token;
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
@@ -160,15 +196,14 @@ export const stockService = {
         }
     },
 
-    // Supprimer un item
-    deleteItem: async (associationId: string, itemId: string): Promise<void> => {
-        const token = useAuthStore.getState().token;
+    // Supprimer un article du stock
+    deleteItem: async (itemId: string, associationId: string): Promise<void> => {
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
 
-        await axios.delete(`${API_URL}/stock/item`, {
-            params: { associationId, itemId },
+        await axios.delete(`${API_URL}/stock/item/${itemId}?associationId=${associationId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -176,15 +211,14 @@ export const stockService = {
         });
     },
 
-    // Récupérer un item par son ID
-    getItemById: async (id: string, associationId: string): Promise<StockItem> => {
-        const token = useAuthStore.getState().token;
+    // Récupérer un article du stock
+    getItemById: async (itemId: string): Promise<StockItem> => {
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
 
-        const response = await axios.get<any>(`${API_URL}/item/${id}`, {
-            params: { associationId },
+        const response = await axios.get<any>(`${API_URL}/stock/item/${itemId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -197,7 +231,7 @@ export const stockService = {
 
     // Récupérer les items par catégorie
     getItemsByCategory: async (category: Category, associationId: string): Promise<StockItem[]> => {
-        const token = useAuthStore.getState().token;
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
@@ -216,7 +250,7 @@ export const stockService = {
 
     // Récupérer un item par son code-barres
     getItemByBarcode: async (barcode: string, associationId: string): Promise<StockItem> => {
-        const token = useAuthStore.getState().token;
+        const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
@@ -231,25 +265,5 @@ export const stockService = {
         
         // Mapper la réponse du backend vers le format frontend
         return mapBackendItemToFrontend(response.data);
-    },
-
-    // Créer un item à partir d'un code-barres
-    createItemFromBarcode: async (barcode: string, associationId: string): Promise<string> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
-        const response = await axios.post<{ id: string }>(
-            `${API_URL}/item/${barcode}`,
-            { associationId },
-            { 
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                withCredentials: true 
-            }
-        );
-        return response.data.id;
     }
 }; 

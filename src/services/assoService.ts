@@ -4,6 +4,7 @@ import { userService } from './userService';
 
 const API_URL = 'http://localhost:8080';
 
+
 interface AssoResponse {
     id?: string;
     siret: string;
@@ -119,6 +120,25 @@ export const assoService = {
             return response.data;
         } catch (error: any) {
             // Error silencieuse
+            throw error;
+        }
+    },
+
+    // Nouvelle fonction spécifiquement pour les invitations qui utilise le bon format d'URL
+    getAssociationByIdForInvitation: async (id: string) => {
+        try {
+            console.log('🔍 Récupération association pour invitation avec ID:', id);
+            const response = await axios.get(`${API_URL}/association`, {
+                params: { id },
+                headers: {
+                    'Authorization': `Bearer ${useAuthStore.getState().token}`
+                },
+                withCredentials: true
+            });
+            console.log('✅ Association récupérée:', response.data);
+            return response.data;
+        } catch (error: any) {
+            console.error('❌ Erreur récupération association pour invitation:', error);
             throw error;
         }
     },

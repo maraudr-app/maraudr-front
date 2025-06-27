@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { tokenManager } from './tokenManager';
 
 // Créer une instance axios avec la configuration de base
 export const api = axios.create({
@@ -10,10 +11,15 @@ export const api = axios.create({
 });
 
 // Intercepteur pour ajouter le token d'authentification
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(async (config) => {
+    try {
+        const token = await tokenManager.ensureValidToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    } catch (error) {
+        console.error('Erreur lors de la vérification du token:', error);
+        // Continue sans token si erreur
     }
     return config;
 });
@@ -21,11 +27,23 @@ api.interceptors.request.use((config) => {
 // Intercepteur pour gérer les erreurs
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
         if (error.response?.status === 401) {
-            // Token expiré ou invalide
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+            console.log('❌ Erreur 401 détectée, gestion par tokenManager...');
+            
+            // Laisser le tokenManager gérer l'erreur 401
+            try {
+                const newToken = await tokenManager.refreshToken();
+                
+                // Refaire la requête avec le nouveau token
+                if (newToken && error.config) {
+                    error.config.headers.Authorization = `Bearer ${newToken}`;
+                    return api.request(error.config);
+                }
+            } catch (refreshError) {
+                console.error('❌ Impossible de refresh le token:', refreshError);
+                // Le tokenManager s'occupe déjà du nettoyage et de la redirection
+            }
         }
         return Promise.reject(error);
     }

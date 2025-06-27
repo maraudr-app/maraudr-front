@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
@@ -45,8 +45,9 @@ interface DashboardData {
 
 const DashBoard = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
-  const { selectedAssociation } = useAssoStore();
+  const { selectedAssociation, associations } = useAssoStore();
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -63,6 +64,18 @@ const DashBoard = () => {
   });
 
   const isManager = user?.userType === 'Manager';
+
+  // Vérifier si le manager a une association, sinon rediriger vers create-asso
+  useEffect(() => {
+    // Attendre un peu que les associations se chargent
+    const timer = setTimeout(() => {
+      if (isManager && (!associations || associations.length === 0)) {
+        navigate('/maraudApp/create-asso');
+      }
+    }, 1000); // Délai pour laisser le temps aux associations de se charger
+
+    return () => clearTimeout(timer);
+  }, [isManager, associations, navigate]);
 
   // Fonctions pour la navigation des mois
   const getMonthName = (date: Date) => {
@@ -357,7 +370,7 @@ const DashBoard = () => {
       {/* En-tête de bienvenue */}
       <div className="bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl p-6 text-white">
         <h1 className="text-2xl font-bold mb-2">
-          Bonjour {user?.firstName || user?.email?.split('@')[0] || 'Utilisateur'} ! 👋
+          Bonjour {user?.firstName || user?.lastName || user?.email?.split('@')[0] || 'Membre'} ! 👋
         </h1>
         <p className="text-orange-100">
           {isManager 
@@ -717,7 +730,7 @@ const DashBoard = () => {
                 <div className="flex items-center text-sm">
                   <UserGroupIcon className="w-4 h-4 text-gray-400 mr-2" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    {selectedEvent.participants?.length || 0} participant(s)
+                    {selectedEvent.participantsIds?.length || 0} participant(s)
                   </span>
                 </div>
               </div>

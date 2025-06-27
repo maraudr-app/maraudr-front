@@ -45,12 +45,8 @@ const UserAvailabilityView: React.FC = () => {
     const [endTime, setEndTime] = useState('');
     const [showTimeModal, setShowTimeModal] = useState(false);
 
-    // Charger les associations si nécessaire
-    useEffect(() => {
-        if (user && !selectedAssociation) {
-            fetchUserAssociations();
-        }
-    }, [user, fetchUserAssociations]); // SUPPRIMÉ selectedAssociation des dépendances
+    // Note : Les associations sont déjà chargées par MaraudrApp
+    // Pas besoin de les recharger ici
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();

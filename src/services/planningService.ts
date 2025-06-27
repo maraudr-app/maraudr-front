@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { tokenManager } from './tokenManager';
 
 // Instance API spécifique pour le planning (port 8085)
 const planningApi = axios.create({
@@ -10,10 +11,14 @@ const planningApi = axios.create({
 });
 
 // Intercepteur pour ajouter le token d'authentification
-planningApi.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+planningApi.interceptors.request.use(async (config) => {
+    try {
+        const token = await tokenManager.ensureValidToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    } catch (error) {
+        console.error('Erreur lors de la vérification du token:', error);
     }
     return config;
 });
@@ -21,10 +26,18 @@ planningApi.interceptors.request.use((config) => {
 // Intercepteur pour gérer les erreurs
 planningApi.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+            console.log('❌ Erreur 401 détectée dans planningService...');
+            try {
+                const newToken = await tokenManager.refreshToken();
+                if (newToken && error.config) {
+                    error.config.headers.Authorization = `Bearer ${newToken}`;
+                    return planningApi.request(error.config);
+                }
+            } catch (refreshError) {
+                console.error('❌ Impossible de refresh le token:', refreshError);
+            }
         }
         return Promise.reject(error);
     }

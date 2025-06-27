@@ -57,6 +57,8 @@ export const useAuthStore = create<AuthState>()(
             const decodedToken = jwtDecode<DecodedToken>(response.accessToken);
             
             if (decodedToken) {
+              console.log('🔍 Token décodé:', decodedToken);
+              
               const userData: User = {
                 email: decodedToken.email,
                 sub: decodedToken.sub,  // sub est l'UUID de l'utilisateur
@@ -66,8 +68,10 @@ export const useAuthStore = create<AuthState>()(
                 avatar: `https://ui-avatars.com/api/?name=${decodedToken.firstName}+${decodedToken.lastName}&background=random`
               };
               
-              // Sauvegarder le token
-              authService.setToken(response.accessToken);
+              console.log('👤 Données utilisateur créées:', userData);
+              
+              // Sauvegarder le token et le refresh token s'il est fourni
+              authService.setToken(response.accessToken, response.refreshToken);
               
               // Mettre à jour le state
               set({ 
@@ -118,7 +122,7 @@ export const useAuthStore = create<AuthState>()(
               ...currentUser,
               firstName: userData.firstname,
               lastName: userData.lastname,
-              userType: userData.userType,
+              userType: (userData as any).userType || currentUser.userType,
               // On garde l'avatar existant ou on en crée un nouveau
               avatar: currentUser.avatar || `https://ui-avatars.com/api/?name=${userData.firstname}+${userData.lastname}&background=random`
             }

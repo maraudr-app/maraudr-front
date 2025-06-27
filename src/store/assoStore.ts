@@ -15,6 +15,7 @@ interface AssoState {
     selectedAssociation: Association | null;
     sidebarCollapsed: boolean;
     isLoading: boolean;
+    lastFetchTime: number;
     
     // Actions
     setAssociations: (associations: Association[]) => void;
@@ -31,6 +32,7 @@ export const useAssoStore = create<AssoState>()(
             selectedAssociation: null,
             sidebarCollapsed: false,
             isLoading: false,
+            lastFetchTime: 0,
 
             setAssociations: (associations) => set({ associations }),
             
@@ -84,8 +86,14 @@ export const useAssoStore = create<AssoState>()(
             fetchUserAssociations: async () => {
                 const state = get();
                 if (state.isLoading) return;
+                
+                // Éviter les appels trop fréquents (debounce de 500ms)
+                const now = Date.now();
+                if (now - state.lastFetchTime < 500) {
+                    return;
+                }
 
-                set({ isLoading: true });
+                set({ isLoading: true, lastFetchTime: now });
                 try {
                     const user = useAuthStore.getState().user;
                     if (!user || !user.sub) {
