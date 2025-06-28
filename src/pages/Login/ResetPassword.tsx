@@ -3,10 +3,13 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '../../components/common/button/button';
 import { Input } from '../../components/common/input/input';
 import { LockClosedIcon, EyeIcon, EyeSlashIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { FaCheckCircle } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import loginImage from '../../assets/pictures/access-key.jpg';
 import { authService } from '../../services/authService';
 import { toast } from 'react-hot-toast';
+import { getPasswordStrength } from '../../utils/passwordStrength';
+import PasswordStrengthToast from '../../components/common/toast/PasswordStrengthToast';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -19,6 +22,10 @@ const ResetPassword = () => {
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | undefined>(undefined);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -31,10 +38,42 @@ const ResetPassword = () => {
     }
   }, [searchParams]);
 
-  const validatePassword = (password: string): boolean => {
-    // Au moins 8 caractères, une majuscule, une minuscule, un chiffre
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
+  const passwordStrength = getPasswordStrength(newPassword);
+
+  const isValid = {
+    password: passwordStrength.strength >= 3,
+    confirmPassword: newPassword === confirmPassword && confirmPassword.length > 0
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewPassword(value);
+    
+    if (value.length > 0) {
+      const { strength } = getPasswordStrength(value);
+      if (strength < 2) {
+        setPasswordError("Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre");
+      } else {
+        setPasswordError(undefined);
+      }
+    } else {
+      setPasswordError(undefined);
+    }
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+    
+    if (value.length > 0) {
+      if (value !== newPassword) {
+        setConfirmPasswordError("Les mots de passe ne correspondent pas");
+      } else {
+        setConfirmPasswordError(undefined);
+      }
+    } else {
+      setConfirmPasswordError(undefined);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +91,7 @@ const ResetPassword = () => {
       return;
     }
 
-    if (!validatePassword(newPassword)) {
+    if (passwordStrength.strength < 3) {
       setError('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.');
       return;
     }
@@ -174,20 +213,32 @@ const ResetPassword = () => {
                   required
                   placeholder="Nouveau mot de passe"
                   value={newPassword}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
+                  onChange={handlePasswordChange}
+                  onFocus={() => setIsPasswordFocused(true)}
+                  onBlur={() => setIsPasswordFocused(false)}
+                  error={passwordError}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 pr-10"
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showNewPassword ? (
+                        <EyeSlashIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  }
                 />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  {showNewPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
+                {isPasswordFocused && (
+                  <PasswordStrengthToast 
+                    strength={passwordStrength.strength * 25}
+                    label={passwordStrength.label}
+                    message={passwordStrength.message}
+                  />
+                )}
               </div>
 
               <div className="relative">
@@ -198,36 +249,26 @@ const ResetPassword = () => {
                   required
                   placeholder="Confirmer le mot de passe"
                   value={confirmPassword}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+                  onChange={handleConfirmPasswordChange}
+                  onFocus={() => setIsConfirmPasswordFocused(true)}
+                  onBlur={() => setIsConfirmPasswordFocused(false)}
+                  error={confirmPasswordError}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 pr-10"
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeSlashIcon className="h-5 w-5" />
+                      ) : (
+                        <EyeIcon className="h-5 w-5" />
+                      )}
+                    </button>
+                  }
                 />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
               </div>
-
-              {/* Indicateur de force du mot de passe */}
-              {newPassword && (
-                <div className="text-sm">
-                  <div className="flex space-x-1 mb-2">
-                    <div className={`h-1 flex-1 rounded ${newPassword.length >= 8 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <div className={`h-1 flex-1 rounded ${/[A-Z]/.test(newPassword) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <div className={`h-1 flex-1 rounded ${/[a-z]/.test(newPassword) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <div className={`h-1 flex-1 rounded ${/\d/.test(newPassword) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Le mot de passe doit contenir 8 caractères, une majuscule, une minuscule et un chiffre.
-                  </p>
-                </div>
-              )}
 
               {/* Afficher l'erreur s'il y en a une */}
               {error && (

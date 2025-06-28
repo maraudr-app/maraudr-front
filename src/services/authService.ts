@@ -267,7 +267,7 @@ export const authService = {
   // Fonction pour réinitialiser le mot de passe
   resetPassword: async (email: string): Promise<{ message: string }> => {
     try {
-      const response = await axios.post(`${API_URL}/auth/reset-password`, {
+      const response = await axios.post(`${API_URL}/auth/password-reset/initiate`, {
         email
       });
       return response.data;
@@ -279,7 +279,7 @@ export const authService = {
   // Fonction pour confirmer la réinitialisation avec le token
   confirmResetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
     try {
-      const response = await axios.post(`${API_URL}/auth/confirm-reset-password`, {
+      const response = await axios.post(`${API_URL}/auth/password-reset/confirm`, {
         token,
         newPassword
       });

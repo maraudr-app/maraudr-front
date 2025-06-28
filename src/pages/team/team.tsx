@@ -20,6 +20,8 @@ import TeamToast from '../../components/team/TeamToast';
 import AddMemberModal from '../../components/team/AddMemberModal';
 import { useNavigate } from 'react-router-dom';
 import { OrgChart } from '../../components/team/OrgChart';
+import UserCard from '../../components/team/UserCard';
+import { Language } from '../../types/enums/Language';
 
 const Team: React.FC = () => {
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -70,7 +72,7 @@ const Team: React.FC = () => {
             state: member.state || '',
             postalCode: member.postalCode || '',
             country: member.country || '',
-            languages: member.languages || [],
+            languages: (member.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language)),
             isManager: member.isManager,
             managerId: null,
             createdAt: member.createdAt,
@@ -330,6 +332,8 @@ const Team: React.FC = () => {
                     </div>
                 </div>
 
+           
+        
                 {/* Organigramme */}
                 <OrgChart 
                     members={teamMembers} 
@@ -426,6 +430,7 @@ const Team: React.FC = () => {
                     isOpen={isAddModalOpen}
                     onClose={() => setIsAddModalOpen(false)}
                     onMemberAdded={handleMemberAdded}
+                    managerId={user?.sub || ''}
                 />
             )}
 
@@ -433,9 +438,23 @@ const Team: React.FC = () => {
                 <TeamToast
                     type={toast.type}
                     message={toast.message}
+                    isVisible={toast.isVisible}
                     onClose={hideToast}
                 />
             )}
+
+            <div className="px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {teamMembers.map(membre => (
+                    <UserCard
+                        key={membre.id}
+                        user={{
+                            ...membre,
+                            languages: (membre.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language))
+                        }}
+                        handleViewDisponibilities={user => handleViewDisponibilities(user.id)}
+                    />
+                ))}
+            </div>
         </div>
     );
 };

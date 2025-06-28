@@ -44,7 +44,7 @@ const ForgotPassword = () => {
                   Email envoyé !
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Nous avons envoyé un lien de réinitialisation à <strong>{email}</strong>
+                  Si un compte existe avec l'adresse <strong>{email}</strong>, vous recevrez un email de réinitialisation.
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
                   Vérifiez votre boîte de réception et vos spams. Le lien expire dans 24 heures.
