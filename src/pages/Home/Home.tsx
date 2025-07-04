@@ -26,15 +26,33 @@ const Home = () => {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const associations = useAssoStore((state) => state.associations);
+  const [isLoadingAssociations, setIsLoadingAssociations] = useState(false);
 
   const t_home = (key: string, fallback: string) => t(`home:${key}`, fallback);
   
+  // Charger les associations si l'utilisateur est connecté
   useEffect(() => {
-    // Si l'utilisateur est authentifié ET a des associations, rediriger vers le dashboard
-    if (isAuthenticated && associations.length > 0) {
+    if (isAuthenticated) {
+      setIsLoadingAssociations(true);
+      const loadAssociations = async () => {
+        try {
+          await useAssoStore.getState().fetchUserAssociations();
+        } catch (error) {
+          console.error('Erreur lors du chargement des associations:', error);
+        } finally {
+          setIsLoadingAssociations(false);
+        }
+      };
+      loadAssociations();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    // Si l'utilisateur est authentifié ET a des associations ET le chargement est terminé, rediriger vers le dashboard
+    if (isAuthenticated && associations.length > 0 && !isLoadingAssociations) {
       navigate('/maraudApp/dashboard');
     }
-  }, [isAuthenticated, associations, navigate]);
+  }, [isAuthenticated, associations, isLoadingAssociations, navigate]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -120,8 +138,20 @@ const Home = () => {
               {t_home('hero.description', 'Une plateforme intuitive pour gérer vos membres, organiser vos missions, suivre les stocks et analyser vos actions. Conçue pour les associations engagées comme la vôtre.')}
             </p>
             
+            {/* Loader pendant le chargement des associations */}
+            {isAuthenticated && isLoadingAssociations && (
+              <div className="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-maraudr-blue"></div>
+                  <p className="text-blue-700 dark:text-blue-300">
+                    Vérification de vos associations...
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Message spécial pour les utilisateurs connectés sans association */}
-            {isAuthenticated && associations.length === 0 && (
+            {isAuthenticated && !isLoadingAssociations && associations.length === 0 && (
               <div className="mb-8 p-6 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 border border-orange-300 dark:border-orange-700 rounded-xl">
                 <div className="flex items-center justify-center space-x-3 mb-4">
                   <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">

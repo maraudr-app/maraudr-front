@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAssoStore } from '../../store/assoStore';
+import { useAuthStore } from '../../store/authStore';
 import NoAssociationAlert from './alert/NoAssociationAlert';
 
 interface ProtectedAssociationRouteProps {
@@ -15,6 +16,43 @@ const ProtectedAssociationRoute: React.FC<ProtectedAssociationRouteProps> = ({
 }) => {
   const associations = useAssoStore(state => state.associations);
   const selectedAssociation = useAssoStore(state => state.selectedAssociation);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasCheckedAssociations, setHasCheckedAssociations] = useState(false);
+
+  // Charger les associations si l'utilisateur est connecté
+  useEffect(() => {
+    if (isAuthenticated && !hasCheckedAssociations) {
+      const loadAssociations = async () => {
+        try {
+          await useAssoStore.getState().fetchUserAssociations();
+        } catch (error) {
+          console.error('Erreur lors du chargement des associations:', error);
+        } finally {
+          setHasCheckedAssociations(true);
+          setIsLoading(false);
+        }
+      };
+
+      loadAssociations();
+    } else if (!isAuthenticated) {
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, hasCheckedAssociations]);
+
+  // Afficher un loader pendant le chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-maraudr-orange mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Chargement de vos associations...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Si l'utilisateur n'a pas d'association
   if (associations.length === 0) {
