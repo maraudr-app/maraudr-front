@@ -442,19 +442,6 @@ const Team: React.FC = () => {
                     onClose={hideToast}
                 />
             )}
-
-            <div className="px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {teamMembers.map(membre => (
-                    <UserCard
-                        key={membre.id}
-                        user={{
-                            ...membre,
-                            languages: (membre.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language))
-                        }}
-                        handleViewDisponibilities={user => handleViewDisponibilities(user.id)}
-                    />
-                ))}
-            </div>
         </div>
     );
 };

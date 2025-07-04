@@ -1,7 +1,49 @@
 import axios from 'axios';
-import { useAuthStore } from '../store/authStore';
+import { tokenManager } from './tokenManager';
 
 const GEO_API_URL = 'http://localhost:8084';
+
+// Instance API spécifique pour la géolocalisation (port 8084)
+const geoApi = axios.create({
+    baseURL: GEO_API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    withCredentials: true
+});
+
+// Intercepteur pour ajouter le token d'authentification
+geoApi.interceptors.request.use(async (config) => {
+    try {
+        const token = await tokenManager.ensureValidToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    } catch (error) {
+        console.error('Erreur lors de la vérification du token:', error);
+    }
+    return config;
+});
+
+// Intercepteur pour gérer les erreurs
+geoApi.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401) {
+            console.log('❌ Erreur 401 détectée dans geoService...');
+            try {
+                const newToken = await tokenManager.refreshToken();
+                if (newToken && error.config) {
+                    error.config.headers.Authorization = `Bearer ${newToken}`;
+                    return geoApi.request(error.config);
+                }
+            } catch (refreshError) {
+                console.error('❌ Impossible de refresh le token:', refreshError);
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 export interface GeoPoint {
     id?: string;
@@ -31,22 +73,27 @@ export interface TravelTimes {
     driving: RouteInfo;
 }
 
+export interface RouteResponse {
+    id: string;
+    associationId: string;
+    eventId: string;
+    startLat: number;
+    startLng: number;
+    centerLat: number;
+    centerLng: number;
+    radiusKm: number;
+    geoJson: string;
+    googleMapsUrl: string;
+    distanceKm: number;
+    durationMinutes: number;
+    createdAt: string;
+}
+
 export const geoService = {
     // Ajouter un point de géolocalisation
     addGeoPoint: async (geoPoint: Omit<GeoPoint, 'id' | 'timestamp' | 'userId'>): Promise<any> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
         try {
-            const response = await axios.post(`${GEO_API_URL}/geo`, geoPoint, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                withCredentials: true
-            });
+            const response = await geoApi.post('/geo', geoPoint);
             return response.data;
         } catch (error) {
             console.error('Error adding geo point:', error);
@@ -56,22 +103,8 @@ export const geoService = {
 
     // Sauvegarder le store de géolocalisation
     saveGeoStore: async (associationId: string): Promise<any> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
         try {
-            const response = await axios.post(`${GEO_API_URL}/geo/store`, 
-                { associationId }, 
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    withCredentials: true
-                }
-            );
+            const response = await geoApi.post('/geo/store', { associationId });
             return response.data;
         } catch (error) {
             console.error('Error saving geo store:', error);
@@ -81,18 +114,9 @@ export const geoService = {
 
     // Récupérer les points de géolocalisation pour une association
     getGeoPoints: async (associationId: string, days: number): Promise<GeoPoint[]> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
         try {
-            const response = await axios.get(`${GEO_API_URL}/geo/${associationId}`, {
-                params: { days },
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                withCredentials: true
+            const response = await geoApi.get(`/geo/${associationId}`, {
+                params: { days }
             });
             return response.data;
         } catch (error) {
@@ -103,18 +127,8 @@ export const geoService = {
 
     // Récupérer le store de géolocalisation
     getGeoStore: async (associationId: string): Promise<GeoStore> => {
-        const token = useAuthStore.getState().token;
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
         try {
-            const response = await axios.get(`${GEO_API_URL}/geo/store/${associationId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                withCredentials: true
-            });
+            const response = await geoApi.get(`/geo/store/${associationId}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching geo store:', error);
@@ -294,6 +308,39 @@ export const geoService = {
         } else {
             const km = meters / 1000;
             return `${km.toFixed(1)} km`;
+        }
+    },
+
+    // Créer une route pour un événement
+    createRoute: async (routeData: {
+        associationId: string;
+        eventId: string;
+        centerLat: number;
+        centerLng: number;
+        radiusKm: number;
+        startLat: number;
+        startLng: number;
+    }): Promise<RouteResponse> => {
+        try {
+            console.log('🔄 Tentative de création de route vers:', `${GEO_API_URL}/itineraries`);
+            console.log('📦 Données envoyées:', routeData);
+            
+            const response = await geoApi.post('/itineraries', routeData);
+            console.log('✅ Route créée avec succès:', response.data);
+            return response.data;
+        } catch (error: any) {
+            console.error('❌ Erreur lors de la création de la route:');
+            console.error('   - URL:', `${GEO_API_URL}/itineraries`);
+            console.error('   - Erreur:', error.message);
+            console.error('   - Code:', error.code);
+            console.error('   - Status:', error.response?.status);
+            console.error('   - Données:', error.response?.data);
+            
+            if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
+                throw new Error(`Service géolocalisation non accessible sur ${GEO_API_URL}. Vérifiez que le service est démarré.`);
+            }
+            
+            throw error;
         }
     }
 }; 

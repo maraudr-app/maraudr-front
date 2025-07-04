@@ -243,7 +243,7 @@ export const Stock = () => {
         return null;
     }
 
-  return (
+    return (
         <div className="min-h-screen">
             <StockNavbar 
                 onItemAdded={onItemAdded} 
