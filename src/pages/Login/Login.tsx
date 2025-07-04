@@ -55,7 +55,7 @@ const Login = () => {
 
         // Toujours rediriger vers le dashboard après connexion
         // Le dashboard et MaraudrApp géreront le chargement des associations
-        navigate('/maraudApp/dashboard');
+          navigate('/maraudApp/dashboard');
       } else {
         // Si login retourne false, c'est une erreur d'authentification
         setError(t('auth.invalidCredentials'));

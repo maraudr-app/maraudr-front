@@ -6,14 +6,14 @@
     "settings": "Paramètres",
     "contact": "Contact",
     "search": "Rechercher...",
-    "signup": "Créer un compte"
+    "signup": "S'inscrire"
   },
   "sidebar": {
     "dashboard": "Tableau de bord",
     "stock": "Stock",
     "settings": "Paramètres",
     "profile": "Profil",
-    "expand": "Agrandir",
+    "expand": "Développer",
     "collapse": "Réduire",
     "logout": "Déconnexion"
   },
@@ -23,20 +23,20 @@
     "email": "Adresse e-mail",
     "password": "Mot de passe",
     "remember": "Se souvenir de moi",
-    "forgot": "Mot de passe oublié?",
+    "forgot": "Mot de passe oublié ?",
     "loginButton": "Se connecter",
-    "noAccount": "Pas encore de compte?",
+    "noAccount": "Vous n'avez pas de compte ?",
     "register": "S'inscrire",
     "or": "Ou continuer avec",
     "google": "Se connecter avec Google",
     "microsoft": "Se connecter avec Microsoft",
     "logout": "Déconnexion",
-    "invalidCredentials": "Identifiants invalides. Vérifiez votre email et mot de passe.",
+    "invalidCredentials": "Identifiants invalides. Veuillez vérifier votre email et mot de passe.",
     "authenticationError": "Erreur d'authentification. Veuillez réessayer.",
-    "networkError": "Erreur de connexion. Vérifiez votre connexion internet.",
+    "networkError": "Erreur de connexion. Veuillez vérifier votre connexion internet.",
     "accountBlocked": "Votre compte est temporairement bloqué.",
     "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
-    "loginError": "Une erreur est survenue lors de la connexion."
+    "loginError": "Une erreur s'est produite lors de la connexion."
   },
   "register": {
     "title": "Créer un compte",
@@ -123,6 +123,21 @@
     "success": {
       "itemAdded": "Item ajouté avec succès !",
       "itemDeleted": "Item supprimé avec succès"
+    }
+  },
+  "error": {
+    "401": {
+      "title": "Accès non autorisé",
+      "description": "Vous devez être connecté pour accéder à cette page. Veuillez vous connecter pour continuer.",
+      "loginButton": "Se connecter",
+      "homeButton": "Retour à l'accueil"
+    },
+    "404": {
+      "title": "Page non trouvée",
+      "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+      "dashboardButton": "Retour au dashboard",
+      "homeButton": "Retour à l'accueil",
+      "backButton": "Page précédente"
     }
   }
 } 

@@ -3,6 +3,7 @@
     "title": "Simplifiez la gestion de votre association",
     "description": "Une plateforme intuitive pour gérer vos membres, organiser vos missions, suivre les stocks et analyser vos actions. Conçue pour les associations engagées comme la vôtre.",
     "createAccount": "Créer un compte",
+    "login": "Se connecter",
     "discoverFeatures": "Découvrir les fonctionnalités"
   },
   "features": {
@@ -51,6 +52,7 @@
   "cta": {
     "title": "Prêt à transformer votre association ?",
     "description": "Rejoignez des centaines d'associations qui utilisent déjà notre outil pour structurer leurs actions et décupler leur impact.",
-    "button": "Créer mon espace"
+    "button": "Créer mon espace",
+    "login": "Se connecter"
   }
 } 

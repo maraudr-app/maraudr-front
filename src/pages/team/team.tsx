@@ -333,7 +333,7 @@ const Team: React.FC = () => {
                 </div>
 
            
-        
+
                 {/* Organigramme */}
                 <OrgChart 
                     members={teamMembers} 

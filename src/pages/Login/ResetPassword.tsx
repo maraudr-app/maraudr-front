@@ -219,17 +219,17 @@ const ResetPassword = () => {
                   error={passwordError}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 pr-10"
                   rightIcon={
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
                       className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                      {showNewPassword ? (
+                >
+                  {showNewPassword ? (
                         <EyeSlashIcon className="h-5 w-5" />
-                      ) : (
+                  ) : (
                         <EyeIcon className="h-5 w-5" />
-                      )}
-                    </button>
+                  )}
+                </button>
                   }
                 />
                 {isPasswordFocused && (
@@ -255,17 +255,17 @@ const ResetPassword = () => {
                   error={confirmPasswordError}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 pr-10"
                   rightIcon={
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                      {showConfirmPassword ? (
+                >
+                  {showConfirmPassword ? (
                         <EyeSlashIcon className="h-5 w-5" />
-                      ) : (
+                  ) : (
                         <EyeIcon className="h-5 w-5" />
-                      )}
-                    </button>
+                  )}
+                </button>
                   }
                 />
               </div>

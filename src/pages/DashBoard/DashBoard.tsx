@@ -65,17 +65,11 @@ const DashBoard = () => {
 
   const isManager = user?.userType === 'Manager';
 
-  // Vérifier si le manager a une association, sinon rediriger vers create-asso
+  // Vérifier si l'utilisateur a une association
   useEffect(() => {
-    // Attendre un peu que les associations se chargent
-    const timer = setTimeout(() => {
-      if (isManager && (!associations || associations.length === 0)) {
-        navigate('/maraudApp/create-asso');
-      }
-    }, 1000); // Délai pour laisser le temps aux associations de se charger
-
-    return () => clearTimeout(timer);
-  }, [isManager, associations, navigate]);
+    // Si l'utilisateur n'a pas d'association, on ne fait rien ici
+    // Le composant ProtectedAssociationRoute s'en chargera
+  }, [associations]);
 
   // Fonctions pour la navigation des mois
   const getMonthName = (date: Date) => {

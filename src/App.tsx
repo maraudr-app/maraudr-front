@@ -23,19 +23,10 @@ import { Toaster } from 'react-hot-toast';
 import AssoInformation from "./pages/Association/AssoInformation.tsx";
 import { Stock } from './pages/Stock/Stock.tsx';
 import NotificationManager from './pages/NotificationManager/NotificationManager.tsx';
-
-
-
-// Composant pour les routes protégées
-const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{element}</>;
-};
+import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedAssociationRoute from './components/common/ProtectedAssociationRoute';
+import Error401 from './pages/Error401';
+import Error404 from './pages/Error404';
 
 function App() {
   const { i18n } = useTranslation();
@@ -48,38 +39,120 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <Header />
-        <main className="pt-16 min-h-screen bg-white dark:bg-gray-900 transition-colors">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/register" element={<CreateAccount />} />
-            <Route path="/accept-invitation" element={<AcceptInvitation />} />
+        <Routes>
+          {/* Page d'erreur 401 sans Header (utilisateur non connecté) */}
+          <Route path="/401" element={<Error401 />} />
 
-            <Route
-                path="/maraudApp"
-                element={<ProtectedRoute element={<MaraudrApp />} />}
-            >
-              {/* Redirection par défaut vers le dashboard */}
-              <Route index element={<Navigate to="/maraudApp/dashboard" replace />} />
-              <Route path="dashboard" element={<DashBoard />} />
-              <Route path="stock" element={<ProtectedRoute element={<Stock />} />} />
-              <Route path="map" element={<Plan/>} />
-              <Route path="setting" element={<ProtectedRoute element={<Setting/>} />} />
-              <Route path="about" element={<About/>} />
-              <Route path="team" element={<Team/>} />
-              <Route path="planing" element={<ProtectedRoute element={<Planning/>} />} />
-              <Route path="profile" element={<ProtectedRoute element={<Profile />} />} />
-              <Route path="notification-manager" element={<ProtectedRoute element={<NotificationManager />} />} />
-              <Route path="create-asso" element={<ProtectedRoute element={<CreateAsso />} />} />
-            </Route>
-            <Route path="/association-info" element={<AssoInformation/>} />
+          {/* Routes avec Header */}
+          <Route path="*" element={
+            <>
+              <Header />
+              <main className="pt-16 min-h-screen bg-white dark:bg-gray-900 transition-colors">
+                <Routes>
+                  {/* Routes publiques */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<ProtectedRoute requireAuth={false}><Login /></ProtectedRoute>} />
+                  <Route path="/forgot-password" element={<ProtectedRoute requireAuth={false}><ForgotPassword /></ProtectedRoute>} />
+                  <Route path="/reset-password" element={<ProtectedRoute requireAuth={false}><ResetPassword /></ProtectedRoute>} />
+                  <Route path="/createAccount" element={<ProtectedRoute requireAuth={false}><CreateAccount /></ProtectedRoute>} />
+                  <Route path="/register" element={<ProtectedRoute requireAuth={false}><CreateAccount /></ProtectedRoute>} />
+                  <Route path="/accept-invitation" element={<ProtectedRoute requireAuth={false}><AcceptInvitation /></ProtectedRoute>} />
 
-            {/* autres routes */}
-          </Routes>
-        </main>
+                  {/* Routes protégées */}
+                  <Route
+                      path="/maraudApp"
+                      element={<ProtectedRoute><MaraudrApp /></ProtectedRoute>}
+                  >
+                    {/* Redirection par défaut vers le dashboard */}
+                    <Route index element={<Navigate to="/maraudApp/dashboard" replace />} />
+                    <Route path="dashboard" element={
+                      <ProtectedAssociationRoute 
+                        title="Bienvenue sur votre dashboard"
+                        message="Créez votre première association pour commencer à organiser vos actions sociales."
+                      >
+                        <DashBoard />
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="stock" element={
+                      <ProtectedAssociationRoute 
+                        title="Gestion du stock"
+                        message="Vous devez créer une association pour gérer votre stock."
+                      >
+                        <Stock />
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="map" element={
+                      <ProtectedAssociationRoute 
+                        title="Planification des maraudes"
+                        message="Vous devez créer une association pour planifier vos maraudes."
+                      >
+                        <Plan/>
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="setting" element={
+                      <ProtectedAssociationRoute 
+                        title="Paramètres"
+                        message="Vous devez créer une association pour accéder aux paramètres."
+                      >
+                        <Setting/>
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="about" element={
+                      <ProtectedAssociationRoute 
+                        title="À propos"
+                        message="Vous devez créer une association pour accéder à cette page."
+                      >
+                        <About/>
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="team" element={
+                      <ProtectedAssociationRoute 
+                        title="Gestion d'équipe"
+                        message="Vous devez créer une association pour gérer votre équipe."
+                      >
+                        <Team/>
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="planing" element={
+                      <ProtectedAssociationRoute 
+                        title="Planning"
+                        message="Vous devez créer une association pour accéder au planning."
+                      >
+                        <Planning/>
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="profile" element={
+                      <ProtectedAssociationRoute 
+                        title="Profil"
+                        message="Vous devez créer une association pour accéder à votre profil."
+                      >
+                        <Profile />
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="notification-manager" element={
+                      <ProtectedAssociationRoute 
+                        title="Notifications"
+                        message="Vous devez créer une association pour gérer vos notifications."
+                      >
+                        <NotificationManager />
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="create-asso" element={<CreateAsso />} />
+                  </Route>
+                  
+                  {/* Route publique pour les informations d'association */}
+                  <Route path="/association-info" element={<AssoInformation/>} />
+
+                  {/* Page d'erreur 404 avec Header (utilisateur connecté ou page publique inexistante) */}
+                  <Route path="/404" element={<Error404 />} />
+
+                  {/* Route 404 par défaut - doit être en dernier */}
+                  <Route path="*" element={<Error404 />} />
+                </Routes>
+              </main>
+            </>
+          } />
+        </Routes>
         <Toaster />
       </Router>
     </ThemeProvider>

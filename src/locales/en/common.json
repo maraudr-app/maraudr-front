@@ -124,5 +124,20 @@
       "itemAdded": "Item added successfully!",
       "itemDeleted": "Item deleted successfully"
     }
+  },
+  "error": {
+    "401": {
+      "title": "Unauthorized Access",
+      "description": "You must be logged in to access this page. Please sign in to continue.",
+      "loginButton": "Sign in",
+      "homeButton": "Back to home"
+    },
+    "404": {
+      "title": "Page Not Found",
+      "description": "The page you are looking for does not exist or has been moved.",
+      "dashboardButton": "Back to dashboard",
+      "homeButton": "Back to home",
+      "backButton": "Previous page"
+    }
   }
 } 

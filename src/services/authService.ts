@@ -51,9 +51,9 @@ export const authService = {
       localStorage.removeItem('asso-storage');
       localStorage.removeItem('auth-storage');
       
-      // Supprimer l'intercepteur
+    // Supprimer l'intercepteur
       if (authService.interceptorId) {
-        axios.interceptors.request.eject(authService.interceptorId);
+    axios.interceptors.request.eject(authService.interceptorId);
       }
     }
   },

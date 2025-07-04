@@ -14,8 +14,8 @@ const planningApi = axios.create({
 planningApi.interceptors.request.use(async (config) => {
     try {
         const token = await tokenManager.ensureValidToken();
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
         }
     } catch (error) {
         console.error('Erreur lors de la vérification du token:', error);

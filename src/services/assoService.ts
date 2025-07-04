@@ -123,7 +123,7 @@ export const assoService = {
             throw error;
         }
     },
-
+  
     // Nouvelle fonction spécifiquement pour les invitations qui utilise le bon format d'URL
     getAssociationByIdForInvitation: async (id: string) => {
         try {

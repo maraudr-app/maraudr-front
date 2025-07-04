@@ -117,13 +117,13 @@ export const stockService = {
         try {
             // D'abord, récupérer le stockId de l'association
             const stockId = await stockService.getStockId(associationId);
-            if (!stockId) {
+        if (!stockId) {
                 throw new Error('Stock non trouvé pour cette association');
-            }
+        }
 
-            const requestData = { 
+        const requestData = { 
                 stockId: stockId,
-                name: item.name,
+            name: item.name,
                 description: item.description || "",
                 barCode: item.barCode || "",
                 itemType: item.category

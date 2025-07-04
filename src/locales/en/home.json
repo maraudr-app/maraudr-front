@@ -3,6 +3,7 @@
     "title": "Simplify your organization's management",
     "description": "An intuitive platform to manage your members, organize missions, track inventory, and analyze your actions. Designed for committed organizations like yours.",
     "createAccount": "Create account",
+    "login": "Sign in",
     "discoverFeatures": "Discover features"
   },
   "features": {
@@ -51,6 +52,7 @@
   "cta": {
     "title": "Ready to transform your organization?",
     "description": "Join hundreds of organizations already using our tool to structure their actions and multiply their impact.",
-    "button": "Create my account"
+    "button": "Create my account",
+    "login": "Sign in"
   }
 } 
