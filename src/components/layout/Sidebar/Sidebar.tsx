@@ -114,7 +114,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       icon: <CubeIcon className="w-5 h-5" />,
       label: t('sidebar.stock', 'Stock'),
       key: 'stock',
-      showForManager: true
+      showForManager: false
+    },
+    {
+      to: '/maraudApp/gallery',
+      icon: <InformationCircleIcon className="w-5 h-5" />,
+      label: t('sidebar.media', 'Médias'),
+      key: 'gallery',
+      showForManager: false
     },
     {
       to: '/maraudApp/team',
@@ -131,19 +138,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       showForManager: false
     },
     {
-      to: '/maraudApp/about',
-      icon: <InformationCircleIcon className="w-5 h-5" />,
-      label: t('sidebar.about', 'À propos'),
-      key: 'about',
+      to: '/maraudApp/planing',
+      icon: <FiCalendar className="w-5 h-5" />,
+      label: t('sidebar.planing', 'Planing'),
+      key: 'planing',
       showForManager: false
     },
     {
-      to: '/maraudApp/planing',
-      icon: <FiCalendar className="w-5 h-5" />,
-      label: t('sidebar.about', 'Planing'),
-      key: 'planing',
+      to: '/maraudApp/mcp-server',
+      icon: <Cog6ToothIcon className="w-5 h-5" />,
+      label: t('sidebar.mcp', 'Serveur MCP'),
+      key: 'mcp-server',
       showForManager: false
-    }
+    },
   ];
 
   // Filtrer les éléments selon le rôle

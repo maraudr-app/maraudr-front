@@ -21,7 +21,11 @@ interface NavLink {
     translationKey: string;
 }
 
-const Header = () => {
+interface HeaderProps {
+    noSidebar?: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showCreateAccount, setShowCreateAccount] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -167,11 +171,10 @@ const Header = () => {
 
     // Calculer la largeur et la position du header selon l'état de la sidebar
     const getHeaderStyle = () => {
-        // Si pas authentifié, header complet
-        if (!isAuthenticated) {
+        // Si pas authentifié ou pas de sidebar, header complet
+        if (!isAuthenticated || noSidebar) {
             return "fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md";
         }
-        
         // Si authentifié, ajuster selon l'état de la sidebar - utilise les mêmes marges que MaraudrApp
         const marginLeft = sidebarCollapsed ? 'ml-14' : 'ml-48';
         return `fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md transition-all duration-300 ${marginLeft}`;

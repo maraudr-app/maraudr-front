@@ -11,7 +11,6 @@ import MaraudrApp from "./pages/MaraudrApp.tsx";
 import Profile from "./pages/Profile/Profile.tsx";
 import Plan from "./pages/plan/plan.tsx";
 import Setting from "./pages/setting/setting.tsx";
-import About from "./pages/About/About.tsx";
 import Team from "./pages/team/team.tsx";
 import Planning from "./pages/planing/planing.tsx";
 import CreateAccount from './pages/Register/createAccount.tsx';
@@ -27,6 +26,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedAssociationRoute from './components/common/ProtectedAssociationRoute';
 import Error401 from './pages/Error401';
 import Error404 from './pages/Error404';
+import Media from './pages/GalleryAndDocuments';
+import McpServer from './pages/McpServer';
 
 function App() {
   const { i18n } = useTranslation();
@@ -97,14 +98,6 @@ function App() {
                         <Setting/>
                       </ProtectedAssociationRoute>
                     } />
-                    <Route path="about" element={
-                      <ProtectedAssociationRoute 
-                        title="À propos"
-                        message="Vous devez créer une association pour accéder à cette page."
-                      >
-                        <About/>
-                      </ProtectedAssociationRoute>
-                    } />
                     <Route path="team" element={
                       <ProtectedAssociationRoute 
                         title="Gestion d'équipe"
@@ -138,16 +131,18 @@ function App() {
                       </ProtectedAssociationRoute>
                     } />
                     <Route path="create-asso" element={<CreateAsso />} />
+                    <Route path="gallery" element={<Media />} />
+                    <Route path="mcp-server" element={<McpServer />} />
                   </Route>
                   
                   {/* Route publique pour les informations d'association */}
                   <Route path="/association-info" element={<AssoInformation/>} />
 
                   {/* Page d'erreur 404 avec Header (utilisateur connecté ou page publique inexistante) */}
-                  <Route path="/404" element={<Error404 />} />
+                  <Route path="/404" element={<><Header noSidebar={true} /><Error404 /></>} />
 
                   {/* Route 404 par défaut - doit être en dernier */}
-                  <Route path="*" element={<Error404 />} />
+                  <Route path="*" element={<><Header noSidebar={true} /><Error404 /></>} />
                 </Routes>
               </main>
             </>

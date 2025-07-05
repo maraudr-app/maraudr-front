@@ -1,11 +1,13 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ExclamationTriangleIcon, HomeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/common/button/button';
 
 const Error404 = () => {
   const { t } = useTranslation(['common']);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8">
@@ -33,39 +35,22 @@ const Error404 = () => {
         </p>
 
         {/* Boutons d'action */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {isAuthenticated ? (
-            <Link
-              to="/maraudApp/dashboard"
-              className="w-full px-6 py-3 bg-maraudr-blue hover:bg-maraudr-orange text-white font-bold text-base rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-            >
-              <HomeIcon className="w-4 h-4" />
+            <Button onClick={() => navigate('/maraudApp/dashboard')} className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white">
+              <HomeIcon className="w-4 h-4 mr-2" />
               {t('error.404.dashboardButton', 'Retour au dashboard')}
-            </Link>
+            </Button>
           ) : (
-            <Link
-              to="/"
-              className="w-full px-6 py-3 bg-maraudr-blue hover:bg-maraudr-orange text-white font-bold text-base rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-            >
-              <HomeIcon className="w-4 h-4" />
+            <Button onClick={() => navigate('/')} className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white">
+              <HomeIcon className="w-4 h-4 mr-2" />
               {t('error.404.homeButton', 'Retour à l\'accueil')}
-            </Link>
+            </Button>
           )}
-          
-          <button
-            onClick={() => window.history.back()}
-            className="w-full px-6 py-3 border-2 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange hover:bg-maraudr-blue hover:text-white dark:hover:bg-maraudr-orange dark:hover:text-white font-bold text-base rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
+          <Button onClick={() => window.history.back()} className="w-full mt-3 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:bg-gray-900 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
             {t('error.404.backButton', 'Page précédente')}
-          </button>
-        </div>
-
-        {/* Logo */}
-        <div className="mt-8">
-          <div className="text-xl font-bold text-maraudr-blue dark:text-maraudr-orange">
-            maraudr
-          </div>
+          </Button>
         </div>
       </div>
     </div>

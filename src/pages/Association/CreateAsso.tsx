@@ -27,6 +27,13 @@ const CreateAsso = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Rediriger si manager et déjà une association
+  useEffect(() => {
+    if (isManager && associations.length > 0) {
+      navigate('/maraudApp/dashboard');
+    }
+  }, [isManager, associations, navigate]);
+
   const handleSiretChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 14);
     setSiret(value);

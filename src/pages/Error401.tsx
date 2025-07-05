@@ -1,9 +1,11 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShieldExclamationIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/common/button/button';
 
 const Error401 = () => {
   const { t } = useTranslation(['common']);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
@@ -31,29 +33,15 @@ const Error401 = () => {
         </p>
 
         {/* Boutons d'action */}
-        <div className="space-y-4">
-          <Link
-            to="/login"
-            className="w-full px-8 py-4 bg-maraudr-blue hover:bg-maraudr-orange text-white font-bold text-lg rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
-          >
+        <div className="space-y-3">
+          <Button onClick={() => navigate('/login')} className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white">
+            <ArrowLeftIcon className="w-4 h-4 rotate-180 mr-2" />
             {t('error.401.loginButton', 'Se connecter')}
-            <ArrowLeftIcon className="w-5 h-5 rotate-180" />
-          </Link>
-          
-          <Link
-            to="/"
-            className="w-full px-8 py-4 border-2 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange hover:bg-maraudr-blue hover:text-white dark:hover:bg-maraudr-orange dark:hover:text-white font-bold text-lg rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3"
-          >
-            <ArrowLeftIcon className="w-5 h-5" />
+          </Button>
+          <Button onClick={() => navigate('/')} className="w-full mt-3 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:bg-gray-900 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
             {t('error.401.homeButton', 'Retour à l\'accueil')}
-          </Link>
-        </div>
-
-        {/* Logo */}
-        <div className="mt-12">
-          <div className="text-2xl font-bold text-maraudr-blue dark:text-maraudr-orange">
-            maraudr
-          </div>
+          </Button>
         </div>
       </div>
     </div>
