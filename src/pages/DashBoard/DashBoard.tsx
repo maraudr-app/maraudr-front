@@ -36,6 +36,7 @@ interface DashboardData {
   stockItems: number;
   lowStockItems: number;
   teamMembers: number;
+  teamMembersList: any[];
   upcomingEvents: number;
   activeDisponibilities: number;
   isUserInAssociation: boolean;
@@ -56,6 +57,7 @@ const DashBoard = () => {
     stockItems: 0,
     lowStockItems: 0,
     teamMembers: 0,
+    teamMembersList: [],
     upcomingEvents: 0,
     activeDisponibilities: 0,
     isUserInAssociation: true,
@@ -196,6 +198,7 @@ const DashBoard = () => {
           stockItems: stockItems.length,
           lowStockItems: lowStockItems.length,
           teamMembers: 0,
+          teamMembersList: [],
           upcomingEvents: 0,
           activeDisponibilities: 0,
           isUserInAssociation: true,
@@ -207,7 +210,7 @@ const DashBoard = () => {
         if (user?.userType === 'Manager') {
           const teamResponse = await teamService.getTeamMembers(user.sub);
           const teamCount = teamResponse?.members?.length || 0;
-          setDashboardData(prev => ({ ...prev, teamMembers: teamCount }));
+          setDashboardData(prev => ({ ...prev, teamMembers: teamCount, teamMembersList: teamResponse?.members || [] }));
         }
 
         // Charger les données de planning
@@ -250,24 +253,46 @@ const DashBoard = () => {
     };
   }, []);
 
+  // Calcul de la période (mois en cours)
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Variation stock : nombre d'articles créés ce mois-ci
+  const stockAddedThisMonth = dashboardData.stockItemsData.filter(item => {
+    if (!item.createdAt) return false;
+    const created = new Date(item.createdAt);
+    return created >= startOfMonth && created <= now;
+  }).length;
+
+  // Variation événements : nombre d'événements qui commencent ce mois-ci
+  const eventsThisMonth = dashboardData.userEvents.filter(event => {
+    const begin = new Date(event.beginningDate);
+    return begin >= startOfMonth && begin <= now;
+  }).length;
+
+  // Variation membres : nombre de membres créés ce mois-ci
+  const teamAddedThisMonth = dashboardData.teamMembersList.filter(member => {
+    if (!member.createdAt) return false;
+    const created = new Date(member.createdAt);
+    return created >= startOfMonth && created <= now;
+  }).length;
+
   // Données des cartes selon le rôle
   const getStatsCards = () => {
     if (isManager) {
       return [
         {
-          title: 'Membres de l\'équipe',
+          title: "Membres de l'équipe",
           value: dashboardData.teamMembers.toString(),
-          change: '+2',
-          isPositive: true,
+          variation: teamAddedThisMonth,
           icon: <UsersIcon className="w-6 h-6 text-orange-500" />,
           iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-          description: 'Ce mois'
+          description: 'Total'
         },
         {
           title: 'Articles en stock',
           value: dashboardData.stockItems.toString(),
-          change: '+12',
-          isPositive: true,
+          variation: stockAddedThisMonth,
           icon: <CubeIcon className="w-6 h-6 text-blue-500" />,
           iconBg: 'bg-blue-100 dark:bg-blue-900/30',
           description: 'Total'
@@ -275,8 +300,7 @@ const DashBoard = () => {
         {
           title: 'Stock faible',
           value: dashboardData.lowStockItems.toString(),
-          change: '-3',
-          isPositive: false,
+          variation: 0,
           icon: <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />,
           iconBg: 'bg-red-100 dark:bg-red-900/30',
           description: 'À réapprovisionner'
@@ -284,11 +308,10 @@ const DashBoard = () => {
         {
           title: 'Événements prévus',
           value: dashboardData.upcomingEvents.toString(),
-          change: '+1',
-          isPositive: true,
+          variation: eventsThisMonth,
           icon: <CalendarDaysIcon className="w-6 h-6 text-green-500" />,
           iconBg: 'bg-green-100 dark:bg-green-900/30',
-          description: 'Cette semaine'
+          description: 'À venir'
         }
       ];
     } else {
@@ -296,11 +319,10 @@ const DashBoard = () => {
         {
           title: 'Mes disponibilités',
           value: dashboardData.activeDisponibilities.toString(),
-          change: '+2',
-          isPositive: true,
+          variation: 0,
           icon: <ClockIcon className="w-6 h-6 text-orange-500" />,
           iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-          description: 'Ce mois',
+          description: 'Total',
           action: (
             <Link
               to="/maraudApp/planing"
@@ -313,29 +335,26 @@ const DashBoard = () => {
         {
           title: 'Prochaines missions',
           value: dashboardData.upcomingEvents.toString(),
-          change: '+1',
-          isPositive: true,
+          variation: eventsThisMonth,
           icon: <MapPinIcon className="w-6 h-6 text-blue-500" />,
           iconBg: 'bg-blue-100 dark:bg-blue-900/30',
           description: 'À venir'
         },
         {
           title: 'Missions complétées',
-          value: '8',
-          change: '+3',
-          isPositive: true,
+          value: dashboardData.userEvents.filter(event => new Date(event.endDate) < new Date()).length.toString(),
+          variation: 0,
           icon: <CheckCircleIcon className="w-6 h-6 text-green-500" />,
           iconBg: 'bg-green-100 dark:bg-green-900/30',
-          description: 'Ce mois'
+          description: 'Total'
         },
         {
           title: 'Heures bénévolat',
-          value: '24h',
-          change: '+6h',
-          isPositive: true,
+          value: '—',
+          variation: 0,
           icon: <ChartBarIcon className="w-6 h-6 text-purple-500" />,
           iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-          description: 'Ce mois'
+          description: 'Total'
         }
       ];
     }
@@ -399,18 +418,25 @@ const DashBoard = () => {
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {card.value}
                 </h3>
-                <div className="flex items-center">
-                  <span className={`flex items-center text-sm ${card.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                    {card.isPositive ? 
-                      <ArrowUpIcon className="w-3 h-3 mr-1" /> : 
-                      <ArrowDownIcon className="w-3 h-3 mr-1" />
-                    }
-                    {card.change}
-                  </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                    {card.description}
-                  </span>
-                </div>
+                {card.title === "Membres de l'équipe" ? null : (
+                  card.variation > 0 ? (
+                    <span className="ml-2 text-sm text-green-600">
+                      +{card.variation} ce mois
+                    </span>
+                  ) : card.variation === 0 && card.title === 'Articles en stock' ? (
+                    <span className="ml-2 text-xs text-gray-400">
+                      Aucun nouvel article ce mois
+                    </span>
+                  ) : card.variation === 0 && card.title === 'Événements prévus' ? (
+                    <span className="ml-2 text-xs text-gray-400">
+                      Aucun nouvel événement ce mois
+                    </span>
+                  ) : card.variation === 0 && card.title === 'Prochaines missions' ? (
+                    <span className="ml-2 text-xs text-gray-400">
+                      Aucune nouvelle mission ce mois
+                    </span>
+                  ) : null
+                )}
                 {(card as any).action && (card as any).action}
               </div>
               <div className={`p-3 rounded-lg ${card.iconBg}`}>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAssoStore } from '../../store/assoStore';
 import { useAuthStore } from '../../store/authStore';
+import { useNavigate } from 'react-router-dom';
 import NoAssociationAlert from './alert/NoAssociationAlert';
 
 interface ProtectedAssociationRouteProps {
@@ -16,9 +17,11 @@ const ProtectedAssociationRoute: React.FC<ProtectedAssociationRouteProps> = ({
 }) => {
   const associations = useAssoStore(state => state.associations);
   const selectedAssociation = useAssoStore(state => state.selectedAssociation);
+  const user = useAuthStore(state => state.user);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCheckedAssociations, setHasCheckedAssociations] = useState(false);
+  const navigate = useNavigate();
 
   // Charger les associations si l'utilisateur est connecté
   useEffect(() => {
@@ -33,7 +36,6 @@ const ProtectedAssociationRoute: React.FC<ProtectedAssociationRouteProps> = ({
           setIsLoading(false);
         }
       };
-
       loadAssociations();
     } else if (!isAuthenticated) {
       setIsLoading(false);
@@ -41,6 +43,13 @@ const ProtectedAssociationRoute: React.FC<ProtectedAssociationRouteProps> = ({
       setIsLoading(false);
     }
   }, [isAuthenticated, hasCheckedAssociations]);
+
+  // Rediriger automatiquement les managers sans association vers la page de création d'asso
+  useEffect(() => {
+    if (!isLoading && user?.userType === 'Manager' && associations.length === 0) {
+      navigate('/maraudApp/create-asso', { replace: true });
+    }
+  }, [isLoading, user, associations, navigate]);
 
   // Afficher un loader pendant le chargement
   if (isLoading) {

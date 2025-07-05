@@ -18,24 +18,7 @@ const CreateAsso = () => {
   const user = useAuthStore(state => state.user);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const associations = useAssoStore(state => state.associations);
-
-  // Vérifier si l'utilisateur est manager, sinon rediriger
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      if (!user.userType || !user.firstName || !user.lastName) {
-        useAuthStore.getState().fetchUser().then(() => {
-          const updatedUser = useAuthStore.getState().user;
-          if (updatedUser && updatedUser.userType !== 'Manager') {
-            toast.error('Vous n\'avez pas les permissions pour créer une association');
-            navigate('/maraudApp/dashboard');
-          }
-        });
-      } else if (user.userType !== 'Manager') {
-        toast.error('Vous n\'avez pas les permissions pour créer une association');
-        navigate('/maraudApp/dashboard');
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
+  const isManager = user?.userType === 'Manager';
 
   // Si l'utilisateur n'est pas connecté, rediriger vers login
   useEffect(() => {
@@ -113,21 +96,13 @@ const CreateAsso = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900">
       {/* Header compact */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-orange-200/50 dark:border-gray-700 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/maraudApp/dashboard')}
-                className="text-gray-600 dark:text-gray-300 hover:text-maraudr-orange dark:hover:text-maraudr-orange transition-colors"
-              >
-                <FaArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-maraudr-blue to-maraudr-orange bg-clip-text text-transparent">
-                Créer une association
-              </h1>
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="py-6 border-b border-orange-200/50 dark:border-gray-700 sticky top-0 z-40 bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-2xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2 text-center">
+              Créer une association
+            </h1>
+            <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
               {associations.length === 0 ? 'Première association' : `Association ${associations.length + 1}`}
             </div>
           </div>
@@ -138,7 +113,7 @@ const CreateAsso = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* En-tête de la carte */}
-          <div className="bg-gradient-to-r from-maraudr-blue to-maraudr-orange p-6 text-white">
+          <div className=" p-6 dark:text-white text-black">
             <div className="flex items-center space-x-3 mb-2">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                 <FaBuilding className="w-5 h-5" />
@@ -229,18 +204,25 @@ const CreateAsso = () => {
                 )}
               </div>
 
-              <Button
-                type="submit"
-                className={`w-full py-4 text-lg font-semibold rounded-lg transition-all duration-300 ${
-                  isValid && !apiError
-                    ? 'bg-gradient-to-r from-maraudr-blue to-maraudr-orange hover:from-maraudr-orange hover:to-maraudr-blue text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5' 
-                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                }`}
-                disabled={!isValid || isLoading || !!apiError}
-                isLoading={isLoading}
-              >
-                {isLoading ? 'Création en cours...' : 'Créer mon association'}
-              </Button>
+              {isManager && (
+                <Button
+                  type="submit"
+                  className={`w-full py-4 text-lg font-semibold rounded-lg transition-all duration-300 ${
+                    isValid && !apiError
+                      ? 'bg-gradient-to-r from-maraudr-blue to-maraudr-orange hover:from-maraudr-orange hover:to-maraudr-blue text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5' 
+                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  }`}
+                  disabled={!isValid || isLoading || !!apiError}
+                  isLoading={isLoading}
+                >
+                  {isLoading ? 'Création en cours...' : 'Créer mon association'}
+                </Button>
+              )}
+              {!isManager && (
+                <p className="mt-2 text-sm text-orange-700 dark:text-orange-300 text-center">
+                  Seuls les managers peuvent créer une association.
+                </p>
+              )}
             </form>
 
             {/* Avantages */}
