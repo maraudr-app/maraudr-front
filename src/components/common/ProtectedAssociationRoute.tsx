@@ -44,12 +44,7 @@ const ProtectedAssociationRoute: React.FC<ProtectedAssociationRouteProps> = ({
     }
   }, [isAuthenticated, hasCheckedAssociations]);
 
-  // Rediriger automatiquement les managers sans association vers la page de création d'asso
-  useEffect(() => {
-    if (!isLoading && user?.userType === 'Manager' && associations.length === 0) {
-      navigate('/maraudApp/create-asso', { replace: true });
-    }
-  }, [isLoading, user, associations, navigate]);
+  // On ne redirige plus automatiquement - laisser l'utilisateur choisir
 
   // Afficher un loader pendant le chargement
   if (isLoading) {

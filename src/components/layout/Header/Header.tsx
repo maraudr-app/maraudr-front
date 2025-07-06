@@ -39,6 +39,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
     const { user, isAuthenticated, logout } = useAuthStore();
     const isHomePage = location.pathname === '/';
     const isLoginPage = location.pathname === '/login';
+    const isCreateAssoPage = location.pathname === '/maraudApp/create-asso';
     const sidebarCollapsed = useAssoStore(state => state.sidebarCollapsed);
     const { notificationCount } = useNotifications();
 
@@ -298,12 +299,18 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                 
                                 {/* Bouton Créer une association - seulement pour les managers */}
                                 {isManager() && (
-                                    <Link
-                                        to="/maraudApp/create-asso"
-                                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-sm"
-                                    >
-                                        {t('header.createAssociation', 'Créer une association')}
-                                    </Link>
+                                    isCreateAssoPage ? (
+                                        <span className="px-4 py-2 text-base font-medium border-b-2 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange">
+                                            {t('header.createAssociation', 'Créer une association')}
+                                        </span>
+                                    ) : (
+                                        <Link
+                                            to="/maraudApp/create-asso"
+                                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-sm"
+                                        >
+                                            {t('header.createAssociation', 'Créer une association')}
+                                        </Link>
+                                    )
                                 )}
                                 
                                 <div className="relative" id="user-menu">
@@ -412,13 +419,19 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                         <>
                             {/* Bouton Créer une association - seulement pour les managers */}
                             {isManager() && (
-                                <Link
-                                    to="/maraudApp/create-asso"
-                                    onClick={() => setIsOpen(false)}
-                                    className="block px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300"
-                                >
-                                    {t('header.createAssociation', 'Créer une association')}
-                                </Link>
+                                isCreateAssoPage ? (
+                                    <span className="block px-4 py-2 text-sm font-medium border-l-4 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange bg-maraudr-blue/10 dark:bg-maraudr-orange/10">
+                                        {t('header.createAssociation', 'Créer une association')}
+                                    </span>
+                                ) : (
+                                    <Link
+                                        to="/maraudApp/create-asso"
+                                        onClick={() => setIsOpen(false)}
+                                        className="block px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300"
+                                    >
+                                        {t('header.createAssociation', 'Créer une association')}
+                                    </Link>
+                                )
                             )}
                             
                             <div className="px-4 py-2 border-t dark:border-gray-700">

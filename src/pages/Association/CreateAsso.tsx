@@ -19,6 +19,7 @@ const CreateAsso = () => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const associations = useAssoStore(state => state.associations);
   const isManager = user?.userType === 'Manager';
+  const isLoadingAssociations = useAssoStore(state => state.isLoading);
 
   // Si l'utilisateur n'est pas connecté, rediriger vers login
   useEffect(() => {
@@ -27,12 +28,23 @@ const CreateAsso = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Rediriger si manager et déjà une association
+  // Attendre la fin du chargement des associations avant d'afficher le formulaire
   useEffect(() => {
-    if (isManager && associations.length > 0) {
-      navigate('/maraudApp/dashboard');
-    }
-  }, [isManager, associations, navigate]);
+    if (isLoadingAssociations) return;
+    // On ne redirige plus automatiquement - un manager peut créer plusieurs associations
+  }, [isLoadingAssociations]);
+
+  // Afficher un loader tant que le chargement n'est pas terminé
+  if (isLoadingAssociations) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des associations...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSiretChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 14);
@@ -109,9 +121,7 @@ const CreateAsso = () => {
             <h1 className="text-2xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2 text-center">
               Créer une association
             </h1>
-            <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
-              {associations.length === 0 ? 'Première association' : `Association ${associations.length + 1}`}
-            </div>
+
           </div>
         </div>
       </div>
@@ -120,7 +130,7 @@ const CreateAsso = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* En-tête de la carte */}
-          <div className=" p-6 dark:text-white text-black">
+          <div className="bg-gradient-to-r from-maraudr-blue to-maraudr-orange p-6 dark:text-white text-white">
             <div className="flex items-center space-x-3 mb-2">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                 <FaBuilding className="w-5 h-5" />
