@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
 import { userService } from '../../services/userService';
 import { assoService } from '../../services/assoService';
+import { teamService } from '../../services/teamService';
 import { useNotifications } from '../../hooks/useNotifications';
 import { 
     CheckIcon, 
@@ -14,28 +15,20 @@ import {
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import { User } from '../../types/user/user';
+import { Language } from '../../types/enums/Language';
 import ConfirmationModal from '../../components/common/modal/ConfirmationModal';
-
-interface MessageUser {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    avatar?: string;
-    lastMessage: string;
-    time: string;
-    unread?: boolean;
-    vehicleInfo?: string;
-}
+import UserDetailsModal from '../../components/team/UserDetailsModal';
 
 const NotificationManager: React.FC = () => {
-    const [pendingMembers, setPendingMembers] = useState<MessageUser[]>([]);
+    const [pendingMembers, setPendingMembers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [processing, setProcessing] = useState<string | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [memberToValidate, setMemberToValidate] = useState<{ id: string; name: string } | null>(null);
     const [selectedFilter, setSelectedFilter] = useState('Demandes d\'adhésion');
     const [selectedAudience, setSelectedAudience] = useState('Tous les membres');
+    const [selectedUserDetails, setSelectedUserDetails] = useState<User | null>(null);
+    const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
     
     const user = useAuthStore(state => state.user);
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
@@ -52,31 +45,68 @@ const NotificationManager: React.FC = () => {
         try {
             setLoading(true);
             
-            // Récupérer tous les membres de l'équipe
-            const teamMembers = await userService.getTeamUsers(user.sub);
-            console.log('Membres de l\'équipe récupérés:', teamMembers);
+            // 1. Récupérer tous les membres de l'équipe du manager
+            const teamResponse = await teamService.getTeamMembers(user.sub);
+            console.log('🔍 Requête teamService.getTeamMembers:', `http://localhost:8082/managers/team/${user.sub}`);
+            console.log('📋 Résultat complet de la requête:', teamResponse);
+            // L'API retourne directement un tableau, pas un objet avec propriété members
+            const teamMembers = Array.isArray(teamResponse) ? teamResponse : (teamResponse.members || []);
+            console.log('👥 Membres de l\'équipe récupérés:', teamMembers);
             
-            // Vérifier pour chaque membre s'il est déjà dans l'association
+            // 2. Vérifier pour chaque membre de l'équipe s'il est déjà dans l'association
             const pending: User[] = [];
             
-            for (const member of teamMembers) {
+            for (const teamMember of teamMembers) {
                 try {
                     // Utiliser la nouvelle API pour vérifier l'adhésion
-                    const isMember = await assoService.isUserMemberOfAssociation(member.id, selectedAssociation.id);
-                    console.log(`Membre ${member.id} (${member.firstname} ${member.lastname}) - Est membre: ${isMember}`);
+                    const isMember = await assoService.isUserMemberOfAssociation(teamMember.id, selectedAssociation.id);
+                    console.log(`Membre équipe ${teamMember.id} (${teamMember.firstname} ${teamMember.lastname}) - Est dans l'association: ${isMember}`);
                     
-                    // Si pas membre, ajouter à la liste d'attente
+                    // Si le membre de l'équipe n'est PAS dans l'association, l'ajouter à la liste d'attente
                     if (!isMember) {
-                        pending.push(member);
+                        // Convertir TeamMember en User pour la compatibilité
+                        const userMember: User = {
+                            id: teamMember.id,
+                            firstname: teamMember.firstname,
+                            lastname: teamMember.lastname,
+                            email: teamMember.email,
+                            phoneNumber: teamMember.phoneNumber,
+                            street: teamMember.street,
+                            city: teamMember.city,
+                            state: teamMember.state,
+                            postalCode: teamMember.postalCode,
+                            country: teamMember.country,
+                            languages: (teamMember.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language)),
+                            isManager: teamMember.isManager,
+                            createdAt: teamMember.createdAt,
+                            updatedAt: teamMember.updatedAt
+                        };
+                        pending.push(userMember);
                     }
                 } catch (error) {
-                    console.error(`Erreur lors de la vérification du membre ${member.id}:`, error);
+                    console.error(`Erreur lors de la vérification du membre ${teamMember.id}:`, error);
                     // En cas d'erreur, on considère qu'il n'est pas membre (safe fallback)
-                    pending.push(member);
+                    const userMember: User = {
+                        id: teamMember.id,
+                        firstname: teamMember.firstname,
+                        lastname: teamMember.lastname,
+                        email: teamMember.email,
+                        phoneNumber: teamMember.phoneNumber,
+                        street: teamMember.street,
+                        city: teamMember.city,
+                        state: teamMember.state,
+                        postalCode: teamMember.postalCode,
+                        country: teamMember.country,
+                        languages: (teamMember.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language)),
+                        isManager: teamMember.isManager,
+                        createdAt: teamMember.createdAt,
+                        updatedAt: teamMember.updatedAt
+                    };
+                    pending.push(userMember);
                 }
             }
             
-            console.log('Membres en attente après vérification API:', pending);
+            console.log('Membres en attente après vérification (membres équipe pas dans association):', pending);
             
             // Transformer en format message avec des informations réalistes pour l'affichage
             const realMessages = [
@@ -99,17 +129,7 @@ const NotificationManager: React.FC = () => {
                 "Membre - Actions terrain"
             ];
             
-            setPendingMembers(pending.map((member: User, index) => ({
-                id: member.id,
-                firstName: member.firstname || '',
-                lastName: member.lastname || '',
-                email: member.email || '',
-                avatar: undefined,
-                lastMessage: realMessages[index % realMessages.length],
-                time: formatMessageTime(member.createdAt),
-                unread: Math.random() > 0.3,
-                vehicleInfo: roles[index % roles.length]
-            })));
+            setPendingMembers(pending);
             
         } catch (error) {
             console.error('Erreur lors du chargement des membres en attente:', error);
@@ -289,25 +309,16 @@ const NotificationManager: React.FC = () => {
                                 <div 
                                     key={member.id} 
                                     className="flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
+                                    onClick={() => {
+                                        setSelectedUserDetails(member);
+                                        setShowUserDetailsModal(true);
+                                    }}
                                 >
                                     {/* Avatar */}
                                     <div className="relative">
-                                        {member.avatar ? (
-                                            <img
-                                                src={member.avatar}
-                                                alt={`${member.firstName} ${member.lastName}`}
-                                                className="h-14 w-14 rounded-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">
-                                                {getInitials(member.firstName, member.lastName)}
-                                            </div>
-                                        )}
-                                        {member.unread && (
-                                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                                                <span className="text-white text-xs font-bold">1</span>
-                                            </div>
-                                        )}
+                                        <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">
+                                            {member.firstname?.charAt(0)}{member.lastname?.charAt(0)}
+                                        </div>
                                     </div>
                                     
                                     {/* Contenu du message */}
@@ -315,35 +326,18 @@ const NotificationManager: React.FC = () => {
                                         <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center space-x-2">
                                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                                                    {member.firstName} {member.lastName}
+                                                    {member.firstname} {member.lastname}
                                                 </h3>
                                                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                    @{member.email.split('@')[0]}
+                                                    @{member.email?.split('@')[0]}
                                                 </span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {member.time}
-                                                </span>
-                                                <button className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <EllipsisVerticalIcon className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                                                </button>
                                             </div>
                                         </div>
                                         
-                                        {member.vehicleInfo && (
-                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                                {member.vehicleInfo}
-                                            </div>
-                                        )}
-                                        
-                                        <p className={`text-sm text-gray-600 dark:text-gray-300 truncate ${
-                                            member.unread ? 'font-medium' : ''
-                                        }`}>
-                                            {member.lastMessage}
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+                                            {/* Message fictif ou info complémentaire si besoin */}
                                         </p>
                                         
-                                        {/* Badge statut */}
                                         <div className="mt-2 flex items-center justify-between">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
                                                 En attente d'adhésion
@@ -352,7 +346,7 @@ const NotificationManager: React.FC = () => {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleValidationRequest(member.id, `${member.firstName} ${member.lastName}`);
+                                                    handleValidationRequest(member.id, `${member.firstname} ${member.lastname}`);
                                                 }}
                                                 disabled={processing === member.id}
                                                 className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -387,6 +381,12 @@ const NotificationManager: React.FC = () => {
                 cancelText="Annuler"
                 type="success"
                 loading={processing === memberToValidate?.id}
+            />
+
+            <UserDetailsModal
+                member={selectedUserDetails}
+                isOpen={showUserDetailsModal}
+                onClose={() => setShowUserDetailsModal(false)}
             />
         </div>
     );

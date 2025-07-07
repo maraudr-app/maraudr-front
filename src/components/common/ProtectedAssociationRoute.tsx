@@ -63,7 +63,7 @@ const ProtectedAssociationRoute: React.FC<ProtectedAssociationRouteProps> = ({
     return (
       <NoAssociationAlert
         title={title || "Aucune association trouvée"}
-        message={message || "Vous devez créer une association pour accéder à cette fonctionnalité."}
+        message={message}
         showCreateButton={true}
       />
     );

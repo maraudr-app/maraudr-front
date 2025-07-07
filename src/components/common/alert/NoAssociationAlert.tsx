@@ -12,7 +12,7 @@ interface NoAssociationAlertProps {
 
 const NoAssociationAlert: React.FC<NoAssociationAlertProps> = ({
   title = "Aucune association trouvée",
-  message = "Vous devez créer une association pour accéder à cette fonctionnalité.",
+  message,
   showCreateButton = true,
   className = ""
 }) => {
@@ -20,11 +20,18 @@ const NoAssociationAlert: React.FC<NoAssociationAlertProps> = ({
   const user = useAuthStore(state => state.user);
   const isManager = user?.userType === 'Manager';
 
+  // Message par défaut selon le type d'utilisateur
+  const defaultMessage = isManager 
+    ? "Vous devez créer une association pour accéder à cette fonctionnalité."
+    : "Votre inscription est en attente de validation par votre manager. Vous recevrez une notification dès que votre adhésion sera approuvée.";
+
+  const displayMessage = message || defaultMessage;
+
   return (
     <div className={`min-h-[60vh] flex flex-col items-center justify-center ${className}`}>
       <div className="w-full max-w-md mx-auto text-center">
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{title}</h2>
-        <p className="mb-6 text-gray-700 dark:text-gray-300">{message}</p>
+        <p className="mb-6 text-gray-700 dark:text-gray-300">{displayMessage}</p>
         {showCreateButton && isManager && (
           <Button
             onClick={() => navigate('/maraudApp/create-asso')}

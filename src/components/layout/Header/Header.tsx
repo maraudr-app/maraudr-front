@@ -304,12 +304,12 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                             {t('header.createAssociation', 'Créer une association')}
                                         </span>
                                     ) : (
-                                        <Link
-                                            to="/maraudApp/create-asso"
-                                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-sm"
-                                        >
-                                            {t('header.createAssociation', 'Créer une association')}
-                                        </Link>
+                                    <Link
+                                        to="/maraudApp/create-asso"
+                                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-sm"
+                                    >
+                                        {t('header.createAssociation', 'Créer une association')}
+                                    </Link>
                                     )
                                 )}
                                 
@@ -424,13 +424,13 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                         {t('header.createAssociation', 'Créer une association')}
                                     </span>
                                 ) : (
-                                    <Link
-                                        to="/maraudApp/create-asso"
-                                        onClick={() => setIsOpen(false)}
-                                        className="block px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300"
-                                    >
-                                        {t('header.createAssociation', 'Créer une association')}
-                                    </Link>
+                                <Link
+                                    to="/maraudApp/create-asso"
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300"
+                                >
+                                    {t('header.createAssociation', 'Créer une association')}
+                                </Link>
                                 )
                             )}
                             

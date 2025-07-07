@@ -47,11 +47,11 @@ function App() {
           {/* Routes avec Header */}
           <Route path="*" element={
             <>
-              <Header />
-              <main className="pt-16 min-h-screen bg-white dark:bg-gray-900 transition-colors">
-                <Routes>
+        <Header />
+        <main className="pt-16 min-h-screen bg-white dark:bg-gray-900 transition-colors">
+          <Routes>
                   {/* Routes publiques */}
-                  <Route path="/" element={<Home />} />
+            <Route path="/" element={<Home />} />
                   <Route path="/login" element={<ProtectedRoute requireAuth={false}><Login /></ProtectedRoute>} />
                   <Route path="/forgot-password" element={<ProtectedRoute requireAuth={false}><ForgotPassword /></ProtectedRoute>} />
                   <Route path="/reset-password" element={<ProtectedRoute requireAuth={false}><ResetPassword /></ProtectedRoute>} />
@@ -60,16 +60,16 @@ function App() {
                   <Route path="/accept-invitation" element={<ProtectedRoute requireAuth={false}><AcceptInvitation /></ProtectedRoute>} />
 
                   {/* Routes protégées */}
-                  <Route
-                      path="/maraudApp"
+            <Route
+                path="/maraudApp"
                       element={<ProtectedRoute><MaraudrApp /></ProtectedRoute>}
-                  >
-                    {/* Redirection par défaut vers le dashboard */}
-                    <Route index element={<Navigate to="/maraudApp/dashboard" replace />} />
+            >
+              {/* Redirection par défaut vers le dashboard */}
+              <Route index element={<Navigate to="/maraudApp/dashboard" replace />} />
                     <Route path="dashboard" element={
                       <ProtectedAssociationRoute 
                         title="Bienvenue sur votre dashboard"
-                        message="Créez votre première association pour commencer à organiser vos actions sociales."
+                        message=""
                       >
                         <DashBoard />
                       </ProtectedAssociationRoute>
@@ -77,7 +77,7 @@ function App() {
                     <Route path="stock" element={
                       <ProtectedAssociationRoute 
                         title="Gestion du stock"
-                        message="Vous devez créer une association pour gérer votre stock."
+                        message=""
                       >
                         <Stock />
                       </ProtectedAssociationRoute>
@@ -85,7 +85,7 @@ function App() {
                     <Route path="map" element={
                       <ProtectedAssociationRoute 
                         title="Planification des maraudes"
-                        message="Vous devez créer une association pour planifier vos maraudes."
+                        message=""
                       >
                         <Plan/>
                       </ProtectedAssociationRoute>
@@ -93,7 +93,7 @@ function App() {
                     <Route path="setting" element={
                       <ProtectedAssociationRoute 
                         title="Paramètres"
-                        message="Vous devez créer une association pour accéder aux paramètres."
+                        message=""
                       >
                         <Setting/>
                       </ProtectedAssociationRoute>
@@ -101,7 +101,7 @@ function App() {
                     <Route path="team" element={
                       <ProtectedAssociationRoute 
                         title="Gestion d'équipe"
-                        message="Vous devez créer une association pour gérer votre équipe."
+                        message=""
                       >
                         <Team/>
                       </ProtectedAssociationRoute>
@@ -109,7 +109,7 @@ function App() {
                     <Route path="planing" element={
                       <ProtectedAssociationRoute 
                         title="Planning"
-                        message="Vous devez créer une association pour accéder au planning."
+                        message=""
                       >
                         <Planning/>
                       </ProtectedAssociationRoute>
@@ -117,7 +117,7 @@ function App() {
                     <Route path="profile" element={
                       <ProtectedAssociationRoute 
                         title="Profil"
-                        message="Vous devez créer une association pour accéder à votre profil."
+                        message=""
                       >
                         <Profile />
                       </ProtectedAssociationRoute>
@@ -125,26 +125,40 @@ function App() {
                     <Route path="notification-manager" element={
                       <ProtectedAssociationRoute 
                         title="Notifications"
-                        message="Vous devez créer une association pour gérer vos notifications."
+                        message=""
                       >
                         <NotificationManager />
                       </ProtectedAssociationRoute>
                     } />
                     <Route path="create-asso" element={<CreateAsso />} />
-                    <Route path="gallery" element={<Media />} />
-                    <Route path="mcp-server" element={<McpServer />} />
-                  </Route>
+                    <Route path="gallery" element={
+                      <ProtectedAssociationRoute 
+                        title="Galerie et documents"
+                        message=""
+                      >
+                        <Media />
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="mcp-server" element={
+                      <ProtectedAssociationRoute 
+                        title="Serveur MCP"
+                        message=""
+                      >
+                        <McpServer />
+                      </ProtectedAssociationRoute>
+                    } />
+            </Route>
                   
                   {/* Route publique pour les informations d'association */}
-                  <Route path="/association-info" element={<AssoInformation/>} />
+            <Route path="/association-info" element={<AssoInformation/>} />
 
                   {/* Page d'erreur 404 avec Header (utilisateur connecté ou page publique inexistante) */}
                   <Route path="/404" element={<><Header noSidebar={true} /><Error404 /></>} />
 
                   {/* Route 404 par défaut - doit être en dernier */}
                   <Route path="*" element={<><Header noSidebar={true} /><Error404 /></>} />
-                </Routes>
-              </main>
+          </Routes>
+        </main>
             </>
           } />
         </Routes>

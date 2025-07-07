@@ -123,8 +123,8 @@ const CreateAsso = () => {
             </h1>
 
           </div>
-        </div>
-      </div>
+                    </div>
+                  </div>
 
       {/* Contenu principal */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -136,72 +136,72 @@ const CreateAsso = () => {
                 <FaBuilding className="w-5 h-5" />
               </div>
               <h2 className="text-2xl font-bold">Nouvelle association</h2>
-            </div>
+                    </div>
             <p className="text-white/90">
               Créez votre association pour commencer à gérer vos équipes et vos actions
-            </p>
-          </div>
+                    </p>
+                  </div>
 
           {/* Formulaire */}
           <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="siret" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Numéro SIRET de votre association
-                </label>
-                <div className="relative">
-                  <Input
-                    id="siret"
-                    name="siret"
-                    type="text"
-                    value={siret}
-                    onChange={handleSiretChange}
-                    placeholder="Ex: 12345678901234"
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                      <label htmlFor="siret" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Numéro SIRET de votre association
+                      </label>
+                      <div className="relative">
+                        <Input
+                          id="siret"
+                          name="siret"
+                          type="text"
+                          value={siret}
+                          onChange={handleSiretChange}
+                          placeholder="Ex: 12345678901234"
                     className="text-lg py-4 pr-12 border-2 border-gray-200 dark:border-gray-600 focus:border-maraudr-blue dark:focus:border-maraudr-orange bg-gray-50 dark:bg-gray-700 rounded-lg transition-all duration-300"
-                    required
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                    {isValid === null ? (
-                      <div className="w-6 h-6 rounded-lg bg-gray-200 dark:bg-gray-600"></div>
-                    ) : isValid ? (
-                      <FaCheckCircle className="h-6 w-6 text-green-500" />
-                    ) : (
-                      <FaTimesCircle className="h-6 w-6 text-red-500" />
-                    )}
-                  </div>
-                </div>
-                
-                {/* Indicateur de progression */}
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    <span>Progression</span>
-                    <span>{siret.length}/14</span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded h-2">
-                    <div 
+                          required
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-4">
+                          {isValid === null ? (
+                            <div className="w-6 h-6 rounded-lg bg-gray-200 dark:bg-gray-600"></div>
+                          ) : isValid ? (
+                            <FaCheckCircle className="h-6 w-6 text-green-500" />
+                          ) : (
+                            <FaTimesCircle className="h-6 w-6 text-red-500" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Indicateur de progression */}
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          <span>Progression</span>
+                          <span>{siret.length}/14</span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded h-2">
+                          <div 
                       className="bg-gradient-to-r from-maraudr-blue to-maraudr-orange h-2 rounded transition-all duration-300"
-                      style={{ width: `${(siret.length / 14) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
+                            style={{ width: `${(siret.length / 14) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
 
-                {siret.length > 0 && siret.length < 14 && (
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Encore {14 - siret.length} chiffres à saisir
-                  </p>
-                )}
-                {isValid === false && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center space-x-2">
-                    <FaTimesCircle className="h-4 w-4" />
-                    <span>Ce numéro SIRET n'est pas valide</span>
-                  </p>
-                )}
-                {isValid === true && (
-                  <p className="mt-2 text-sm text-green-600 dark:text-green-400 flex items-center space-x-2">
-                    <FaCheckCircle className="h-4 w-4" />
-                    <span>Numéro SIRET valide !</span>
-                  </p>
-                )}
+                      {siret.length > 0 && siret.length < 14 && (
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                          Encore {14 - siret.length} chiffres à saisir
+                        </p>
+                      )}
+                      {isValid === false && (
+                        <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center space-x-2">
+                          <FaTimesCircle className="h-4 w-4" />
+                          <span>Ce numéro SIRET n'est pas valide</span>
+                        </p>
+                      )}
+                      {isValid === true && (
+                        <p className="mt-2 text-sm text-green-600 dark:text-green-400 flex items-center space-x-2">
+                          <FaCheckCircle className="h-4 w-4" />
+                          <span>Numéro SIRET valide !</span>
+                        </p>
+                      )}
                 
                 {/* Message d'erreur API */}
                 {apiError && (
@@ -219,28 +219,28 @@ const CreateAsso = () => {
                     </div>
                   </div>
                 )}
-              </div>
+                    </div>
 
               {isManager && (
-                <Button
-                  type="submit"
-                  className={`w-full py-4 text-lg font-semibold rounded-lg transition-all duration-300 ${
+                    <Button
+                      type="submit"
+                      className={`w-full py-4 text-lg font-semibold rounded-lg transition-all duration-300 ${
                     isValid && !apiError
                       ? 'bg-gradient-to-r from-maraudr-blue to-maraudr-orange hover:from-maraudr-orange hover:to-maraudr-blue text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5' 
-                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  }`}
+                          : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      }`}
                   disabled={!isValid || isLoading || !!apiError}
-                  isLoading={isLoading}
-                >
-                  {isLoading ? 'Création en cours...' : 'Créer mon association'}
-                </Button>
+                      isLoading={isLoading}
+                    >
+                      {isLoading ? 'Création en cours...' : 'Créer mon association'}
+                    </Button>
               )}
               {!isManager && (
                 <p className="mt-2 text-sm text-orange-700 dark:text-orange-300 text-center">
                   Seuls les managers peuvent créer une association.
                 </p>
               )}
-            </form>
+                  </form>
 
             {/* Avantages */}
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -272,12 +272,12 @@ const CreateAsso = () => {
               </div>
             </div>
 
-            {/* Note informative */}
-            <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-              <p className="text-sm text-orange-800 dark:text-orange-200">
-                <strong>Note :</strong> Le numéro SIRET permet de vérifier l'existence légale de votre association. 
-                Toutes vos données restent confidentielles et sécurisées.
-              </p>
+                  {/* Note informative */}
+                  <div className="mt-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <p className="text-sm text-orange-800 dark:text-orange-200">
+                      <strong>Note :</strong> Le numéro SIRET permet de vérifier l'existence légale de votre association. 
+                      Toutes vos données restent confidentielles et sécurisées.
+                    </p>
             </div>
           </div>
         </div>
