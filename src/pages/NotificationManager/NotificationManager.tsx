@@ -29,6 +29,7 @@ const NotificationManager: React.FC = () => {
     const [selectedAudience, setSelectedAudience] = useState('Tous les membres');
     const [selectedUserDetails, setSelectedUserDetails] = useState<User | null>(null);
     const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
+    const [loadingUserDetails, setLoadingUserDetails] = useState(false);
     
     const user = useAuthStore(state => state.user);
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
@@ -309,9 +310,17 @@ const NotificationManager: React.FC = () => {
                                 <div 
                                     key={member.id} 
                                     className="flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer group"
-                                    onClick={() => {
-                                        setSelectedUserDetails(member);
-                                        setShowUserDetailsModal(true);
+                                    onClick={async () => {
+                                        setLoadingUserDetails(true);
+                                        try {
+                                            const userDetails = await userService.getUser(member.id);
+                                            setSelectedUserDetails(userDetails);
+                                            setShowUserDetailsModal(true);
+                                        } catch (err) {
+                                            console.error('Erreur lors de la récupération du profil utilisateur:', err);
+                                        } finally {
+                                            setLoadingUserDetails(false);
+                                        }
                                     }}
                                 >
                                     {/* Avatar */}
@@ -387,6 +396,7 @@ const NotificationManager: React.FC = () => {
                 member={selectedUserDetails}
                 isOpen={showUserDetailsModal}
                 onClose={() => setShowUserDetailsModal(false)}
+                loading={loadingUserDetails}
             />
         </div>
     );

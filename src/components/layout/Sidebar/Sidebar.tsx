@@ -170,12 +170,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       icon: <Cog6ToothIcon className="w-5 h-5" />, 
       label: t('sidebar.settings', 'Settings'), 
       key: 'settings' 
-    },
-    {
-      to: '/logOut',
-      icon: <ArrowRightOnRectangleIcon className="w-5 h-5" />,
-      label: t('sidebar.logout', 'Log Out'),
-      key: 'logOut'
     }
   ];
 

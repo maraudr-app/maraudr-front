@@ -9,6 +9,7 @@ interface UserDetailsModalProps {
   onClose: () => void;
   onViewDisponibilities?: (memberId: string) => void;
   onRemoveMember?: (member: TeamMember | User) => void;
+  loading?: boolean;
 }
 
 const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
@@ -16,9 +17,20 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   isOpen,
   onClose,
   onViewDisponibilities,
-  onRemoveMember
+  onRemoveMember,
+  loading = false
 }) => {
-  if (!isOpen || !member) return null;
+  if (!isOpen) return null;
+  if (loading || !member) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] flex items-center justify-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maraudr-orange mx-auto mb-4"></div>
+          <span className="text-gray-700 dark:text-gray-200 ml-4">Chargement des informations...</span>
+        </div>
+      </div>
+    );
+  }
 
   // Mapping pour les langues (exemple simplifié)
   const getLanguageLabel = (lang: any) => {
