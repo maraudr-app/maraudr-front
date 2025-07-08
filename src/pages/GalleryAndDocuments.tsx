@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MediaNavbar } from '../components/media/MediaNavbar';
 import { FaImages, FaFileAlt, FaSearch, FaFilter, FaDownload, FaTrash, FaEye } from 'react-icons/fa';
 import { mediaService, MediaFile, MediaFilter } from '../services/mediaService';
@@ -12,6 +12,7 @@ const Media: React.FC = () => {
   const [documents, setDocuments] = useState<MediaFile[]>([]);
   const [photos, setPhotos] = useState<MediaFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState<MediaFilter>({
     name: '',
     category: '',
@@ -22,6 +23,7 @@ const Media: React.FC = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [uploaders, setUploaders] = useState<string[]>([]);
   const { selectedAssociation } = useAssoStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (selectedAssociation?.id) {
@@ -80,10 +82,53 @@ const Media: React.FC = () => {
 
   const handleDelete = async (fileId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?')) {
-      const success = await mediaService.deleteFile(fileId);
+      const success = await mediaService.deleteFile(fileId, selectedAssociation!.id);
       if (success) {
         fetchData();
       }
+    }
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !selectedAssociation?.id) return;
+
+    const file = files[0];
+    
+    // Vérifier le type de fichier
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain', 'text/csv'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      alert('Type de fichier non autorisé');
+      return;
+    }
+
+    // Vérifier la taille (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Fichier trop volumineux (max 10MB)');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      // Déterminer le type de fichier
+      const isImage = file.type.startsWith('image/');
+      const type = isImage ? 'photo' : 'document';
+      
+      const uploadedFile = await mediaService.uploadFile(selectedAssociation.id, file, type);
+      if (uploadedFile) {
+        fetchData(); // Recharger la liste
+        alert('Fichier uploadé avec succès !');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'upload:', error);
+      alert('Erreur lors de l\'upload');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -92,11 +137,25 @@ const Media: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
       <MediaNavbar 
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
+
+      {/* Bouton flottant pour upload rapide */}
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="fixed bottom-6 right-6 z-50 p-4 bg-gradient-to-r from-maraudr-blue to-maraudr-orange text-white rounded-full shadow-lg hover:from-maraudr-orange hover:to-maraudr-blue transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110"
+        title={uploading ? 'Upload en cours...' : 'Ajouter un fichier'}
+      >
+        {uploading ? (
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+        ) : (
+          <FaFileAlt className="w-6 h-6" />
+        )}
+      </button>
 
       <main className="pt-16">
         {/* Section Photos */}
@@ -141,6 +200,19 @@ const Media: React.FC = () => {
             <div className="rounded-xl p-6">
               {/* Filtres fixes en haut */}
               <div className="sticky top-0 z-10 mb-6 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Documents de l'association
+                  </h3>
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-maraudr-blue to-maraudr-orange text-white text-sm font-medium rounded-lg hover:from-maraudr-orange hover:to-maraudr-blue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaFileAlt className="w-4 h-4 mr-2" />
+                    {uploading ? 'Upload en cours...' : 'Ajouter un fichier'}
+                  </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Input
                     type="text"
@@ -290,6 +362,16 @@ const Media: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Input file caché pour l'upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={(e) => handleFileUpload(e.target.files)}
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp"
+          disabled={uploading}
+        />
       </main>
     </div>
   );

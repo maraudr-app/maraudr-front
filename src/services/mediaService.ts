@@ -1,4 +1,5 @@
 import { api } from './api';
+import { tokenManager } from './tokenManager';
 
 export interface MediaFile {
     id: string;
@@ -23,19 +24,27 @@ export interface MediaFilter {
 }
 
 class MediaService {
-    private baseUrl = '/media';
+    private baseUrl = 'http://localhost:8087';
 
     async getMediaFiles(associationId: string, filter?: MediaFilter): Promise<MediaFile[]> {
         try {
-            const params = new URLSearchParams();
-            if (filter) {
-                Object.entries(filter).forEach(([key, value]) => {
-                    if (value) params.append(key, value);
-                });
-            }
+            const response = await api.get(`${this.baseUrl}/download/${associationId}`);
             
-            const response = await api.get(`${this.baseUrl}/association/${associationId}?${params.toString()}`);
-            return response.data;
+            // Mapper le format de réponse du backend au format attendu par le frontend
+            const mappedFiles: MediaFile[] = response.data.map((file: any) => ({
+                id: file.id,
+                name: file.fileName,
+                type: file.contentType.startsWith('image/') ? 'photo' : 'document',
+                url: file.url,
+                size: file.size || 0, // Le backend ne semble pas retourner la taille
+                uploadedAt: file.uploadedAt,
+                uploadedBy: file.uploadedBy || 'Utilisateur', // Valeur par défaut si non fournie
+                description: file.description,
+                category: file.category,
+                tags: file.tags || []
+            }));
+            
+            return mappedFiles;
         } catch (error) {
             console.error('Erreur lors de la récupération des fichiers média:', error);
             return [];
@@ -43,24 +52,21 @@ class MediaService {
     }
 
     async getPhotos(associationId: string, filter?: Omit<MediaFilter, 'type'>): Promise<MediaFile[]> {
-        return this.getMediaFiles(associationId, { ...filter, type: 'photo' });
+        const allFiles = await this.getMediaFiles(associationId, filter);
+        return allFiles.filter(file => file.type === 'photo');
     }
 
     async getDocuments(associationId: string, filter?: Omit<MediaFilter, 'type'>): Promise<MediaFile[]> {
-        return this.getMediaFiles(associationId, { ...filter, type: 'document' });
+        const allFiles = await this.getMediaFiles(associationId, filter);
+        return allFiles.filter(file => file.type === 'document');
     }
 
     async uploadFile(associationId: string, file: File, type: 'photo' | 'document', description?: string): Promise<MediaFile> {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('type', type);
-            formData.append('associationId', associationId);
-            if (description) {
-                formData.append('description', description);
-            }
 
-            const response = await api.post(`${this.baseUrl}/upload`, formData, {
+            const response = await api.post(`${this.baseUrl}/upload/${associationId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -72,9 +78,9 @@ class MediaService {
         }
     }
 
-    async deleteFile(fileId: string): Promise<boolean> {
+    async deleteFile(fileId: string, associationId: string): Promise<boolean> {
         try {
-            await api.delete(`${this.baseUrl}/${fileId}`);
+            await api.delete(`${this.baseUrl}/delete/${associationId}/document/${fileId}`);
             return true;
         } catch (error) {
             console.error('Erreur lors de la suppression du fichier:', error);
@@ -104,10 +110,12 @@ class MediaService {
 
     async getUploaders(associationId: string): Promise<string[]> {
         try {
-            const response = await api.get(`${this.baseUrl}/uploaders/${associationId}`);
+            // Endpoint temporaire - à ajuster selon l'API du backend
+            const response = await api.get(`${this.baseUrl}/users/${associationId}`);
             return response.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des uploaders:', error);
+            // Retourner une liste vide en cas d'erreur
             return [];
         }
     }

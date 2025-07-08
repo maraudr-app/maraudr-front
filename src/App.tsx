@@ -147,6 +147,7 @@ function App() {
                         <McpServer />
                       </ProtectedAssociationRoute>
                     } />
+
             </Route>
                   
                   {/* Route publique pour les informations d'association */}

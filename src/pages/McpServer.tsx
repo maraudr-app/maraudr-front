@@ -1,99 +1,304 @@
-import React, { useState } from 'react';
-
-const quickActions = [
-  { label: 'Voir le stock', value: 'stock' },
-  { label: 'Voir le planning', value: 'planning' },
-  { label: 'Afficher la map', value: 'map' },
-  { label: 'Voir les disponibilités', value: 'disponibilites' },
-];
+import React, { useState, useRef, useEffect } from 'react';
+import { chatService, ChatMessage } from '../services/chatService';
+import { 
+    PaperAirplaneIcon, 
+    ArrowPathIcon,
+    ChatBubbleLeftRightIcon,
+    Cog6ToothIcon,
+    XMarkIcon
+} from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 const McpServer: React.FC = () => {
-  const [query, setQuery] = useState('');
-  const [result, setResult] = useState<any>(null);
-  const [history, setHistory] = useState<{query: string, response: any}[]>([]);
-  const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [streamingResponse, setStreamingResponse] = useState('');
+    const [useStreaming, setUseStreaming] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  // Simule une requête IA/backend (à remplacer par un vrai appel API)
-  const sendRequest = async (req: string) => {
-    setLoading(true);
-    setTimeout(() => {
-      const fakeResponse = { message: `Réponse simulée pour la requête : "${req}"`, data: { type: req, content: '...' } };
-      setResult(fakeResponse);
-      setHistory(prev => [{ query: req, response: fakeResponse }, ...prev]);
-      setLoading(false);
-    }, 800);
-  };
+    // Auto-scroll vers le bas quand de nouveaux messages arrivent
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
-  const handleQuickAction = (value: string) => {
-    setQuery(value);
-    sendRequest(value);
-  };
+    useEffect(() => {
+        scrollToBottom();
+    }, [conversationHistory, streamingResponse]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      sendRequest(query.trim());
-    }
-  };
+    // Focus sur l'input au chargement
+    useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900 py-10 px-4">
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-maraudr-blue to-maraudr-orange bg-clip-text text-transparent mb-8 text-center">
-        Serveur MCP
-      </h1>
-      <form onSubmit={handleSubmit} className="mb-6 flex gap-2 max-w-2xl mx-auto">
-        <input
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          className="flex-1 px-4 py-2 border-2 border-maraudr-blue dark:border-maraudr-orange rounded focus:outline-none focus:ring-2 focus:ring-maraudr-blue dark:focus:ring-maraudr-orange bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
-          placeholder="Tapez une requête (ex: stock, planning, map...)"
-        />
-        <button type="submit" className="px-4 py-2 bg-gradient-to-r from-maraudr-blue to-maraudr-orange text-white rounded font-semibold hover:from-maraudr-orange hover:to-maraudr-blue transition-all" disabled={loading}>
-          Envoyer
-        </button>
-      </form>
-      <div className="mb-8 flex flex-wrap gap-3 justify-center max-w-2xl mx-auto">
-        {quickActions.map(action => (
-          <button
-            key={action.value}
-            onClick={() => handleQuickAction(action.value)}
-            className="px-4 py-2 bg-maraudr-blue/10 dark:bg-maraudr-orange/10 text-maraudr-blue dark:text-maraudr-orange rounded font-semibold hover:bg-maraudr-blue hover:text-white dark:hover:bg-maraudr-orange dark:hover:text-white transition-all border border-maraudr-blue/20 dark:border-maraudr-orange/20"
-            disabled={loading}
-          >
-            {action.label}
-          </button>
-        ))}
-      </div>
-      <div className="mb-8 max-w-2xl mx-auto">
-        <div className="text-lg font-semibold text-maraudr-blue dark:text-maraudr-orange mb-2">Résultat :</div>
-        <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 min-h-[80px] text-sm font-mono overflow-x-auto border border-maraudr-blue/10 dark:border-maraudr-orange/10">
-          {loading ? (
-            <span className="text-gray-400">Chargement...</span>
-          ) : result ? (
-            <pre>{JSON.stringify(result, null, 2)}</pre>
-          ) : (
-            <span className="text-gray-400">Aucun résultat pour l'instant.</span>
-          )}
+    const sendMessage = async (e?: React.FormEvent) => {
+        e?.preventDefault();
+        
+        if (!message.trim() || loading) return;
+
+        const userMessage: ChatMessage = {
+            role: 'user',
+            content: message.trim()
+        };
+
+        // Ajouter le message utilisateur à l'historique
+        const updatedHistory = chatService.manageConversationHistory(conversationHistory, userMessage);
+        setConversationHistory(updatedHistory);
+        
+        const currentMessage = message.trim();
+        setMessage('');
+        setLoading(true);
+        setStreamingResponse('');
+
+        try {
+            if (useStreaming) {
+                // Mode streaming
+                setIsStreaming(true);
+                await chatService.sendMessageStream(
+                    {
+                        message: currentMessage,
+                        conversationHistory: updatedHistory
+                    },
+                    (chunk: string) => {
+                        setStreamingResponse(prev => prev + chunk);
+                    },
+                    (fullResponse: string) => {
+                        const assistantMessage: ChatMessage = {
+                            role: 'assistant',
+                            content: fullResponse
+                        };
+                        setConversationHistory(prev => chatService.manageConversationHistory(prev, assistantMessage));
+                        setStreamingResponse('');
+                        setIsStreaming(false);
+                        setLoading(false);
+                    },
+                    (error: string) => {
+                        toast.error(`Erreur: ${error}`);
+                        setIsStreaming(false);
+                        setLoading(false);
+                    }
+                );
+            } else {
+                // Mode normal
+                const response = await chatService.sendMessage({
+                    message: currentMessage,
+                    conversationHistory: updatedHistory
+                });
+                
+                setConversationHistory(response.conversationHistory);
+                setLoading(false);
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Erreur lors de l\'envoi du message');
+            setLoading(false);
+            setIsStreaming(false);
+        }
+    };
+
+    const clearHistory = () => {
+        setConversationHistory([]);
+        setStreamingResponse('');
+        toast.success('Historique effacé');
+    };
+
+    const handleQuickAction = (action: string) => {
+        setMessage(action);
+    };
+
+    // Actions rapides dynamiques basées sur les capacités de l'API
+    const quickActions = [
+        { label: 'Voir le stock', value: 'Peux-tu me dire ce qu\'il y a dans le stock de mon association ?' },
+        { label: 'Voir le planning', value: 'Quels sont les événements prévus cette semaine ?' },
+        { label: 'Afficher la map', value: 'Peux-tu me montrer les points d\'intérêt sur la carte ?' },
+        { label: 'Voir les disponibilités', value: 'Qui est disponible pour les maraudes ce weekend ?' },
+    ];
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900">
+            {/* Header */}
+            <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+                <div className="max-w-4xl mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-gradient-to-r from-maraudr-blue to-maraudr-orange rounded-lg">
+                                <ChatBubbleLeftRightIcon className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold bg-gradient-to-r from-maraudr-blue to-maraudr-orange bg-clip-text text-transparent">
+                                    Assistant IA - Dog
+                                </h1>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Spécialisé dans la gestion d'association et des stocks
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                            {/* Toggle streaming */}
+                            <div className="flex items-center space-x-2">
+                                <label className="text-sm text-gray-600 dark:text-gray-400">Streaming</label>
+                                <button
+                                    onClick={() => setUseStreaming(!useStreaming)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                        useStreaming ? 'bg-maraudr-blue' : 'bg-gray-300 dark:bg-gray-600'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                            useStreaming ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+                            
+                            {/* Clear history */}
+                            <button
+                                onClick={clearHistory}
+                                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                title="Effacer l'historique"
+                            >
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto px-4 py-6">
+                {/* Quick Actions */}
+                <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Actions rapides
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                        {quickActions.map(action => (
+                            <button
+                                key={action.value}
+                                onClick={() => handleQuickAction(action.value)}
+                                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                disabled={loading}
+                            >
+                                {action.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Chat Messages */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+                    <div className="h-96 overflow-y-auto p-4">
+                        {conversationHistory.length === 0 && !isStreaming ? (
+                            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                                <ChatBubbleLeftRightIcon className="w-12 h-12 mb-4" />
+                                <p className="text-center">
+                                    Bonjour ! Je suis Dog, votre assistant spécialisé dans la gestion d'association.<br />
+                                    Posez-moi vos questions sur les stocks, le planning, ou la géolocalisation.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {conversationHistory.map((msg, index) => (
+                                    <div
+                                        key={index}
+                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                    >
+                                        <div
+                                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                                msg.role === 'user'
+                                                    ? 'bg-maraudr-blue text-white'
+                                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                                            }`}
+                                        >
+                                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                {/* Streaming response */}
+                                {isStreaming && streamingResponse && (
+                                    <div className="flex justify-start">
+                                        <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+                                            <p className="text-sm whitespace-pre-wrap">
+                                                {streamingResponse}
+                                                <span className="animate-pulse">▋</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Loading indicator */}
+                                {loading && !isStreaming && (
+                                    <div className="flex justify-start">
+                                        <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                                            <div className="flex items-center space-x-2">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-maraudr-blue"></div>
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    Dog réfléchit...
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+                </div>
+
+                {/* Input Form */}
+                <form onSubmit={sendMessage} className="flex space-x-3">
+                    <div className="flex-1 relative">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            placeholder="Posez votre question à Dog..."
+                            className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-maraudr-blue dark:focus:ring-maraudr-orange focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            disabled={loading}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={loading || !message.trim()}
+                        className="px-6 py-3 bg-gradient-to-r from-maraudr-blue to-maraudr-orange text-white rounded-lg font-semibold hover:from-maraudr-orange hover:to-maraudr-blue transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                    >
+                        {loading ? (
+                            <>
+                                <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                                <span>Envoi...</span>
+                            </>
+                        ) : (
+                            <>
+                                <PaperAirplaneIcon className="w-5 h-5" />
+                                <span>Envoyer</span>
+                            </>
+                        )}
+                    </button>
+                </form>
+
+                {/* Status */}
+                <div className="mt-4 text-center">
+                    <div className="inline-flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                        <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
+                        <span>
+                            {loading 
+                                ? (useStreaming ? 'Streaming en cours...' : 'Traitement...')
+                                : 'Prêt'
+                            }
+                        </span>
+                        {useStreaming && (
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-2 py-1 rounded">
+                                Streaming activé
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div className="max-w-2xl mx-auto">
-        <div className="text-lg font-semibold text-maraudr-blue dark:text-maraudr-orange mb-2">Historique des requêtes :</div>
-        <div className="bg-white dark:bg-gray-800 rounded p-4 max-h-48 overflow-y-auto text-xs border border-maraudr-blue/10 dark:border-maraudr-orange/10">
-          {history.length === 0 ? (
-            <span className="text-gray-400">Aucune requête envoyée.</span>
-          ) : (
-            history.map((item, idx) => (
-              <div key={idx} className="mb-2">
-                <div className="font-bold text-maraudr-blue dark:text-maraudr-orange">{item.query}</div>
-                <pre className="bg-gray-50 dark:bg-gray-900 rounded p-2 mt-1 border border-maraudr-blue/10 dark:border-maraudr-orange/10">{JSON.stringify(item.response, null, 2)}</pre>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default McpServer; 

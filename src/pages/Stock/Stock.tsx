@@ -12,7 +12,7 @@ import { Button } from '../../components/common/button/button';
 import { Select } from '../../components/common/select/select';
 import { Input } from '../../components/common/input/input';
 import { Dialog } from '@headlessui/react';
-import { XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon, MinusCircleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
 
@@ -43,6 +43,10 @@ export const Stock = () => {
     const [itemsPerPage] = useState(10);
     const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
     const [highlightedItemName, setHighlightedItemName] = useState<string | null>(null);
+    const [showReduceModal, setShowReduceModal] = useState(false);
+    const [itemToReduce, setItemToReduce] = useState<StockItem | null>(null);
+    const [reduceQuantity, setReduceQuantity] = useState('');
+    const [loadingReduce, setLoadingReduce] = useState(false);
 
     useEffect(() => {
         if (!selectedAssociation) {
@@ -561,10 +565,15 @@ export const Stock = () => {
                                                         ) : (
                                                             <>
                                                                 <Button
-                                                                    onClick={() => handleEditClick(item)}
-                                                                    className="text-blue-500 hover:text-blue-600 p-2"
+                                                                    onClick={() => {
+                                                                        setItemToReduce(item);
+                                                                        setShowReduceModal(true);
+                                                                        setReduceQuantity('');
+                                                                    }}
+                                                                    className="text-orange-500 hover:text-orange-600 p-2"
+                                                                    title="Réduire le stock"
                                                                 >
-                                                                    <FaPencilAlt className="h-4 w-4" />
+                                                                    <MinusCircleIcon className="h-5 w-5" />
                                                                 </Button>
                                                                 <Button
                                                                     onClick={() => handleDeleteClick(item.id)}
@@ -743,6 +752,76 @@ export const Stock = () => {
                 </div>
             </Dialog>
             
+            {showReduceModal && itemToReduce && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
+                        <h2 className="text-xl font-bold mb-4">Réduire le stock</h2>
+                        <div className="mb-4">
+                            <div className="mb-2 text-gray-700 dark:text-gray-200">
+                                <strong>Article :</strong> {itemToReduce.name}
+                            </div>
+                            <div className="mb-2 text-gray-700 dark:text-gray-200">
+                                <strong>Quantité actuelle :</strong> {itemToReduce.quantity}
+                            </div>
+                            <Input
+                                type="number"
+                                min={1}
+                                max={itemToReduce.quantity}
+                                value={reduceQuantity}
+                                onChange={e => setReduceQuantity(e.target.value)}
+                                placeholder="Quantité à retirer"
+                                className="w-full"
+                            />
+                            {reduceQuantity && Number(reduceQuantity) > itemToReduce.quantity && (
+                                <div className="text-red-500 text-sm mt-2">
+                                    La quantité à retirer ne peut pas dépasser la quantité actuelle.
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                onClick={() => {
+                                    setShowReduceModal(false);
+                                    setReduceQuantity('');
+                                    setItemToReduce(null);
+                                }}
+                                className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                            >
+                                Annuler
+                            </Button>
+                            <Button
+                                disabled={
+                                    loadingReduce ||
+                                    !reduceQuantity ||
+                                    Number(reduceQuantity) < 1 ||
+                                    Number(reduceQuantity) > itemToReduce.quantity
+                                }
+                                onClick={async () => {
+                                    setLoadingReduce(true);
+                                    try {
+                                        await stockService.reduceItemStock(itemToReduce.barCode, {
+                                            associationId: selectedAssociation.id,
+                                            quantity: Number(reduceQuantity),
+                                        });
+                                        toast.success('Stock réduit avec succès');
+                                        setShowReduceModal(false);
+                                        setReduceQuantity('');
+                                        setItemToReduce(null);
+                                        await fetchItems();
+                                    } catch (err) {
+                                        toast.error('Erreur lors de la réduction du stock');
+                                    } finally {
+                                        setLoadingReduce(false);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded bg-orange-600 text-white font-semibold hover:bg-orange-700 disabled:opacity-50"
+                            >
+                                {loadingReduce ? 'Traitement...' : 'Valider'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
     </div>
   );

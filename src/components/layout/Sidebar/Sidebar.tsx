@@ -12,6 +12,7 @@ import {
   UsersIcon,
   Bars3Icon,
   XMarkIcon,
+  DocumentIcon,
 } from '@heroicons/react/24/outline';
 import { FiCalendar } from "react-icons/fi";
 import {ArrowRightOnRectangleIcon} from "@heroicons/react/20/solid";
@@ -151,6 +152,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       key: 'mcp-server',
       showForManager: false
     },
+
   ];
 
   // Filtrer les éléments selon le rôle

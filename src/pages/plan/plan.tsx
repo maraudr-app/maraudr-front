@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, GeoJSON, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { 
@@ -75,6 +75,60 @@ function SetViewOnLoad({ coords }: { coords: [number, number] }) {
     return null;
 }
 
+// Composant pour afficher manuellement les routes sans utiliser GeoJSON
+const RouteRenderer: React.FC<{
+    geoJsonData: any,
+    color: string,
+    routeId: string,
+    opacity?: number
+}> = ({geoJsonData, color, routeId, opacity = 0.8}) => {
+    const [hasError, setHasError] = React.useState(false);
+    
+    if (hasError || !geoJsonData || !geoJsonData.features) {
+        return null;
+    }
+    
+    try {
+        return (
+            <>
+                {geoJsonData.features.map((feature: any, featureIndex: number) => {
+                    if (feature.geometry && feature.geometry.type === 'LineString' && feature.geometry.coordinates) {
+                        // Convertir les coordonnées [lng, lat] en [lat, lng] pour Leaflet
+                        const positions = feature.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]);
+                        
+                        return (
+                            <Polyline
+                                key={`${routeId}-${featureIndex}`}
+                                positions={positions}
+                                color={color}
+                                weight={4}
+                                opacity={opacity}
+                            >
+                                {feature.properties && feature.properties.summary && (
+                                    <Popup>
+                                        <div className="p-2">
+                                            <h4 className="font-semibold">
+                                                {routeId === 'example-route' ? 'Route d\'exemple' : 'Informations de route'}
+                                            </h4>
+                                            <p>Distance: {feature.properties.summary.distance} m</p>
+                                            <p>Durée: {feature.properties.summary.duration} s</p>
+                                        </div>
+                                    </Popup>
+                                )}
+                            </Polyline>
+                        );
+                    }
+                    return null;
+                })}
+            </>
+        );
+    } catch (error) {
+        console.error('Erreur dans RouteRenderer:', error);
+        setHasError(true);
+        return null;
+    }
+};
+
 const Plan: React.FC = () => {
     const { selectedAssociation } = useAssoStore();
     const { user } = useAuthStore();
@@ -107,23 +161,21 @@ const Plan: React.FC = () => {
     const [isCreatingRoute, setIsCreatingRoute] = useState(false);
     const [selectedRoutePoint, setSelectedRoutePoint] = useState<{ lat: number; lng: number } | null>(null);
     const [showRouteCreationModal, setShowRouteCreationModal] = useState(false);
+    const [routesDisabled, setRoutesDisabled] = useState(false);
     
-    // Route d'exemple pour tester l'affichage
-    const [exampleRoute] = useState<RouteResponse>({
-        id: 'example-route',
-        associationId: '894979cd-bb2e-479a-a633-64be60f45079',
-        eventId: '3830d4c2-5853-4f7c-a88d-074478f3fccf',
-        startLat: 48.8471,
-        startLng: 2.3866,
-        centerLat: 48.8471,
-        centerLng: 2.3866,
-        radiusKm: 10,
-        geoJson: '{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"LineString","coordinates":[[2.386576,48.847205],[2.3866,48.8471],[2.4,48.85],[2.41,48.86],[2.42,48.87],[2.43,48.88]]},"properties":{"summary":{"distance":2500.0,"duration":900.0}}}]}',
-        googleMapsUrl: 'https://www.google.com/maps/dir/48.8471,2.3866/48.8471,2.3866',
-        distanceKm: 2.5,
-        durationMinutes: 15,
-        createdAt: new Date().toISOString()
-    });
+    // États pour les itinéraires existants
+    const [itineraries, setItineraries] = useState<any[]>([]);
+    const [loadingItineraries, setLoadingItineraries] = useState(false);
+    const [selectedItinerary, setSelectedItinerary] = useState<string | null>(null);
+    
+    // États pour l'autocomplétion d'adresse
+    const [addressQuery, setAddressQuery] = useState('');
+    const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+    const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+    const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+    const [selectedAddress, setSelectedAddress] = useState<any>(null);
+    const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [selectionMode, setSelectionMode] = useState<'map' | 'address'>('map');
     
     // Position par défaut (Paris)
     const [mapCenter] = useState<[number, number]>([48.8566, 2.3522]);
@@ -235,6 +287,77 @@ const Plan: React.FC = () => {
         loadEvents();
     }, [selectedAssociation?.id]);
 
+    // Charger les itinéraires existants
+    useEffect(() => {
+        const loadItineraries = async () => {
+            if (!selectedAssociation?.id) return;
+            
+            try {
+                setLoadingItineraries(true);
+                console.log('🔄 Chargement des itinéraires pour l\'association:', selectedAssociation.id);
+                
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Token d\'authentification non trouvé');
+                }
+                
+                const response = await fetch(`http://localhost:8084/itineraries?associationId=${selectedAssociation.id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const itinerariesData = await response.json();
+                console.log('✅ Itinéraires récupérés:', itinerariesData);
+                console.log('📊 Structure des données:', {
+                    type: typeof itinerariesData,
+                    isArray: Array.isArray(itinerariesData),
+                    length: Array.isArray(itinerariesData) ? itinerariesData.length : 'N/A',
+                    sample: Array.isArray(itinerariesData) && itinerariesData.length > 0 ? itinerariesData[0] : 'Aucun échantillon'
+                });
+                
+                // Vérifier que les itinéraires appartiennent à l'association
+                if (Array.isArray(itinerariesData)) {
+                    const filteredItineraries = itinerariesData.filter(itinerary => {
+                        const belongsToAssociation = itinerary.associationId === selectedAssociation.id;
+                        if (!belongsToAssociation) {
+                            console.warn('⚠️ Itinéraire ignoré - associationId différent:', {
+                                itineraryId: itinerary.id,
+                                itineraryAssociationId: itinerary.associationId,
+                                currentAssociationId: selectedAssociation.id
+                            });
+                        }
+                        return belongsToAssociation;
+                    });
+                    
+                    console.log('🔍 Filtrage par association:', {
+                        total: itinerariesData.length,
+                        filtered: filteredItineraries.length,
+                        associationId: selectedAssociation.id
+                    });
+                    
+                    setItineraries(filteredItineraries);
+                } else {
+                    console.warn('⚠️ Les données ne sont pas un tableau:', itinerariesData);
+                    setItineraries([]);
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors du chargement des itinéraires:', error);
+                toast.error('Erreur lors du chargement des itinéraires');
+            } finally {
+                setLoadingItineraries(false);
+            }
+        };
+
+        loadItineraries();
+    }, [selectedAssociation?.id]);
+
     // Fonction pour calculer l'itinéraire vers un point
     const handleShowRoute = async (point: GeoPoint) => {
         if (!userPosition) {
@@ -274,6 +397,13 @@ const Plan: React.FC = () => {
             notes: newPointNotes
         });
         setShowPointModal(true);
+    };
+
+    // Gérer le clic sur la carte pour créer une route
+    const handleMapClickForRoute = (lat: number, lng: number) => {
+        if (!isCreatingRoute || !selectedEvent || selectionMode !== 'map') return;
+        
+        setSelectedRoutePoint({ lat, lng });
     };
 
     // Ajouter un nouveau point
@@ -325,14 +455,6 @@ const Plan: React.FC = () => {
         return new Date(timestamp).toLocaleString('fr-FR');
     };
 
-    // Gérer le clic sur la carte pour créer une route
-    const handleMapClickForRoute = (lat: number, lng: number) => {
-        if (!isCreatingRoute || !selectedEvent) return;
-        
-        setSelectedRoutePoint({ lat, lng });
-        setShowRouteCreationModal(true);
-    };
-
     // Créer une route pour un événement
     const handleCreateRoute = async () => {
         if (!selectedEvent || !selectedRoutePoint || !selectedAssociation?.id) return;
@@ -372,12 +494,19 @@ const Plan: React.FC = () => {
     const parseRouteGeoJson = (geoJsonString: string) => {
         try {
             console.log('🔄 Parsing GeoJSON:', geoJsonString);
+            
+            // Vérifier que la chaîne n'est pas vide
+            if (!geoJsonString || geoJsonString.trim() === '') {
+                console.warn('⚠️ GeoJSON vide ou null');
+                return null;
+            }
+            
             const parsed = JSON.parse(geoJsonString);
             console.log('✅ GeoJSON parsé:', parsed);
             
-            // Si le GeoJSON n'a pas de type, on l'ajoute
+            // Si le GeoJSON n'a pas de type mais a des features, on ajoute le type
             if (!parsed.type && parsed.features) {
-                console.log('🔧 Ajout du type FeatureCollection au GeoJSON');
+                console.log('🔧 Ajout du type FeatureCollection au GeoJSON (auto-correction)');
                 parsed.type = 'FeatureCollection';
             }
             
@@ -387,12 +516,132 @@ const Plan: React.FC = () => {
                 return null;
             }
             
-            console.log('✅ GeoJSON final:', parsed);
+            // Vérifier que chaque feature a une géométrie valide
+            if (parsed.features && Array.isArray(parsed.features)) {
+                for (let i = 0; i < parsed.features.length; i++) {
+                    const feature = parsed.features[i];
+                    if (!feature.geometry || !feature.geometry.type || !feature.geometry.coordinates) {
+                        console.warn(`⚠️ Feature ${i} invalide:`, feature);
+                        return null;
+                    }
+                    
+                    // Vérifier que les coordonnées sont des nombres
+                    if (feature.geometry.coordinates && Array.isArray(feature.geometry.coordinates)) {
+                        const coords = feature.geometry.coordinates;
+                        if (coords.length > 0 && Array.isArray(coords[0])) {
+                            // Pour LineString, vérifier chaque point
+                            for (let j = 0; j < coords.length; j++) {
+                                const point = coords[j];
+                                if (!Array.isArray(point) || point.length < 2 || 
+                                    typeof point[0] !== 'number' || typeof point[1] !== 'number') {
+                                    console.warn(`⚠️ Coordonnées invalides dans feature ${i}, point ${j}:`, point);
+                                    return null;
+                                }
+                            }
+                        } else if (coords.length >= 2) {
+                            // Pour Point, vérifier les coordonnées
+                            if (typeof coords[0] !== 'number' || typeof coords[1] !== 'number') {
+                                console.warn(`⚠️ Coordonnées invalides dans feature ${i}:`, coords);
+                                return null;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            console.log('✅ GeoJSON final validé:', parsed);
             return parsed;
         } catch (error) {
             console.error('❌ Erreur lors du parsing du GeoJSON:', error);
             console.error('📄 Contenu du GeoJSON:', geoJsonString);
             return null;
+        }
+    };
+
+    // Fonction d'autocomplétion d'adresse avec debounce
+    const searchAddresses = async (query: string) => {
+        if (!query || query.trim().length < 3) {
+            setAddressSuggestions([]);
+            setShowAddressSuggestions(false);
+            return;
+        }
+
+        try {
+            setIsLoadingAddresses(true);
+            console.log('🔍 Recherche d\'adresses pour:', query);
+            
+            // Récupérer le token depuis le store d'authentification
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token d\'authentification non trouvé');
+            }
+            
+            const response = await fetch(`http://localhost:8084/autocomplete?text=${encodeURIComponent(query)}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            console.log('📡 Réponse API:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('📄 Données reçues:', data);
+            
+            if (data.features && Array.isArray(data.features)) {
+                console.log('✅ Suggestions trouvées:', data.features.length);
+                setAddressSuggestions(data.features);
+                setShowAddressSuggestions(true);
+            } else {
+                console.log('⚠️ Aucune suggestion trouvée');
+                setAddressSuggestions([]);
+                setShowAddressSuggestions(false);
+            }
+        } catch (error) {
+            console.error('❌ Erreur lors de la recherche d\'adresses:', error);
+            setAddressSuggestions([]);
+            setShowAddressSuggestions(false);
+        } finally {
+            setIsLoadingAddresses(false);
+        }
+    };
+
+    // Fonction pour gérer la saisie d'adresse avec debounce
+    const handleAddressInput = (value: string) => {
+        setAddressQuery(value);
+        setSelectedAddress(null);
+        
+        // Annuler le timeout précédent
+        if (debounceTimeout) {
+            clearTimeout(debounceTimeout);
+        }
+        
+        // Créer un nouveau timeout (debounce de 500ms)
+        const timeout = setTimeout(() => {
+            searchAddresses(value);
+        }, 500);
+        
+        setDebounceTimeout(timeout);
+    };
+
+    // Fonction pour sélectionner une adresse
+    const handleAddressSelect = (address: any) => {
+        setSelectedAddress(address);
+        setAddressQuery(address.properties.formatted || address.properties.name);
+        setShowAddressSuggestions(false);
+        setAddressSuggestions([]);
+        
+        // Extraire les coordonnées
+        const lat = address.properties.lat;
+        const lng = address.properties.lon;
+        
+        if (lat && lng) {
+            setSelectedRoutePoint({ lat, lng });
+            setShowRouteCreationModal(true);
         }
     };
 
@@ -491,20 +740,156 @@ const Plan: React.FC = () => {
                     </div>
                 )}
 
-                {/* Instruction de création de route */}
+                {/* Instruction de création de route avec autocomplétion d'adresse */}
                 {isCreatingRoute && selectedEvent && (
                     <div className="mt-4 p-4 bg-blue-100 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <div className="flex items-center space-x-2 text-blue-800 dark:text-blue-400 mb-2">
                             <MapIcon className="w-5 h-5" />
-                            <span className="font-medium">Mode création de route activé</span>
+                            <span className="font-medium">Création de route pour "{selectedEvent.title}"</span>
                         </div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                            Cliquez sur la carte pour sélectionner le point de départ de la route pour l'événement "{selectedEvent.title}".
-                        </p>
+                        
+                        {/* Choix du mode de sélection */}
+                        <div className="mb-4">
+                            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                                Choisissez comment sélectionner le point de départ :
+                            </p>
+                            
+                            <div className="flex space-x-3 mb-3">
+                                <button
+                                    onClick={() => {
+                                        setSelectionMode('map');
+                                        setAddressQuery('');
+                                        setSelectedAddress(null);
+                                        setShowAddressSuggestions(false);
+                                    }}
+                                    className={`px-3 py-2 text-sm rounded-lg transition-all ${
+                                        selectionMode === 'map'
+                                            ? 'bg-blue-500 text-white' 
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                    }`}
+                                >
+                                    📍 Clic sur la carte
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectionMode('address');
+                                        setSelectedRoutePoint(null);
+                                    }}
+                                    className={`px-3 py-2 text-sm rounded-lg transition-all ${
+                                        selectionMode === 'address'
+                                            ? 'bg-blue-500 text-white' 
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                    }`}
+                                >
+                                    🔍 Recherche d'adresse
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Mode clic sur la carte */}
+                        {selectionMode === 'map' && (
+                            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                                <p className="text-sm text-green-700 dark:text-green-300">
+                                    Cliquez sur la carte pour sélectionner le point de départ.
+                                </p>
+                                {selectedRoutePoint && (
+                                    <div className="mt-2 text-xs text-green-600 dark:text-green-400">
+                                        Point sélectionné : {selectedRoutePoint.lat.toFixed(6)}, {selectedRoutePoint.lng.toFixed(6)}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        {/* Mode recherche d'adresse */}
+                        {selectionMode === 'address' && (
+                            <div className="space-y-3">
+                                <p className="text-sm text-blue-700 dark:text-blue-300">
+                                    Saisissez l'adresse de départ :
+                                </p>
+                                
+                                {/* Champ de saisie d'adresse avec autocomplétion */}
+                                <div className="relative">
+                                    <Input
+                                        placeholder="Saisissez une adresse (ex: ESGI, Paris)"
+                                        value={addressQuery}
+                                        onChange={(e) => handleAddressInput(e.target.value)}
+                                        className="w-full"
+                                    />
+                                    
+                                    {/* Indicateur de chargement */}
+                                    {isLoadingAddresses && (
+                                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Suggestions d'adresses */}
+                                    {showAddressSuggestions && addressSuggestions.length > 0 && (
+                                        <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                                            {addressSuggestions.map((address, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                                                    onClick={() => handleAddressSelect(address)}
+                                                >
+                                                    <div className="font-medium text-sm text-gray-900 dark:text-white">
+                                                        {address.properties.name || address.properties.formatted}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {address.properties.formatted}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Adresse sélectionnée */}
+                                {selectedAddress && (
+                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                                        <div className="text-sm text-green-700 dark:text-green-300">
+                                            <strong>Adresse sélectionnée :</strong>
+                                        </div>
+                                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                                            {selectedAddress.properties.formatted}
+                                        </div>
+                                        <div className="text-xs text-green-600 dark:text-green-400">
+                                            Coordonnées : {selectedAddress.properties.lat.toFixed(6)}, {selectedAddress.properties.lon.toFixed(6)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        {/* Bouton de confirmation */}
+                        {(selectedRoutePoint || selectedAddress) && (
+                            <button
+                                onClick={() => {
+                                    if (selectedRoutePoint) {
+                                        setShowRouteCreationModal(true);
+                                    } else if (selectedAddress) {
+                                        setSelectedRoutePoint({
+                                            lat: selectedAddress.properties.lat,
+                                            lng: selectedAddress.properties.lon
+                                        });
+                                        setShowRouteCreationModal(true);
+                                    }
+                                }}
+                                className="mt-3 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-all"
+                            >
+                                Confirmer et créer la route
+                            </button>
+                        )}
+                        
                         <button
                             onClick={() => {
                                 setIsCreatingRoute(false);
                                 setSelectedEvent(null);
+                                setAddressQuery('');
+                                setSelectedAddress(null);
+                                setSelectedRoutePoint(null);
+                                setShowAddressSuggestions(false);
+                                setSelectionMode('map');
                             }}
                             className="mt-3 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-all"
                         >
@@ -591,8 +976,23 @@ const Plan: React.FC = () => {
                             ))}
 
                             {/* Affichage des routes d'événements */}
-                            {[...routes, exampleRoute].map((route, index) => {
+                            {!routesDisabled && routes.map((route, index) => {
+                                console.log(`🔍 Traitement de la route ${index}:`, route.id);
+                                console.log(`📄 GeoJSON brut:`, route.geoJson);
+                                
                                 const geoJsonData = parseRouteGeoJson(route.geoJson);
+                                console.log(`✅ GeoJSON parsé pour route ${index}:`, geoJsonData);
+                                
+                                const isValidGeoJson = geoJsonData && geoJsonData.type === 'FeatureCollection' && Array.isArray(geoJsonData.features) && geoJsonData.features.length > 0;
+                                console.log(`✅ Validation GeoJSON route ${index}:`, isValidGeoJson);
+                                
+                                // Si le GeoJSON est invalide, désactiver toutes les routes
+                                if (geoJsonData && !isValidGeoJson) {
+                                    console.error(`❌ GeoJSON invalide détecté pour la route ${route.id}, désactivation des routes`);
+                                    setRoutesDisabled(true);
+                                    return null;
+                                }
+                                
                                 return (
                                     <React.Fragment key={route.id || index}>
                                         {/* Marker pour le point de départ de la route */}
@@ -629,31 +1029,131 @@ const Plan: React.FC = () => {
                                             </Popup>
                                         </Marker>
                                         
-                                        {/* Affichage du GeoJSON de la route */}
-                                        {geoJsonData && geoJsonData.features?.length > 0 && (
-                                            <GeoJSON 
-                                                data={geoJsonData}
-                                                style={{
-                                                    color: route.id === 'example-route' ? '#10B981' : '#3B82F6',
-                                                    weight: 4,
-                                                    opacity: 0.8
-                                                }}
-                                                onEachFeature={(feature, layer) => {
-                                                    if (feature.properties && feature.properties.summary) {
-                                                        layer.bindPopup(`
-                                                            <div class="p-2">
-                                                                <h4 class="font-semibold">${route.id === 'example-route' ? 'Route d\'exemple' : 'Informations de route'}</h4>
-                                                                <p>Distance: ${feature.properties.summary.distance} m</p>
-                                                                <p>Durée: ${feature.properties.summary.duration} s</p>
-                                                            </div>
-                                                        `);
-                                                    }
-                                                }}
+                                        {/* Affichage du GeoJSON de la route avec protection d'erreur */}
+                                        {geoJsonData && isValidGeoJson && (
+                                            <RouteRenderer
+                                                key={`route-renderer-${route.id}-${index}`}
+                                                geoJsonData={geoJsonData}
+                                                color={route.id === 'example-route' ? '#10B981' : '#3B82F6'}
+                                                routeId={route.id}
                                             />
                                         )}
                                     </React.Fragment>
                                 );
                             })}
+                            
+                            {/* Affichage des itinéraires existants */}
+                            {itineraries.map((itinerary, index) => {
+                                console.log(`🗺️ Traitement de l'itinéraire ${index}:`, itinerary.id, 'Association:', itinerary.associationId);
+                                
+                                const geoJsonData = parseRouteGeoJson(itinerary.geoJson);
+                                console.log(`✅ GeoJSON parsé pour itinéraire ${index}:`, geoJsonData);
+                                
+                                const isValidGeoJson = geoJsonData && geoJsonData.type === 'FeatureCollection' && Array.isArray(geoJsonData.features) && geoJsonData.features.length > 0;
+                                console.log(`✅ Validation GeoJSON itinéraire ${index}:`, isValidGeoJson);
+                                
+                                const isSelected = selectedItinerary === itinerary.id;
+                                const markerColor = isSelected ? '#FF6B6B' : '#8B5CF6'; // Rouge si sélectionné, violet sinon
+                                const routeColor = isSelected ? '#FF6B6B' : '#8B5CF6';
+                                const opacity = isSelected ? 1.0 : 0.6; // Plus opaque si sélectionné
+                                
+                                return (
+                                    <React.Fragment key={`itinerary-${itinerary.id || index}`}>
+                                        {/* Marker pour le point de départ de l'itinéraire */}
+                                        <Marker
+                                            position={[itinerary.startLat, itinerary.startLng]}
+                                            icon={createCustomIcon(markerColor)}
+                                        >
+                                            <Popup>
+                                                <div className="p-2 min-w-[200px]">
+                                                    <h3 className="font-semibold text-gray-900 mb-2">
+                                                        Itinéraire #{index + 1}
+                                                    </h3>
+                                                    <div className="text-xs text-gray-500 space-y-1 mb-3">
+                                                        <div className="text-xs text-gray-400">
+                                                            Lat: {itinerary.startLat.toFixed(6)}, Lng: {itinerary.startLng.toFixed(6)}
+                                                        </div>
+                                                        {itinerary.associationId && (
+                                                            <div className="text-xs text-gray-400">
+                                                                Association: {itinerary.associationId}
+                                                            </div>
+                                                        )}
+                                                        {itinerary.distanceKm && (
+                                                            <div className="text-xs text-gray-400">
+                                                                Distance: {itinerary.distanceKm} km
+                                                            </div>
+                                                        )}
+                                                        {itinerary.durationMinutes && (
+                                                            <div className="text-xs text-gray-400">
+                                                                Durée: {itinerary.durationMinutes} min
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {itinerary.googleMapsUrl && (
+                                                        <a
+                                                            href={itinerary.googleMapsUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-lg transition-all"
+                                                        >
+                                                            <MapIcon className="w-4 h-4" />
+                                                            <span>Voir sur Google Maps</span>
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </Popup>
+                                        </Marker>
+                                        
+                                        {/* Affichage du GeoJSON de l'itinéraire */}
+                                        {geoJsonData && isValidGeoJson && (
+                                            <RouteRenderer
+                                                key={`itinerary-renderer-${itinerary.id}-${index}`}
+                                                geoJsonData={geoJsonData}
+                                                color={routeColor}
+                                                routeId={`itinerary-${itinerary.id}`}
+                                                opacity={opacity}
+                                            />
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })}
+                            
+                            {/* Message si les routes sont désactivées */}
+                            {routesDisabled && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    backgroundColor: 'rgba(255, 0, 0, 0.9)',
+                                    color: 'white',
+                                    padding: '15px',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    zIndex: 1000,
+                                    textAlign: 'center'
+                                }}>
+                                    <div style={{marginBottom: '10px'}}>
+                                        ⚠️ Affichage des routes désactivé
+                                    </div>
+                                    <div style={{fontSize: '12px', marginBottom: '10px'}}>
+                                        Un GeoJSON invalide a été détecté
+                                    </div>
+                                    <button
+                                        onClick={() => setRoutesDisabled(false)}
+                                        style={{
+                                            backgroundColor: 'white',
+                                            color: 'red',
+                                            border: 'none',
+                                            padding: '5px 10px',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Réactiver
+                                    </button>
+                                </div>
+                            )}
                         </MapContainer>
                     )}
                 </div>
@@ -775,6 +1275,88 @@ const Plan: React.FC = () => {
                         )}
                     </div>
 
+                    {/* Section des itinéraires existants */}
+                    <div className="border-t border-gray-200 dark:border-gray-700">
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                Itinéraires existants
+                            </h2>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                                {loadingItineraries ? (
+                                    <div className="flex items-center space-x-2">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                                        <span>Chargement...</span>
+                                    </div>
+                                ) : (
+                                    `${itineraries.length} itinéraire${itineraries.length !== 1 ? 's' : ''} trouvé${itineraries.length !== 1 ? 's' : ''}`
+                                )}
+                            </div>
+                            
+                            {/* Liste des itinéraires */}
+                            <div className="max-h-64 overflow-y-auto">
+                                <div className="p-4 space-y-3">
+                                    {itineraries.length === 0 ? (
+                                        <div className="text-center text-gray-500 dark:text-gray-400">
+                                            <MapIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                            <p className="text-sm">Aucun itinéraire</p>
+                                        </div>
+                                    ) : (
+                                        itineraries.map((itinerary, index) => {
+                                            const isSelected = selectedItinerary === itinerary.id;
+                                            return (
+                                            <div
+                                                key={itinerary.id || index}
+                                                className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                                                    isSelected 
+                                                        ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' 
+                                                        : 'border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                                                }`}
+                                                onClick={() => setSelectedItinerary(isSelected ? null : itinerary.id)}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center mb-2">
+                                                            <div className={`w-3 h-3 rounded-full mr-2 ${
+                                                                isSelected ? 'bg-red-500' : 'bg-purple-500'
+                                                            }`}></div>
+                                                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                Itinéraire #{index + 1}
+                                                                {isSelected && <span className="ml-2 text-xs text-red-600 dark:text-red-400">(Sélectionné)</span>}
+                                                            </h4>
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                            {itinerary.distanceKm && (
+                                                                <div>Distance: {itinerary.distanceKm} km</div>
+                                                            )}
+                                                            {itinerary.durationMinutes && (
+                                                                <div>Durée: {itinerary.durationMinutes} min</div>
+                                                            )}
+                                                            <div className="mt-1">
+                                                                {itinerary.startLat.toFixed(4)}, {itinerary.startLng.toFixed(4)}
+                                                            </div>
+                                                        </div>
+                                                        {itinerary.googleMapsUrl && (
+                                                            <a
+                                                                href={itinerary.googleMapsUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded transition-all"
+                                                            >
+                                                                <MapIcon className="w-3 h-3" />
+                                                                <span>Google Maps</span>
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Section des routes d'événements */}
                     <div className="border-t border-gray-200 dark:border-gray-700">
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -782,7 +1364,7 @@ const Plan: React.FC = () => {
                                 Routes d'événements
                             </h2>
                             <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                                {routes.length + 1} route{(routes.length + 1) !== 1 ? 's' : ''} créée{(routes.length + 1) !== 1 ? 's' : ''} (incluant l'exemple)
+                                {routes.length} route{routes.length !== 1 ? 's' : ''} créée{routes.length !== 1 ? 's' : ''}
                             </div>
                             
                             {/* Bouton pour créer une nouvelle route */}
@@ -804,38 +1386,7 @@ const Plan: React.FC = () => {
                         {/* Liste des routes */}
                         <div className="max-h-64 overflow-y-auto">
                             <div className="p-4 space-y-3">
-                                {/* Route d'exemple */}
-                                <div className="p-3 border border-green-200 dark:border-green-700 rounded-lg bg-green-50 dark:bg-green-900/20">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center mb-2">
-                                                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    Route d'exemple
-                                                </h4>
-                                            </div>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                Démonstration de l'affichage GeoJSON
-                                            </p>
-                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                <div>Distance: {exampleRoute.distanceKm} km</div>
-                                                <div>Durée: {exampleRoute.durationMinutes} min</div>
-                                                <div className="mt-1">
-                                                    {exampleRoute.startLat.toFixed(4)}, {exampleRoute.startLng.toFixed(4)}
-                                                </div>
-                                            </div>
-                                            <a
-                                                href={exampleRoute.googleMapsUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-all"
-                                            >
-                                                <MapIcon className="w-3 h-3" />
-                                                <span>Google Maps</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+
                                 
                                 {/* Routes créées par l'utilisateur */}
                                 {routes.map((route, index) => {
@@ -1060,7 +1611,7 @@ const Plan: React.FC = () => {
             )}
 
             {/* Modal de confirmation de création de route */}
-            {selectedRoutePoint && selectedEvent && (
+            {showRouteCreationModal && selectedRoutePoint && selectedEvent && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -1101,6 +1652,9 @@ const Plan: React.FC = () => {
                                     setSelectedRoutePoint(null);
                                     setSelectedEvent(null);
                                     setIsCreatingRoute(false);
+                                    setShowRouteCreationModal(false);
+                                    setAddressQuery('');
+                                    setSelectedAddress(null);
                                 }}
                                 className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                             >

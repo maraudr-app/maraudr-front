@@ -265,5 +265,23 @@ export const stockService = {
         
         // Mapper la réponse du backend vers le format frontend
         return mapBackendItemToFrontend(response.data);
+    },
+
+    reduceItemStock: async (barcode: string, data: { associationId: string, quantity: number }) => {
+        const token = await tokenManager.ensureValidToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+        await axios.put(
+            `${API_URL}/item/reduce/${barcode}`,
+            data,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            }
+        );
     }
 }; 
