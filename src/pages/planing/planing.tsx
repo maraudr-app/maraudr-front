@@ -913,8 +913,8 @@ const Planning: React.FC = () => {
                                     A
                                 </div>
                                 <div className="ml-3">
-                                    <div className="font-medium">Association</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Toutes les disponibilités</div>
+                                    <div className="font-medium">Planning de l'association</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Tous les plannings</div>
                                 </div>
                             </button>
                         </div>
@@ -1097,48 +1097,52 @@ const Planning: React.FC = () => {
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-fit">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                                 {selectedUser === null ?
-                                    `Disponibilités de l'association` :
+                                    `Planning de l'association` :
                                     `Disponibilités de ${teamUsers.find(u => u.id === selectedUser)?.firstname} ${teamUsers.find(u => u.id === selectedUser)?.lastname}`
                                 }
                             </h2>
 
                             <div className="space-y-3 max-h-96 overflow-y-auto">
-                                {(selectedUser ? getDisponibilitiesByUser(selectedUser) : allDisponibilities).map((dispo) => {
-                                    const user = teamUsers.find(u => u.id === dispo.userId);
-                                    return (
-                                        <div
-                                            key={dispo.id}
-                                            className="border border-green-200 dark:border-green-600 rounded-md p-3 bg-green-50 dark:bg-green-900/20"
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center mb-2">
-                                                        <ClockIcon className="h-4 w-4 text-green-600 mr-2" />
-                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {user ? `${user.firstname} ${user.lastname}` : 'Utilisateur inconnu'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                            <span className="font-medium">Début:</span> {new Date(dispo.start).toLocaleString('fr-FR')}
-                                                        </p>
-                                                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                            <span className="font-medium">Fin:</span> {new Date(dispo.end).toLocaleString('fr-FR')}
-                                                        </p>
-                                                    </div>
+                                {selectedUser === null ? (
+                                    // Afficher la liste des événements de l'association
+                                    allEvents.length > 0 ? (
+                                        allEvents.map(event => (
+                                            <div key={event.id} className="border border-blue-200 dark:border-blue-600 rounded-lg p-3 bg-blue-50 dark:bg-blue-900/20">
+                                                <div className="font-semibold text-gray-900 dark:text-white">{event.title}</div>
+                                                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                    <span className="font-medium">Début :</span> {new Date(event.beginningDate).toLocaleDateString('fr-FR')} {new Date(event.beginningDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                                 </div>
+                                                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                    <span className="font-medium">Fin :</span> {new Date(event.endDate).toLocaleDateString('fr-FR')} {new Date(event.endDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                </div>
+                                                {event.location && (
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">Lieu : {event.location}</div>
+                                                )}
+                                                {event.description && (
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">{event.description}</div>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                                            Aucun planning n'est enregistré pour cette association.
+                                        </div>
+                                    )
+                                ) : (
+                                    // Afficher les disponibilités de l'utilisateur sélectionné
+                                    getDisponibilitiesByUser(selectedUser).map((dispo) => (
+                                        <div key={dispo.id} className="border border-green-200 dark:border-green-600 rounded-lg p-3 bg-green-50 dark:bg-green-900/20">
+                                            <div className="font-semibold text-gray-900 dark:text-white">
+                                                {teamUsers.find(u => u.id === selectedUser)?.firstname} {teamUsers.find(u => u.id === selectedUser)?.lastname}
+                                            </div>
+                                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                Début : {new Date(dispo.start).toLocaleString('fr-FR')}
+                                            </div>
+                                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                Fin : {new Date(dispo.end).toLocaleString('fr-FR')}
                                             </div>
                                         </div>
-                                    );
-                                })}
-
-                                {(selectedUser ? getDisponibilitiesByUser(selectedUser) : allDisponibilities).length === 0 && (
-                                    <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                                        {selectedUser ?
-                                            `${teamUsers.find(u => u.id === selectedUser)?.firstname} n'a pas encore enregistré de disponibilités.` :
-                                            "Aucune disponibilité n'est enregistrée pour cette association."
-                                        }
-                                    </div>
+                                    ))
                                 )}
                             </div>
 
