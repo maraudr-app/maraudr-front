@@ -30,6 +30,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 // Interfaces pour TypeScript
 interface DashboardData {
@@ -44,6 +45,39 @@ interface DashboardData {
   userEvents: Event[];
 }
 
+// Ajout de la fonction utilitaire pour regrouper les événements par mois (similaire à planning)
+const getEventsPerMonth = (events: Event[]) => {
+  const months: { [key: string]: number } = {};
+  events.forEach(event => {
+    const date = new Date(event.beginningDate);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    months[key] = (months[key] || 0) + 1;
+  });
+  // Retourne un tableau trié par date
+  return Object.entries(months)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, count]) => ({ month, count }));
+};
+
+// Composant EventStatsGraph (identique à celui du planning)
+const EventStatsGraph = ({ events }: { events: Event[] }) => {
+  const data = getEventsPerMonth(events);
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full mb-6">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">Évolution des événements par mois</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={3} dot={{ r: 4 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
 const DashBoard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -53,6 +87,7 @@ const DashBoard = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     stockItems: 0,
     lowStockItems: 0,
@@ -362,6 +397,42 @@ const DashBoard = () => {
 
   const statsCards = getStatsCards();
 
+  // Fonction utilitaire pour regrouper les événements et participants par mois pour une année donnée
+  const getEventsAndParticipantsPerMonth = (events: Event[], year: number) => {
+    const months: { [key: string]: { events: number; participants: number } } = {};
+    
+    // Initialiser tous les mois de l'année
+    for (let month = 1; month <= 12; month++) {
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      months[key] = { events: 0, participants: 0 };
+    }
+    
+    // Compter les événements et participants par mois
+    events.forEach(event => {
+      const date = new Date(event.beginningDate);
+      if (date.getFullYear() === year) {
+        const key = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        months[key].events += 1;
+        months[key].participants += event.participantsIds?.length || 0;
+      }
+    });
+    
+    // Retourner un tableau trié par mois
+    return Object.entries(months)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => ({ 
+        month, 
+        events: data.events, 
+        participants: data.participants 
+      }));
+  };
+
+  // Générer les années disponibles (année courante et 2 années précédentes)
+  const getAvailableYears = () => {
+    const currentYear = new Date().getFullYear();
+    return [currentYear - 2, currentYear - 1, currentYear];
+  };
+
   if (loading) {
     return (
       <div className="w-full flex items-center justify-center min-h-96">
@@ -447,234 +518,301 @@ const DashBoard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calendrier d'activité */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {isManager ? 'Activité de l\'association' : 'Mon activité'}
-            </h3>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => navigateMonth('prev')}
-                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ChevronLeftIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              </button>
-              <div className="text-sm text-gray-500 dark:text-gray-400 min-w-[120px] text-center">
-                {getMonthName(selectedMonth)}
-              </div>
-              <button
-                onClick={() => navigateMonth('next')}
-                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            {/* Légende */}
-            <div className="flex items-center space-x-4 text-xs">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
-                <span className="text-gray-600 dark:text-gray-400">Faible (1-2)</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-orange-500 rounded-full mr-1"></div>
-                <span className="text-gray-600 dark:text-gray-400">Modérée (3-5)</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
-                <span className="text-gray-600 dark:text-gray-400">Élevée (6+)</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calendrier d'activité - 1/3 de la largeur */}
+        <div className="lg:col-span-1">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {isManager ? 'Activité de l\'association' : 'Mon activité'}
+              </h3>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => navigateMonth('prev')}
+                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <ChevronLeftIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                </button>
+                <div className="text-sm text-gray-500 dark:text-gray-400 min-w-[120px] text-center">
+                  {getMonthName(selectedMonth)}
+                </div>
+                <button
+                  onClick={() => navigateMonth('next')}
+                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                </button>
               </div>
             </div>
+            
+            <div className="space-y-4">
+              {/* Légende */}
+              <div className="flex items-center space-x-4 text-xs">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                  <span className="text-gray-600 dark:text-gray-400">Faible (1-2)</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-orange-500 rounded-full mr-1"></div>
+                  <span className="text-gray-600 dark:text-gray-400">Modérée (3-5)</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+                  <span className="text-gray-600 dark:text-gray-400">Élevée (6+)</span>
+                </div>
+              </div>
 
-            {/* Calendrier mini */}
-            <div className="grid grid-cols-7 gap-1">
-              {/* En-têtes des jours */}
-              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, index) => (
-                <div key={index} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 p-1">
-                  {day}
-                </div>
-              ))}
-              
-                             {/* Jours du mois avec activité */}
-               {(() => {
-                 const daysInMonth = getDaysInMonth(selectedMonth);
-                 const monthActivities = generateRealMonthActivities(selectedMonth);
-                 const today = new Date();
-                 const isCurrentMonth = selectedMonth.getMonth() === today.getMonth() && 
-                                       selectedMonth.getFullYear() === today.getFullYear();
-                 
-                 return Array.from({ length: daysInMonth }, (_, i) => {
-                   const dayNumber = i + 1;
-                   const activities = monthActivities[i];
-                   const intensity = activities === 0 ? 'bg-gray-100 dark:bg-gray-700' :
-                                   activities <= 2 ? 'bg-green-200 dark:bg-green-800' :
-                                   activities <= 5 ? 'bg-orange-200 dark:bg-orange-800' :
-                                   'bg-red-200 dark:bg-red-800';
-                   
-                   const isToday = isCurrentMonth && dayNumber === today.getDate();
-                   
-                   return (
-                     <div
-                       key={dayNumber}
-                       className={`aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-all hover:scale-110 ${intensity} ${
-                         isToday ? 'ring-2 ring-blue-500 font-bold' : ''
-                       }`}
-                       title={`${dayNumber} ${getMonthName(selectedMonth).split(' ')[0]} - ${activities} activités`}
-                       onClick={() => handleDayClick(selectedMonth, dayNumber)}
-                     >
-                       {dayNumber}
-                     </div>
-                   );
-                 });
-               })()}
-            </div>
+              {/* Calendrier mini */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* En-têtes des jours */}
+                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, index) => (
+                  <div key={index} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 p-1">
+                    {day}
+                  </div>
+                ))}
+                
+                {/* Jours du mois avec activité */}
+                {(() => {
+                  const daysInMonth = getDaysInMonth(selectedMonth);
+                  const monthActivities = generateRealMonthActivities(selectedMonth);
+                  const today = new Date();
+                  const isCurrentMonth = selectedMonth.getMonth() === today.getMonth() && 
+                                        selectedMonth.getFullYear() === today.getFullYear();
+                  
+                  return Array.from({ length: daysInMonth }, (_, i) => {
+                    const dayNumber = i + 1;
+                    const activities = monthActivities[i];
+                    const intensity = activities === 0 ? 'bg-gray-100 dark:bg-gray-700' :
+                                    activities <= 2 ? 'bg-green-200 dark:bg-green-800' :
+                                    activities <= 5 ? 'bg-orange-200 dark:bg-orange-800' :
+                                    'bg-red-200 dark:bg-red-800';
+                    
+                    const isToday = isCurrentMonth && dayNumber === today.getDate();
+                    
+                    return (
+                      <div
+                        key={dayNumber}
+                        className={`aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-all hover:scale-110 ${intensity} ${
+                          isToday ? 'ring-2 ring-blue-500 font-bold' : ''
+                        }`}
+                        title={`${dayNumber} ${getMonthName(selectedMonth).split(' ')[0]} - ${activities} activités`}
+                        onClick={() => handleDayClick(selectedMonth, dayNumber)}
+                      >
+                        {dayNumber}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
 
-            {/* Statistiques rapides */}
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-center">
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {dashboardData.userEvents.length}
+              {/* Statistiques rapides */}
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {dashboardData.userEvents.length}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Mes missions</div>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Mes missions</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length}
+                <div className="text-center">
+                  <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                    {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">À venir</div>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">À venir</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {dashboardData.userEvents.filter(event => new Date(event.endDate) < new Date()).length}
+                <div className="text-center">
+                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    {dashboardData.userEvents.filter(event => new Date(event.endDate) < new Date()).length}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Terminées</div>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Terminées</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Résumé de stock (Manager) ou Prochaines missions (Membre) */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {isManager ? 'Résumé du stock' : 'Prochaines missions'}
-          </h3>
-          
-          <div className="space-y-4">
+        {/* Graphe d'activité des événements pour les managers (2/3 de la largeur), prochaines missions pour membres */}
+        <div className="lg:col-span-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             {isManager ? (
-              // Vue Manager : Résumé de stock
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {dashboardData.stockItems}
-                    </div>
-                    <div className="text-sm text-blue-600 dark:text-blue-400">Articles total</div>
-                  </div>
-                  <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                      {dashboardData.lowStockItems}
-                    </div>
-                    <div className="text-sm text-red-600 dark:text-red-400">Stock critique</div>
+              <div className="w-full">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Évolution des événements et participants
+                  </h3>
+                  <div className="flex items-center space-x-3">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Année :
+                    </label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {getAvailableYears().map(year => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-                <div className="text-center py-4">
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                    Consultez la page Stock pour plus de détails
-                  </p>
-                  <Link
-                    to="/maraudApp/stock"
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-blue-600 transition-colors"
-                  >
-                    Voir le stock complet
-                  </Link>
+                
+                <div className="w-full h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart 
+                      data={getEventsAndParticipantsPerMonth(dashboardData.userEvents, selectedYear)} 
+                      margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.2)" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#6b7280"
+                        fontSize={12}
+                        tickFormatter={(value) => {
+                          const [year, month] = value.split('-');
+                          const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+                          return monthNames[parseInt(month) - 1];
+                        }}
+                      />
+                      <YAxis 
+                        allowDecimals={false} 
+                        stroke="#6b7280"
+                        fontSize={12}
+                        domain={[0, 'dataMax + 1']}
+                        tickCount={6}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                        labelFormatter={(value) => {
+                          const [year, month] = value.split('-');
+                          const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+                          return `${monthNames[parseInt(month) - 1]} ${year}`;
+                        }}
+                        formatter={(value, name) => [
+                          value, 
+                          name === 'events' ? 'Événements' : 'Participants'
+                        ]}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="events" 
+                        name="events"
+                        stroke="#f97316" 
+                        strokeWidth={3} 
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="participants" 
+                        name="participants"
+                        stroke="#3b82f6" 
+                        strokeWidth={3} 
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                
+                <div className="mt-4 flex justify-center space-x-8 text-sm">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-orange-500 rounded-full mr-2"></div>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Événements ({dashboardData.userEvents.filter(e => new Date(e.beginningDate).getFullYear() === selectedYear).length})
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Participants ({dashboardData.userEvents
+                        .filter(e => new Date(e.beginningDate).getFullYear() === selectedYear)
+                        .reduce((total, event) => total + (event.participantsIds?.length || 0), 0)})
+                    </span>
+                  </div>
                 </div>
               </div>
             ) : (
-              // Vue Membre : Prochaines missions
-              <div className="space-y-3">
-                {dashboardData.userEvents
-                  .filter(event => new Date(event.beginningDate) > new Date())
-                  .slice(0, 3) // Afficher seulement les 3 prochaines
-                  .map((event, index) => {
-                    const eventDate = new Date(event.beginningDate);
-                    const endDate = new Date(event.endDate);
-                    const isToday = eventDate.toDateString() === new Date().toDateString();
-                    const isTomorrow = eventDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
-                    
-                    let dateText = '';
-                    if (isToday) {
-                      dateText = `Aujourd'hui ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-                    } else if (isTomorrow) {
-                      dateText = `Demain ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-                    } else {
-                      dateText = eventDate.toLocaleDateString('fr-FR', { 
-                        weekday: 'long', 
-                        day: 'numeric', 
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      });
-                    }
-                    
-                    return (
-                      <div 
-                        key={event.id} 
-                        className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                        onClick={() => {
-                          setSelectedEvent(event);
-                          setShowEventModal(true);
-                        }}
-                      >
-                        <div className="flex items-center">
-                          <MapPinIcon className="w-5 h-5 text-blue-500 mr-3" />
-                          <div>
-                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                              {event.title}
-                            </p>
-                            <p className="text-xs text-blue-600 dark:text-blue-300">
-                              {dateText}
-                            </p>
-                            {event.location && (
-                              <p className="text-xs text-blue-500 dark:text-blue-400">
-                                📍 {event.location}
+              <>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Prochaines missions</h3>
+                <div className="space-y-3">
+                  {dashboardData.userEvents
+                    .filter(event => new Date(event.beginningDate) > new Date())
+                    .slice(0, 3)
+                    .map((event, index) => {
+                      const eventDate = new Date(event.beginningDate);
+                      const endDate = new Date(event.endDate);
+                      const isToday = eventDate.toDateString() === new Date().toDateString();
+                      const isTomorrow = eventDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                      let dateText = '';
+                      if (isToday) {
+                        dateText = `Aujourd'hui ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                      } else if (isTomorrow) {
+                        dateText = `Demain ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                      } else {
+                        dateText = eventDate.toLocaleDateString('fr-FR', { 
+                          weekday: 'long', 
+                          day: 'numeric', 
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+                      }
+                      return (
+                        <div 
+                          key={event.id} 
+                          className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setShowEventModal(true);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <MapPinIcon className="w-5 h-5 text-blue-500 mr-3" />
+                            <div>
+                              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                                {event.title}
                               </p>
-                            )}
+                              <p className="text-xs text-blue-600 dark:text-blue-300">
+                                {dateText}
+                              </p>
+                              {event.location && (
+                                <p className="text-xs text-blue-500 dark:text-blue-400">
+                                  📍 {event.location}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                
-                {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length === 0 && (
-                  <div className="text-center py-8">
-                    <CalendarDaysIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      Aucune mission prévue
-                    </p>
-                    <Link
-                      to="/maraudApp/planing"
-                      className="inline-flex items-center mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                    >
-                      Voir le planning
-                    </Link>
-                  </div>
-                )}
-                
-                {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length > 3 && (
-                  <div className="text-center pt-2">
-                    <Link
-                      to="/maraudApp/planing"
-                      className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                    >
-                      Voir toutes les missions ({dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length})
-                    </Link>
-                  </div>
-                )}
-              </div>
+                      );
+                    })}
+                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length === 0 && (
+                    <div className="text-center py-8">
+                      <CalendarDaysIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Aucune mission prévue
+                      </p>
+                      <Link
+                        to="/maraudApp/planing"
+                        className="inline-flex items-center mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                      >
+                        Voir le planning
+                      </Link>
+                    </div>
+                  )}
+                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length > 3 && (
+                    <div className="text-center pt-2">
+                      <Link
+                        to="/maraudApp/planing"
+                        className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                      >
+                        Voir toutes les missions ({dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length})
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

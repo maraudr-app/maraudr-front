@@ -18,6 +18,7 @@ import CreateEventModal from '../../components/planning/CreateEventModal';
 import { planningService } from '../../services/planningService';
 import { Event } from '../../types/planning/event';
 import { Input } from '../../components/common/input/input';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Interface simplifiée pour les disponibilités par utilisateur
 interface UserAvailability {
@@ -633,6 +634,39 @@ const Planning: React.FC = () => {
         }).map(dispo => dispo.id)
       );
       return uniqueDispoIds.size;
+    };
+
+    // Fonction utilitaire pour regrouper les événements par mois
+    const getEventsPerMonth = (events: Event[]) => {
+        const months: { [key: string]: number } = {};
+        events.forEach(event => {
+            const date = new Date(event.beginningDate);
+            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            months[key] = (months[key] || 0) + 1;
+        });
+        // Retourne un tableau trié par date
+        return Object.entries(months)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([month, count]) => ({ month, count }));
+    };
+
+    // Composant EventStatsGraph
+    const EventStatsGraph = ({ events }: { events: Event[] }) => {
+        const data = getEventsPerMonth(events);
+        return (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">Évolution des événements par mois</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={3} dot={{ r: 4 }} />
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
+        );
     };
 
     // Rendu pour les managers
