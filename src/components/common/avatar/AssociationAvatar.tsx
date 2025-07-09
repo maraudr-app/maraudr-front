@@ -13,14 +13,28 @@ export const AssociationAvatar: React.FC<AssociationAvatarProps> = ({
 }) => {
   // Fonction pour générer les initiales
   const getInitials = (name: string) => {
-    if (!name) return '';
-    const words = name.split(' ').filter(Boolean);
-    if (words.length === 0) return '';
+    if (!name || typeof name !== 'string') {
+      return '';
+    }
+    
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return '';
+    }
+    
+    const words = trimmedName.split(' ').filter(Boolean);
+    if (words.length === 0) {
+      return '';
+    }
     
     let initials = '';
     for (let i = 0; i < Math.min(words.length, 3); i++) {
-      initials += words[i].charAt(0);
+      const word = words[i].trim();
+      if (word) {
+        initials += word.charAt(0);
+      }
     }
+    
     return initials.toUpperCase();
   };
 

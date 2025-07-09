@@ -44,7 +44,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
   };
 
   return (
-    <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg border shadow-lg max-w-sm w-full ${getBackgroundClass()}`}>
+    <div className={`fixed top-4 right-4 z-[9999] p-4 rounded-lg border shadow-lg max-w-sm w-full ${getBackgroundClass()}`}>
       <div className="flex items-center">
         {getIcon()}
         <p className="ml-3 text-sm font-medium text-gray-900 dark:text-white flex-1">

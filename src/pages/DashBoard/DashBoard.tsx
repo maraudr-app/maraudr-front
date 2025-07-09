@@ -25,6 +25,7 @@ import { stockService } from '../../services/stockService';
 import { userService } from '../../services/userService';
 import { planningService } from '../../services/planningService';
 import { Event } from '../../types/planning/event';
+import { Disponibility } from '../../types/disponibility/disponibility';
 import { MembershipStatusAlert } from '../../components/common/alert/MembershipStatusAlert';
 import { 
   ChevronDownIcon,
@@ -88,6 +89,7 @@ const DashBoard = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [allDisponibilities, setAllDisponibilities] = useState<Disponibility[]>([]);
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     stockItems: 0,
     lowStockItems: 0,
@@ -252,6 +254,12 @@ const DashBoard = () => {
         const availability = await userService.getDisponibilities(selectedAssociation.id);
         setDashboardData(prev => ({ ...prev, activeDisponibilities: availability?.length || 0 }));
 
+        // Charger toutes les disponibilités pour le calcul des personnes disponibles
+        if (user?.userType === 'Manager') {
+          const allAvailabilities = await userService.getAllDisponibilities(selectedAssociation.id);
+          setAllDisponibilities(allAvailabilities || []);
+        }
+
         // Charger les événements de l'utilisateur (pour tous les utilisateurs)
         const userEvents = await planningService.getMyEventsByAssociation(selectedAssociation.id);
         
@@ -312,17 +320,44 @@ const DashBoard = () => {
     return created >= startOfMonth && created <= now;
   }).length;
 
+  // Fonction pour calculer le nombre de personnes disponibles aujourd'hui
+  const getAvailablePeopleToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Compter les disponibilités actives aujourd'hui
+    const availableToday = allDisponibilities.filter(dispo => {
+      const start = new Date(dispo.start);
+      const end = new Date(dispo.end);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      return today >= start && today <= end;
+    });
+    
+    // Retourner le nombre de personnes uniques disponibles
+    const uniquePeople = new Set(availableToday.map(dispo => dispo.userId));
+    return uniquePeople.size;
+  };
+
   // Données des cartes selon le rôle
   const getStatsCards = () => {
     if (isManager) {
       return [
         {
-          title: "Membres de l'équipe",
-          value: dashboardData.teamMembers.toString(),
-          variation: teamAddedThisMonth,
+          title: "Personnes disponibles aujourd'hui",
+          value: getAvailablePeopleToday().toString(),
+          variation: 0,
           icon: <UsersIcon className="w-6 h-6 text-orange-500" />,
           iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-          description: 'Total'
+          description: 'Disponibles',
+          action: (
+            <Link
+              to="/maraudApp/planing"
+              className="mt-2 inline-flex items-center text-xs text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
+            >
+              Voir le planning
+            </Link>
+          )
         },
         {
           title: 'Articles en stock',

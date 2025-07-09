@@ -64,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                 try {
                     await useAuthStore.getState().fetchUser();
                 } catch (error) {
-                    // Error reloading user data silencieuse
+                    // Error silencieuse
                 }
             }
         };
@@ -91,8 +91,42 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
     }, [selectedAssociation]);
 
     const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
-        if (!firstName || !lastName) return '';
-        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+        // Nettoyer et valider les entrées
+        const cleanFirstName = firstName?.trim();
+        const cleanLastName = lastName?.trim();
+        
+        // Si on a un prénom et nom valides, utiliser les premières lettres
+        if (cleanFirstName && cleanLastName) {
+            return `${cleanFirstName.charAt(0)}${cleanLastName.charAt(0)}`.toUpperCase();
+        }
+        
+        // Si on a seulement un prénom valide
+        if (cleanFirstName && !cleanLastName) {
+            return cleanFirstName.charAt(0).toUpperCase();
+        }
+        
+        // Si on a seulement un nom valide
+        if (!cleanFirstName && cleanLastName) {
+            return cleanLastName.charAt(0).toUpperCase();
+        }
+        
+        // Si on n'a ni prénom ni nom, essayer d'extraire de l'email
+        if (user?.email) {
+            const emailParts = user.email.split('@')[0];
+            if (emailParts.includes('.')) {
+                const parts = emailParts.split('.');
+                return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+            } else {
+                return emailParts.charAt(0).toUpperCase();
+            }
+        }
+        
+        // Fallback : première lettre du nom d'utilisateur
+        if (user?.sub) {
+            return user.sub.charAt(0).toUpperCase();
+        }
+        
+        return "U";
     };
 
     const getAssociationInitials = (name: string | undefined) => {
