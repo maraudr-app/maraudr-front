@@ -498,8 +498,56 @@ const Planning: React.FC = () => {
         const query = eventSearchQuery.toLowerCase();
         return selectedDateEvents.filter(event => 
             event.title.toLowerCase().includes(query) ||
-            (event.description && event.description.toLowerCase().includes(query))
+            (event.description && event.description.toLowerCase().includes(query)) ||
+            (event.location && event.location.toLowerCase().includes(query))
         );
+    };
+
+    // Ajout d'une fonction utilitaire pour savoir si un événement est passé
+    const isEventPast = (event: Event) => {
+        const now = new Date();
+        const end = new Date(event.endDate);
+        // Si la date de fin est avant aujourd'hui
+        if (end < now && (end.toDateString() !== now.toDateString())) return true;
+        // Si la date de fin est aujourd'hui, compare l'heure
+        if (end.toDateString() === now.toDateString()) {
+            return end.getTime() < now.getTime();
+        }
+        return end < now;
+    };
+
+    // Ajoute une fonction utilitaire pour savoir si tous les événements d'un jour sont passés
+    const areAllEventsPastForDate = (date: Date) => {
+        const events = getEventsForDate(date);
+        if (events.length === 0) return false;
+        return events.every(event => isEventPast(event));
+    };
+
+    // Ajoute une fonction utilitaire pour savoir si un événement a commencé
+    const isEventStarted = (event: Event) => {
+        const now = new Date();
+        const start = new Date(event.beginningDate);
+        return start < now;
+    };
+
+    // Ajoute une fonction utilitaire pour savoir si un événement est en cours
+    const isEventOngoing = (event: Event) => {
+        const now = new Date();
+        const start = new Date(event.beginningDate);
+        const end = new Date(event.endDate);
+        return start < now && now < end;
+    };
+
+    // Ajoute des helpers pour désactiver individuellement les champs date/heure
+    const isStartDatePast = (event: Event) => {
+        const now = new Date();
+        const start = new Date(event.beginningDate);
+        return start < now;
+    };
+    const isEndDatePast = (event: Event) => {
+        const now = new Date();
+        const end = new Date(event.endDate);
+        return end < now;
     };
 
     // Vérifier l'authentification
@@ -597,7 +645,7 @@ const Planning: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* Navbar fixe style Stock */}
+            {/* Navbar fixe */}
             <nav className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300" style={{ left: sidebarWidth }}>
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center gap-3 pl-7">
@@ -694,7 +742,7 @@ const Planning: React.FC = () => {
                         </div>
                     </div>
                     {/* Calendrier asso */}
-                    <div className="w-full md:w-5/12">
+                    <div className={`w-full ${selectedUser ? 'md:w-5/12' : 'md:w-1/2'}`}>
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 text-center">
                                 Planning de l'association
@@ -737,7 +785,11 @@ const Planning: React.FC = () => {
                                     let bgColor = 'bg-white dark:bg-gray-800';
                                     let textColor = 'text-gray-700 dark:text-gray-300';
                                     let borderColor = 'border-gray-100 dark:border-gray-700';
-                                    if (eventCount === 1) {
+                                    if (isPastDate && eventCount > 0) {
+                                        bgColor = 'bg-violet-500';
+                                        textColor = 'text-white';
+                                        borderColor = 'border-violet-600';
+                                    } else if (eventCount === 1) {
                                         bgColor = 'bg-green-500';
                                         textColor = 'text-white';
                                         borderColor = 'border-green-500';
@@ -753,16 +805,15 @@ const Planning: React.FC = () => {
                                     return (
                                         <div
                                             key={index}
-                                            onClick={() => !isPastDate && eventCount > 0 && handleDateClick(day)}
+                                            onClick={() => eventCount > 0 && handleDateClick(day)}
                                             className={`aspect-square rounded-md border transition-all duration-200
                                                 ${bgColor} ${textColor} ${borderColor}
                                                 ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''}
-                                                ${eventCount > 0 && !isPastDate ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:brightness-110 shadow-sm' : ''}
-                                                ${isPastDate ? 'opacity-50 cursor-not-allowed' : ''}
+                                                ${eventCount > 0 ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:brightness-110 shadow-sm' : ''}
                                             `}
                                         >
-                                            <div className="h-full flex flex-col items-center justify-center p-1">
-                                                <div className="text-sm font-semibold">{day.getDate()}</div>
+                                            <div className="h-full flex flex-col items-center justify-center p-0.5">
+                                                <div className="text-xs font-semibold">{day.getDate()}</div>
                                                 {eventCount > 0 && (
                                                     <div className="text-xs opacity-90 mt-0.5">{eventCount}</div>
                                                 )}
@@ -775,10 +826,11 @@ const Planning: React.FC = () => {
                                 ))}
                             </div>
                             {/* Légende asso */}
-                            <div className="mt-4 flex flex-wrap gap-4 text-sm justify-center">
-                                <div className="flex items-center"><div className="w-3 h-3 bg-green-500 border border-green-600 rounded mr-2"></div><span>1 événement</span></div>
-                                <div className="flex items-center"><div className="w-3 h-3 bg-orange-500 border border-orange-600 rounded mr-2"></div><span>2 événements</span></div>
-                                <div className="flex items-center"><div className="w-3 h-3 bg-red-500 border border-red-600 rounded mr-2"></div><span>3+ événements</span></div>
+                            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2 text-xs justify-center items-center">
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded mr-1.5"></div><span>1 événement</span></div>
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-orange-500 border border-orange-600 rounded mr-1.5"></div><span>2 événements</span></div>
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded mr-1.5"></div><span>3+ événements</span></div>
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-violet-500 border border-violet-600 rounded mr-1.5"></div><span>Événement(s) passé(s)</span></div>
                             </div>
                         </div>
                     </div>
@@ -891,191 +943,6 @@ const Planning: React.FC = () => {
                     onEventCreated={handleEventCreated}
                 />
 
-                {/* Modal de modification d'événement - Vraie version */}
-                {showEditEventModal && editingEvent && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
-                        <div className="relative top-10 mx-auto p-6 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                            <div className="mb-6">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                        Modifier l'événement
-                                    </h3>
-                                    <button
-                                        onClick={() => {
-                                            setShowEditEventModal(false);
-                                            setEditingEvent(null);
-                                        }}
-                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    >
-                                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            {/* Formulaire de modification */}
-                            <form onSubmit={async (e) => {
-                                e.preventDefault();
-                                if (!editingEvent) return;
-                                
-                                const updatedEvent = {
-                                    id: editingEvent.id,
-                                    title: editFormData.title,
-                                    description: editFormData.description,
-                                    location: editFormData.location,
-                                    beginningDate: editFormData.beginningDate,
-                                    endDate: editFormData.endDate,
-                                    participantsIds: editSelectedParticipants
-                                };
-                                
-                                try {
-                                    setUpdateLoading(true);
-                                    await planningService.updateEvent(editingEvent.id, updatedEvent);
-                                    console.log('Événement mis à jour avec succès');
-                                    
-                                    // Recharger les événements
-                                    loadAllEvents();
-                                    
-                                    // Fermer le modal
-                                    setShowEditEventModal(false);
-                                    setEditingEvent(null);
-                                    
-                                    toast.success('Événement mis à jour avec succès !');
-                                } catch (error) {
-                                    console.error('Erreur lors de la mise à jour:', error);
-                                    toast.error('Erreur lors de la mise à jour de l\'événement');
-                                } finally {
-                                    setUpdateLoading(false);
-                                }
-                            }}>
-                                <div className="space-y-4">
-                                    {/* Titre et Lieu sur la même ligne */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Input
-                                            name="title"
-                                            type="text"
-                                            placeholder="Titre de l'événement"
-                                            value={editFormData.title}
-                                            onChange={(e) => setEditFormData(prev => ({ ...prev, title: e.target.value }))}
-                                            required
-                                        />
-                                        <Input
-                                            name="location"
-                                            type="text"
-                                            placeholder="Lieu"
-                                            value={editFormData.location}
-                                            onChange={(e) => setEditFormData(prev => ({ ...prev, location: e.target.value }))}
-                                        />
-                                    </div>
-
-                                    {/* Description */}
-                                    <div>
-                                        <textarea
-                                            name="description"
-                                            rows={3}
-                                            placeholder="Description"
-                                            value={editFormData.description}
-                                            onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                                        />
-                                    </div>
-
-                                    {/* Dates */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Input
-                                            name="beginningDate"
-                                            type="datetime-local"
-                                            placeholder="Date de début"
-                                            value={editFormData.beginningDate}
-                                            onChange={(e) => setEditFormData(prev => ({ ...prev, beginningDate: e.target.value }))}
-                                            required
-                                        />
-                                        <Input
-                                            name="endDate"
-                                            type="datetime-local"
-                                            placeholder="Date de fin"
-                                            value={editFormData.endDate}
-                                            onChange={(e) => setEditFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Sélection des participants */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Participants ({editSelectedParticipants.length} sélectionné{editSelectedParticipants.length > 1 ? 's' : ''})
-                                        </label>
-                                        <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-gray-50 dark:bg-gray-700">
-                                            {teamUsers.map(user => (
-                                                <div key={user.id} className="flex items-center mb-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        id={`edit-participant-${user.id}`}
-                                                        checked={editSelectedParticipants.includes(user.id)}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setEditSelectedParticipants(prev => [...prev, user.id]);
-                                                            } else {
-                                                                setEditSelectedParticipants(prev => prev.filter(id => id !== user.id));
-                                                            }
-                                                        }}
-                                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                                    />
-                                                    <label 
-                                                        htmlFor={`edit-participant-${user.id}`}
-                                                        className="ml-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer flex items-center"
-                                                    >
-                                                        <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
-                                                            {user.firstname ? user.firstname.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                                                        </div>
-                                                        {user.firstname ? `${user.firstname} ${user.lastname || ''}` : user.email}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                            {teamUsers.length === 0 && (
-                                                <p className="text-gray-500 dark:text-gray-400 text-sm">Aucun membre d'équipe disponible</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Boutons d'action */}
-                                <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowEditEventModal(false);
-                                            setEditingEvent(null);
-                                        }}
-                                        disabled={updateLoading}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
-                                    >
-                                        Annuler
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={updateLoading}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center"
-                                    >
-                                        {updateLoading ? (
-                                            <>
-                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Sauvegarde...
-                                            </>
-                                        ) : (
-                                            'Sauvegarder les modifications'
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
                 {/* Modal de confirmation de suppression */}
                 {showDeleteConfirmModal && eventToDelete && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
@@ -1138,87 +1005,117 @@ const Planning: React.FC = () => {
                                         </svg>
                                     </button>
                                 </div>
-                                
+                                {/* Champ de recherche */}
+                                <div className="mb-4">
+                                    <input
+                                        type="text"
+                                        value={eventSearchQuery}
+                                        onChange={e => setEventSearchQuery(e.target.value)}
+                                        placeholder="Rechercher par titre, description ou lieu..."
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                    />
+                                </div>
                                 {/* Content */}
                                 <div className="space-y-4 max-h-96 overflow-y-auto">
-                                    {selectedDateEvents.map((event, index) => (
-                                        <div
-                                            key={event.id}
-                                            className="border border-blue-200 dark:border-blue-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20"
-                                        >
-                                            <div className="flex justify-between items-start mb-3">
-                                                <h4 className="font-semibold text-gray-900 dark:text-white">
-                                                    {event.title}
-                                                </h4>
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 rounded-full">
-                                                        Événement {index + 1}
-                                                    </span>
-                                                    
-                                                    {/* Boutons d'action pour manager/organisateur */}
-                                                    {canEditEvent(event) && (
-                                                        <div className="flex space-x-1">
-                                                            <button
-                                                                onClick={() => handleEditEvent(event)}
-                                                                className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded transition-colors"
-                                                                title="Modifier l'événement"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                                </svg>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteEvent(event)}
-                                                                className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors"
-                                                                title="Supprimer l'événement"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                            </button>
+                                    {getFilteredEvents().map((event, index) => {
+                                        const past = isEventPast(event);
+                                        return (
+                                            <div
+                                                key={event.id}
+                                                className={`border rounded-lg p-4 transition cursor-pointer ${past ? 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600' : 'border-blue-200 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20'} hover:shadow-md`}
+                                                onClick={() => handleEditEvent(event)}
+                                            >
+                                                {past ? (
+                                                    <>
+                                                        <div className="mb-1 text-base font-bold text-center text-violet-700 dark:text-violet-300 uppercase">Événement passé</div>
+                                                        <div className="mb-2 text-xs text-center text-gray-700 dark:text-gray-300 italic">{event.title}</div>
+                                                    </>
+                                                ) : (
+                                                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                                                        {event.title}
+                                                    </h4>
+                                                )}
+                                                <div className="flex justify-between items-start mb-3">
+                                                    {!past && (
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 rounded-full">
+                                                                Événement {index + 1}
+                                                            </span>
+                                                            {/* Boutons d'action pour manager/organisateur */}
+                                                            {canEditEvent(event) && (
+                                                                <div className="flex space-x-1">
+                                                                    <button
+                                                                        onClick={e => { e.stopPropagation(); handleEditEvent(event); }}
+                                                                        className={`p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded transition-colors`}
+                                                                        title="Modifier l'événement"
+                                                                    >
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                        </svg>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={e => { e.stopPropagation(); handleDeleteEvent(event); }}
+                                                                        className={`p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors`}
+                                                                        title="Supprimer l'événement"
+                                                                    >
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                        <CalendarIcon className="h-4 w-4 mr-2" />
+                                                        <span>
+                                                            {new Date(event.beginningDate).toLocaleDateString('fr-FR')} 
+                                                            {' de '}
+                                                            {new Date(event.beginningDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {' à '}
+                                                            {new Date(event.endDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                    {event.description && (
+                                                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                                                            <span className="font-medium">Description:</span> {event.description}
+                                                        </div>
+                                                    )}
+                                                    {event.location && (
+                                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                            <span>{event.location}</span>
+                                                        </div>
+                                                    )}
+                                                    {event.participantsIds && event.participantsIds.length > 0 && (
+                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                            <span className="font-medium">Participants :</span> {
+                                                                event.participantsIds
+                                                                    .map(pid => {
+                                                                        const user = teamUsers.find(u => u.id === pid);
+                                                                        return user ? `${user.firstname} ${user.lastname}`.trim() : '';
+                                                                    })
+                                                                    .filter(Boolean)
+                                                                    .join(', ')
+                                                            }
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                            
-                                            <div className="space-y-2">
-                                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                    <CalendarIcon className="h-4 w-4 mr-2" />
-                                                    <span>
-                                                        {new Date(event.beginningDate).toLocaleDateString('fr-FR')} 
-                                                        {' de '}
-                                                        {new Date(event.beginningDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                                        {' à '}
-                                                        {new Date(event.endDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                </div>
-                                                
-                                                {event.description && (
-                                                    <div className="text-sm text-gray-700 dark:text-gray-300">
-                                                        <span className="font-medium">Description:</span> {event.description}
-                                                    </div>
-                                                )}
-                                                
-                                                {event.location && (
-                                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                        <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        </svg>
-                                                        <span>{event.location}</span>
-                                                    </div>
-                                                )}
-                                                
-                                                {event.participantsIds && event.participantsIds.length > 0 && (
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                        <span className="font-medium">Participants:</span> {event.participantsIds.length}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
+                        </div>
+                        {/* Légende en bas du modal */}
+                        <div className="mt-4 flex flex-wrap gap-4 text-sm justify-center">
+                            <div className="flex items-center"><div className="w-3 h-3 bg-blue-200 border border-blue-400 rounded mr-2"></div><span>Événement à venir</span></div>
+                            <div className="flex items-center"><div className="w-3 h-3 bg-gray-300 border border-gray-400 rounded mr-2"></div><span>Événement passé</span></div>
                         </div>
                     </div>
                 )}

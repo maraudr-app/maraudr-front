@@ -364,19 +364,19 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
                                 type="datetime-local"
-                                placeholder="Date de début *"
                                 value={eventForm.beginningDate}
                                 onChange={(e) => handleFormChange('beginningDate', e.target.value)}
                                 min={new Date().toISOString().slice(0, 16)}
                                 className="w-full"
+                                placeholder=""
                             />
                             <Input
                                 type="datetime-local"
-                                placeholder="Date de fin *"
                                 value={eventForm.endDate}
                                 onChange={(e) => handleFormChange('endDate', e.target.value)}
                                 min={eventForm.beginningDate || new Date().toISOString().slice(0, 16)}
                                 className="w-full"
+                                placeholder=""
                             />
                         </div>
 
