@@ -8,16 +8,18 @@ import {
     XMarkIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
+import { useAssoStore } from '../store/assoStore';
 
 const McpServer: React.FC = () => {
     const [message, setMessage] = useState('');
     const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingResponse, setStreamingResponse] = useState('');
-    const [useStreaming, setUseStreaming] = useState(true);
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const { sidebarCollapsed } = useAssoStore();
+    const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
     // Auto-scroll vers le bas quand de nouveaux messages arrivent
     const scrollToBottom = () => {
@@ -35,61 +37,44 @@ const McpServer: React.FC = () => {
 
     const sendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
-        
         if (!message.trim() || loading) return;
-
         const userMessage: ChatMessage = {
             role: 'user',
             content: message.trim()
         };
-
         // Ajouter le message utilisateur à l'historique
         const updatedHistory = chatService.manageConversationHistory(conversationHistory, userMessage);
         setConversationHistory(updatedHistory);
-        
         const currentMessage = message.trim();
         setMessage('');
         setLoading(true);
         setStreamingResponse('');
-
         try {
-            if (useStreaming) {
-                // Mode streaming
-                setIsStreaming(true);
-                await chatService.sendMessageStream(
-                    {
-                        message: currentMessage,
-                        conversationHistory: updatedHistory
-                    },
-                    (chunk: string) => {
-                        setStreamingResponse(prev => prev + chunk);
-                    },
-                    (fullResponse: string) => {
-                        const assistantMessage: ChatMessage = {
-                            role: 'assistant',
-                            content: fullResponse
-                        };
-                        setConversationHistory(prev => chatService.manageConversationHistory(prev, assistantMessage));
-                        setStreamingResponse('');
-                        setIsStreaming(false);
-                        setLoading(false);
-                    },
-                    (error: string) => {
-                        toast.error(`Erreur: ${error}`);
-                        setIsStreaming(false);
-                        setLoading(false);
-                    }
-                );
-            } else {
-                // Mode normal
-                const response = await chatService.sendMessage({
+            setIsStreaming(true);
+            await chatService.sendMessageStream(
+                {
                     message: currentMessage,
                     conversationHistory: updatedHistory
-                });
-                
-                setConversationHistory(response.conversationHistory);
-                setLoading(false);
-            }
+                },
+                (chunk: string) => {
+                    setStreamingResponse(prev => prev + chunk);
+                },
+                (fullResponse: string) => {
+                    const assistantMessage: ChatMessage = {
+                        role: 'assistant',
+                        content: fullResponse
+                    };
+                    setConversationHistory(prev => chatService.manageConversationHistory(prev, assistantMessage));
+                    setStreamingResponse('');
+                    setIsStreaming(false);
+                    setLoading(false);
+                },
+                (error: string) => {
+                    toast.error(`Erreur: ${error}`);
+                    setIsStreaming(false);
+                    setLoading(false);
+                }
+            );
         } catch (error: any) {
             toast.error(error.message || 'Erreur lors de l\'envoi du message');
             setLoading(false);
@@ -117,55 +102,29 @@ const McpServer: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-maraudr-lightBg via-blue-50/30 to-orange-50/30 dark:from-maraudr-darkBg dark:via-gray-800 dark:to-gray-900">
-            {/* Header */}
-            <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-                <div className="max-w-4xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-gradient-to-r from-maraudr-blue to-maraudr-orange rounded-lg">
-                                <ChatBubbleLeftRightIcon className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold bg-gradient-to-r from-maraudr-blue to-maraudr-orange bg-clip-text text-transparent">
-                                    Assistant IA - Dog
-                                </h1>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Spécialisé dans la gestion d'association et des stocks
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-3">
-                            {/* Toggle streaming */}
-                            <div className="flex items-center space-x-2">
-                                <label className="text-sm text-gray-600 dark:text-gray-400">Streaming</label>
-                                <button
-                                    onClick={() => setUseStreaming(!useStreaming)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        useStreaming ? 'bg-maraudr-blue' : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                            useStreaming ? 'translate-x-6' : 'translate-x-1'
-                                        }`}
-                                    />
-                                </button>
-                            </div>
-                            
-                            {/* Clear history */}
-                            <button
-                                onClick={clearHistory}
-                                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                                title="Effacer l'historique"
-                            >
-                                <XMarkIcon className="w-5 h-5" />
-                            </button>
-                        </div>
+            {/* Navbar Assistance IA, style StockNavbar */}
+            <nav
+                className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300 border-b border-gray-200 dark:border-gray-800"
+                style={{ left: sidebarWidth }}
+            >
+                <div className="flex items-center justify-between h-16 px-7">
+                    <div className="flex items-center gap-3">
+                        <ChatBubbleLeftRightIcon className="w-6 h-6 text-maraudr-blue dark:text-maraudr-orange" />
+                        <span className="text-gray-900 dark:text-white text-lg font-bold">Assistance IA</span>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <button
+                            onClick={clearHistory}
+                            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                            title="Effacer l'historique"
+                        >
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
-            </div>
-
+            </nav>
+            {/* Main content scrolls under the navbar, with correct padding */}
+            <div className="pt-16" />
             <div className="max-w-4xl mx-auto px-4 py-6">
                 {/* Quick Actions */}
                 <div className="mb-6">
@@ -285,15 +244,10 @@ const McpServer: React.FC = () => {
                         <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
                         <span>
                             {loading 
-                                ? (useStreaming ? 'Streaming en cours...' : 'Traitement...')
+                                ? 'Streaming en cours...'
                                 : 'Prêt'
                             }
                         </span>
-                        {useStreaming && (
-                            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-2 py-1 rounded">
-                                Streaming activé
-                            </span>
-                        )}
                     </div>
                 </div>
             </div>

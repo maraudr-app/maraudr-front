@@ -183,6 +183,9 @@ const Plan: React.FC = () => {
     // Référence WebSocket
     const socketRef = useRef<WebSocket | null>(null);
 
+    const { sidebarCollapsed } = useAssoStore();
+    const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
+
     // Obtenir la position de l'utilisateur au chargement
     useEffect(() => {
         const getUserPosition = async () => {
@@ -647,28 +650,18 @@ const Plan: React.FC = () => {
 
     return (
         <div className="h-full bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-            {/* Header */}
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-orange-200/50 dark:border-gray-700 p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent flex items-center">
-                            <MapPinIcon className="w-6 h-6 mr-3 text-orange-500" />
-                            Plan & Géolocalisation
-                        </h1>
-                        
-                        {/* Statut de connexion */}
-                        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
-                            isConnected 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                        }`}>
-                            <WifiIcon className="w-4 h-4" />
-                            <span>{isConnected ? 'Temps réel actif' : 'Hors ligne'}</span>
-                        </div>
+            {/* Navbar Carte, style StockNavbar */}
+            <nav
+                className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300 border-b border-orange-200/50 dark:border-gray-700"
+                style={{ left: sidebarWidth }}
+            >
+                <div className="flex items-center justify-between h-16 px-7">
+                    <div className="flex items-center gap-3">
+                        <MapPinIcon className="w-6 h-6 text-orange-500" />
+                        <span className="text-gray-900 dark:text-white text-lg font-bold">Plan & Géolocalisation</span>
+                        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${isConnected ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'}`}> <WifiIcon className="w-4 h-4" /> <span>{isConnected ? 'Temps réel actif' : 'Hors ligne'}</span> </div>
                     </div>
-
-                    <div className="flex items-center space-x-4">
-                        {/* Filtre par jours */}
+                    <div className="flex items-center space-x-6">
                         <select
                             value={daysFilter}
                             onChange={(e) => setDaysFilter(parseInt(e.target.value))}
@@ -679,225 +672,32 @@ const Plan: React.FC = () => {
                             <option value={30}>30 derniers jours</option>
                             <option value={90}>3 derniers mois</option>
                         </select>
-
-                        {/* Bouton de heatmap */}
                         <button
                             onClick={() => setShowHeatmap(!showHeatmap)}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                                showHeatmap
-                                    ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                                    : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                            }`}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${showHeatmap ? 'bg-purple-500 hover:bg-purple-600 text-white' : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'}`}
                         >
                             <FireIcon className="w-4 h-4" />
                             <span>{showHeatmap ? 'Masquer heatmap' : 'Afficher heatmap'}</span>
                         </button>
-
-                        {/* Bouton d'ajout de point */}
                         <button
                             onClick={() => {
-                                setIsAddingPoint(!isAddingPoint);
-                                setNewPointNotes('');
+                                if (events.length === 0) {
+                                    toast.error('Aucun événement disponible pour créer une route');
+                                    return;
+                                }
+                                setShowRouteCreationModal(true);
                             }}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                                isAddingPoint
-                                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                                    : 'bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white'
-                            }`}
+                            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all"
                         >
-                            {isAddingPoint ? (
-                                <>
-                                    <XMarkIcon className="w-4 h-4" />
-                                    <span>Annuler</span>
-                                </>
-                            ) : (
-                                <>
-                                    <PlusIcon className="w-4 h-4" />
-                                    <span>Ajouter un point</span>
-                                </>
-                            )}
+                            <PlusIcon className="w-4 h-4" />
+                            <span>Créer une route</span>
                         </button>
+                       
                     </div>
                 </div>
-
-                {/* Instruction d'ajout */}
-                {isAddingPoint && (
-                    <div className="mt-4 p-4 bg-orange-100 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-                        <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-400 mb-2">
-                            <MapPinIcon className="w-5 h-5" />
-                            <span className="font-medium">Mode ajout de point activé</span>
-                        </div>
-                        <p className="text-sm text-orange-700 dark:text-orange-300">
-                            Cliquez sur la carte pour placer un nouveau point de géolocalisation.
-                        </p>
-                        <div className="mt-3">
-                            <Input
-                                placeholder="Description du point (optionnel)"
-                                value={newPointNotes}
-                                onChange={(e) => setNewPointNotes(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Instruction de création de route avec autocomplétion d'adresse */}
-                {isCreatingRoute && selectedEvent && (
-                    <div className="mt-4 p-4 bg-blue-100 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <div className="flex items-center space-x-2 text-blue-800 dark:text-blue-400 mb-2">
-                            <MapIcon className="w-5 h-5" />
-                            <span className="font-medium">Création de route pour "{selectedEvent.title}"</span>
-                        </div>
-                        
-                        {/* Choix du mode de sélection */}
-                        <div className="mb-4">
-                            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                                Choisissez comment sélectionner le point de départ :
-                            </p>
-                            
-                            <div className="flex space-x-3 mb-3">
-                                <button
-                                    onClick={() => {
-                                        setSelectionMode('map');
-                                        setAddressQuery('');
-                                        setSelectedAddress(null);
-                                        setShowAddressSuggestions(false);
-                                    }}
-                                    className={`px-3 py-2 text-sm rounded-lg transition-all ${
-                                        selectionMode === 'map'
-                                            ? 'bg-blue-500 text-white' 
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                    }`}
-                                >
-                                    📍 Clic sur la carte
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setSelectionMode('address');
-                                        setSelectedRoutePoint(null);
-                                    }}
-                                    className={`px-3 py-2 text-sm rounded-lg transition-all ${
-                                        selectionMode === 'address'
-                                            ? 'bg-blue-500 text-white' 
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                    }`}
-                                >
-                                    🔍 Recherche d'adresse
-                                </button>
-                            </div>
-                        </div>
-                        
-                        {/* Mode clic sur la carte */}
-                        {selectionMode === 'map' && (
-                            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
-                                <p className="text-sm text-green-700 dark:text-green-300">
-                                    Cliquez sur la carte pour sélectionner le point de départ.
-                                </p>
-                                {selectedRoutePoint && (
-                                    <div className="mt-2 text-xs text-green-600 dark:text-green-400">
-                                        Point sélectionné : {selectedRoutePoint.lat.toFixed(6)}, {selectedRoutePoint.lng.toFixed(6)}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        
-                        {/* Mode recherche d'adresse */}
-                        {selectionMode === 'address' && (
-                            <div className="space-y-3">
-                                <p className="text-sm text-blue-700 dark:text-blue-300">
-                                    Saisissez l'adresse de départ :
-                                </p>
-                                
-                                {/* Champ de saisie d'adresse avec autocomplétion */}
-                                <div className="relative">
-                                    <Input
-                                        placeholder="Saisissez une adresse (ex: ESGI, Paris)"
-                                        value={addressQuery}
-                                        onChange={(e) => handleAddressInput(e.target.value)}
-                                        className="w-full"
-                                    />
-                                    
-                                    {/* Indicateur de chargement */}
-                                    {isLoadingAddresses && (
-                                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Suggestions d'adresses */}
-                                    {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                        <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                                            {addressSuggestions.map((address, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-b-0"
-                                                    onClick={() => handleAddressSelect(address)}
-                                                >
-                                                    <div className="font-medium text-sm text-gray-900 dark:text-white">
-                                                        {address.properties.name || address.properties.formatted}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {address.properties.formatted}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* Adresse sélectionnée */}
-                                {selectedAddress && (
-                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
-                                        <div className="text-sm text-green-700 dark:text-green-300">
-                                            <strong>Adresse sélectionnée :</strong>
-                                        </div>
-                                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                            {selectedAddress.properties.formatted}
-                                        </div>
-                                        <div className="text-xs text-green-600 dark:text-green-400">
-                                            Coordonnées : {selectedAddress.properties.lat.toFixed(6)}, {selectedAddress.properties.lon.toFixed(6)}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        
-                        {/* Bouton de confirmation */}
-                        {(selectedRoutePoint || selectedAddress) && (
-                            <button
-                                onClick={() => {
-                                    if (selectedRoutePoint) {
-                                        setShowRouteCreationModal(true);
-                                    } else if (selectedAddress) {
-                                        setSelectedRoutePoint({
-                                            lat: selectedAddress.properties.lat,
-                                            lng: selectedAddress.properties.lon
-                                        });
-                                        setShowRouteCreationModal(true);
-                                    }
-                                }}
-                                className="mt-3 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-all"
-                            >
-                                Confirmer et créer la route
-                            </button>
-                        )}
-                        
-                        <button
-                            onClick={() => {
-                                setIsCreatingRoute(false);
-                                setSelectedEvent(null);
-                                setAddressQuery('');
-                                setSelectedAddress(null);
-                                setSelectedRoutePoint(null);
-                                setShowAddressSuggestions(false);
-                                setSelectionMode('map');
-                            }}
-                            className="mt-3 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-all"
-                        >
-                            Annuler
-                        </button>
-                    </div>
-                )}
-            </div>
+            </nav>
+            {/* Main content scrolls under the navbar, with correct padding */}
+            <div className="pt-16" />
 
             <div className="flex h-[calc(100vh-140px)]">
                 {/* Carte */}
@@ -1163,70 +963,17 @@ const Plan: React.FC = () => {
                     {/* En-tête du panneau */}
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                            Points de géolocalisation
+                            Points d'interet
                         </h2>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                             {geoPoints.length} point{geoPoints.length !== 1 ? 's' : ''} trouvé{geoPoints.length !== 1 ? 's' : ''}
                         </div>
                     </div>
 
-                    {/* Légende des couleurs */}
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                            {showHeatmap ? 'Heatmap - Densité des points' : 'Légende par âge'}
-                        </h3>
-                        
-                        {showHeatmap ? (
-                            <div className="space-y-2 text-xs">
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Faible densité</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-cyan-400 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Densité modérée</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Densité moyenne</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Densité élevée</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Très haute densité</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Densité maximale</span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-2 text-xs">
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Moins d'1 heure</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Moins de 6 heures</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Aujourd'hui</span>
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
-                                    <span className="text-gray-600 dark:text-gray-400">Plus ancien</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                  
 
                     {/* Liste des points */}
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto max-h-80">
                         {geoPoints.length === 0 ? (
                             <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                                 <MapPinIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -1353,106 +1100,6 @@ const Plan: React.FC = () => {
                                         })
                                     )}
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Section des routes d'événements */}
-                    <div className="border-t border-gray-200 dark:border-gray-700">
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                Routes d'événements
-                            </h2>
-                            <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                                {routes.length} route{routes.length !== 1 ? 's' : ''} créée{routes.length !== 1 ? 's' : ''}
-                            </div>
-                            
-                            {/* Bouton pour créer une nouvelle route */}
-                            <button
-                                onClick={() => {
-                                    if (events.length === 0) {
-                                        toast.error('Aucun événement disponible pour créer une route');
-                                        return;
-                                    }
-                                    setShowRouteCreationModal(true);
-                                }}
-                                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-sm rounded-lg transition-all"
-                            >
-                                <PlusIcon className="w-4 h-4" />
-                                <span>Créer une route</span>
-                            </button>
-                        </div>
-
-                        {/* Liste des routes */}
-                        <div className="max-h-64 overflow-y-auto">
-                            <div className="p-4 space-y-3">
-
-                                
-                                {/* Routes créées par l'utilisateur */}
-                                {routes.map((route, index) => {
-                                    const event = events.find(e => e.id === route.eventId);
-                                    return (
-                                        <div
-                                            key={route.id || index}
-                                            className="p-3 border border-blue-200 dark:border-blue-700 rounded-lg bg-blue-50 dark:bg-blue-900/20"
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center mb-2">
-                                                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            Route #{index + 1}
-                                                        </h4>
-                                                    </div>
-                                                    {event && (
-                                                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                            Événement: {event.title}
-                                                        </p>
-                                                    )}
-                                                    <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                        <div>Distance: {route.distanceKm} km</div>
-                                                        <div>Durée: {route.durationMinutes} min</div>
-                                                        <div className="mt-1">
-                                                            {route.startLat.toFixed(4)}, {route.startLng.toFixed(4)}
-                                                        </div>
-                                                    </div>
-                                                    <a
-                                                        href={route.googleMapsUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded transition-all"
-                                                    >
-                                                        <MapIcon className="w-3 h-3" />
-                                                        <span>Google Maps</span>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Statistiques */}
-                    <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Statistiques</h3>
-                        <div className="grid grid-cols-2 gap-4 text-xs">
-                            <div className="text-center">
-                                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                                    {geoPoints.length}
-                                </div>
-                                <div className="text-gray-500 dark:text-gray-400">Total points</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                    {geoPoints.filter(p => {
-                                        if (!p.timestamp) return false;
-                                        const hoursDiff = (new Date().getTime() - new Date(p.timestamp).getTime()) / (1000 * 60 * 60);
-                                        return hoursDiff < 24;
-                                    }).length}
-                                </div>
-                                <div className="text-gray-500 dark:text-gray-400">Aujourd'hui</div>
                             </div>
                         </div>
                     </div>
