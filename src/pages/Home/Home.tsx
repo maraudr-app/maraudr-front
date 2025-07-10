@@ -75,53 +75,71 @@ const Home = () => {
     {
       icon: <UsersIcon className="w-12 h-12" />,
       title: t_home('features.memberManagement.title', 'Gestion des membres'),
-      description: t_home('features.memberManagement.description', 'Gérez efficacement vos adhérents, leurs rôles et leurs contributions. Suivez les cotisations et gardez un historique complet des activités.'),
+      description: t_home('features.memberManagement.description', 'Gérez votre équipe avec des rôles manager/membre, suivez les profils détaillés et coordonnez vos bénévoles efficacement.'),
       color: 'text-maraudr-blue dark:text-maraudr-orange'
     },
     {
       icon: <ChartBarIcon className="w-12 h-12" />,
-      title: t_home('features.dataAnalysis.title', 'Analyse des données'),
-      description: t_home('features.dataAnalysis.description', 'Visualisez et analysez vos données pour prendre des décisions éclairées. Créez des rapports détaillés sur vos activités et leur impact.'),
+      title: t_home('features.dashboard.title', 'Dashboard intelligent'),
+      description: t_home('features.dashboard.description', 'Vue d\'ensemble complète de votre association avec statistiques, graphiques et métriques en temps réel pour piloter vos actions.'),
       color: 'text-maraudr-orange dark:text-maraudr-blue'
     },
     {
       icon: <CubeIcon className="w-12 h-12" />,
       title: t_home('features.stockManagement.title', 'Gestion des stocks'),
-      description: t_home('features.stockManagement.description', 'Suivez en temps réel vos inventaires, recevez des alertes de seuil et optimisez la distribution des ressources entre vos différents sites.'),
+      description: t_home('features.stockManagement.description', 'Suivez vos inventaires en temps réel, gérez les entrées/sorties, recevez des alertes et optimisez vos ressources.'),
       color: 'text-maraudr-blue dark:text-maraudr-orange'
     },
     {
       icon: <MapPinIcon className="w-12 h-12" />,
-      title: t_home('features.fieldTracking.title', 'Suivi terrain'),
-      description: t_home('features.fieldTracking.description', 'Localisez vos équipes, coordonnez les actions et améliorez la sécurité de vos bénévoles avec notre système de suivi en temps réel.'),
+      title: t_home('features.planning.title', 'Planning & Disponibilités'),
+      description: t_home('features.planning.description', 'Organisez vos événements, gérez les disponibilités de vos membres et coordonnez vos missions avec des calendriers interactifs.'),
       color: 'text-maraudr-orange dark:text-maraudr-blue'
     },
     {
       icon: <HeartIcon className="w-12 h-12" />,
-      title: t_home('features.socialImpact.title', 'Impact social'),
-      description: t_home('features.socialImpact.description', 'Mesurez et démontrez l\'impact de vos actions sur la communauté. Générez des rapports d\'impact pour vos partenaires et donateurs.'),
+      title: t_home('features.map.title', 'Cartographie & Routes'),
+      description: t_home('features.map.description', 'Visualisez vos points d\'intervention sur une carte interactive, créez des routes optimisées et suivez vos actions sur le terrain.'),
       color: 'text-maraudr-blue dark:text-maraudr-orange'
+    },
+    {
+      icon: <StarIcon className="w-12 h-12" />,
+      title: t_home('features.media.title', 'Médias & Documents'),
+      description: t_home('features.media.description', 'Centralisez vos photos, documents et ressources dans une galerie organisée avec recherche et partage sécurisé.'),
+      color: 'text-maraudr-orange dark:text-maraudr-blue'
+    },
+    {
+      icon: <CheckCircleIcon className="w-12 h-12" />,
+      title: t_home('features.ai.title', 'Assistance IA'),
+      description: t_home('features.ai.description', 'Bénéficiez d\'une assistance intelligente pour vos questions, conseils et aide contextuelle pour optimiser vos actions.'),
+      color: 'text-maraudr-blue dark:text-maraudr-orange'
+    },
+    {
+      icon: <ArrowRightIcon className="w-12 h-12" />,
+      title: t_home('features.profile.title', 'Profils personnalisés'),
+      description: t_home('features.profile.description', 'Gérez vos informations personnelles et celles de votre association avec des profils détaillés et modifiables.'),
+      color: 'text-maraudr-orange dark:text-maraudr-blue'
     }
   ];
 
-  // Témoignages
+  // Témoignages mis à jour
   const testimonials = [
     {
       name: t_home('testimonials.users.0.name', 'Jean Dupont'),
       org: t_home('testimonials.users.0.org', 'Association Entraide'),
-      quote: t_home('testimonials.users.0.quote', 'Grâce au suivi des stocks en temps réel, nous avons réduit nos pertes de 30% et optimisé nos distributions sur le terrain.'),
+      quote: t_home('testimonials.users.0.quote', 'Le dashboard nous donne une vue claire de nos actions. La gestion des stocks nous a permis d\'optimiser nos distributions et réduire les pertes de 40%.'),
       rating: 5
     },
     {
       name: t_home('testimonials.users.1.name', 'Marie Lambert'),
       org: t_home('testimonials.users.1.org', 'Club Sportif Local'),
-      quote: t_home('testimonials.users.1.quote', 'La fonctionnalité de géolocalisation nous a permis de coordonner efficacement nos bénévoles lors des grands événements.'),
+      quote: t_home('testimonials.users.1.quote', 'Le planning et la gestion des disponibilités ont révolutionné notre organisation. Nous coordonnons maintenant nos bénévoles en temps réel avec une efficacité incroyable.'),
       rating: 5
     },
     {
       name: t_home('testimonials.users.2.name', 'Paul Lefèvre'),
       org: t_home('testimonials.users.2.org', 'Association Culturelle'),
-      quote: t_home('testimonials.users.2.quote', 'Le module de gestion des événements nous a fait gagner un temps précieux et amélioré la communication avec nos participants.'),
+      quote: t_home('testimonials.users.2.quote', 'La cartographie et l\'assistance IA nous aident à planifier nos interventions. L\'interface est intuitive et nos membres l\'adoptent facilement.'),
       rating: 5
     }
   ];
@@ -136,7 +154,7 @@ const Home = () => {
             {t_home('hero.title', 'Simplifiez la gestion de votre association')}
           </h1>
             <p className="text-xl md:text-2xl text-maraudr-darkText dark:text-maraudr-lightText mb-8 max-w-3xl mx-auto leading-relaxed">
-            {t_home('hero.description', 'Une plateforme intuitive pour gérer vos membres, organiser vos missions, suivre les stocks et analyser vos actions. Conçue pour les associations engagées comme la vôtre.')}
+            {t_home('hero.description', 'Une plateforme complète pour gérer votre association : Dashboard intelligent, Planning & Disponibilités, Gestion des stocks, Cartographie, Médias, Assistance IA et profils personnalisés. Tout ce dont vous avez besoin pour optimiser vos actions sociales.')}
           </p>
             
             {/* Loader pendant le chargement des associations */}
@@ -242,20 +260,20 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-4xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2">500+</div>
-              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Associations</div>
+              <div className="text-4xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2">8</div>
+              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Modules</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-maraudr-orange dark:text-maraudr-blue mb-2">10K+</div>
-              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Membres</div>
-          </div>
-            <div>
-              <div className="text-4xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2">50K+</div>
-              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Actions</div>
+              <div className="text-4xl font-bold text-maraudr-orange dark:text-maraudr-blue mb-2">100%</div>
+              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Responsive</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-maraudr-orange dark:text-maraudr-blue mb-2">99%</div>
-              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Satisfaction</div>
+              <div className="text-4xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2">24/7</div>
+              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Disponible</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-maraudr-orange dark:text-maraudr-blue mb-2">IA</div>
+              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Assistée</div>
             </div>
           </div>
         </div>

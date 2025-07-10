@@ -13,7 +13,8 @@ import { userService } from '../../services/userService';
 import { Disponibility } from '../../types/disponibility/disponibility';
 import { User } from '../../types/user/user';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../../hooks/useToast';
+import Toast from '../../components/common/toast/Toast';
 import CreateEventModal from '../../components/planning/CreateEventModal';
 import { planningService } from '../../services/planningService';
 import type { Event } from '../../types/planning/event';
@@ -21,6 +22,7 @@ import { Input } from '../../components/common/input/input';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { PlanningNavbar } from '../../components/planning/PlanningNavbar';
 import { Button } from '../../components/common/button/button';
+import { toast } from 'react-hot-toast';
 
 // Interface simplifiée pour les disponibilités par utilisateur
 interface UserAvailability {
@@ -35,9 +37,17 @@ interface UserAvailabilityViewProps {
   hideAddButton?: boolean;
   externalAddButtonId?: string;
   flat?: boolean;
+  triggerAdd?: boolean;
+  onTriggerReset?: () => void;
+  onDateClick?: (date: Date) => void;
+  refreshTrigger?: number;
+  toast?: {
+    success: (message: string) => void;
+    error: (message: string) => void;
+  };
 }
 // Composant pour la vue utilisateur simple (disponibilités)
-const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButton, externalAddButtonId, flat }) => {
+const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButton, externalAddButtonId, flat, triggerAdd, onTriggerReset, onDateClick, refreshTrigger, toast }) => {
     const user = useAuthStore(state => state.user);
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -68,6 +78,23 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
     const formatDate = (date: Date) => {
         return date.toISOString().split('T')[0];
     };
+    
+    // Fonction pour formater une date en YYYY-MM-DD en respectant le fuseau horaire local
+    const formatDateForInput = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
+    // Fonction pour créer les clés de disponibilité en respectant le fuseau horaire local
+    const formatDateForAvailabilityKey = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
     const changeMonth = (increment: number) => {
         setCurrentDate(prevDate => new Date(prevDate.getFullYear(), prevDate.getMonth() + increment, 1));
     };
@@ -84,7 +111,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                 const endDate = new Date(dispo.end);
                 const currentDate = new Date(startDate);
                 while (currentDate <= endDate) {
-                    const dateKey = formatDate(currentDate);
+                    const dateKey = formatDateForAvailabilityKey(currentDate);
                     availabilitiesMap[dateKey] = {
                         morning: true,
                         afternoon: true,
@@ -103,26 +130,48 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
     useEffect(() => {
         loadUserAvailabilities();
     }, [selectedAssociation, user]);
+
+    // Recharger les disponibilités quand refreshTrigger change
+    useEffect(() => {
+        if (refreshTrigger && refreshTrigger > 0) {
+            loadUserAvailabilities();
+        }
+    }, [refreshTrigger]);
+
+    // Réagir au trigger d'ajout de disponibilité depuis la navbar
+    useEffect(() => {
+        if (triggerAdd && onTriggerReset) {
+            startPeriodSelection();
+            onTriggerReset();
+        }
+    }, [triggerAdd, onTriggerReset]);
     // Gérer la sélection de dates
     const handleDateClick = (date: Date) => {
+        if (onDateClick) {
+            // Utiliser la fonction personnalisée passée en props
+            onDateClick(date);
+            return;
+        }
+
+        // Logique par défaut pour les managers
         if (!isSelectingPeriod) return;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const clickedDate = new Date(date);
         clickedDate.setHours(0, 0, 0, 0);
+        
         if (clickedDate < today) {
             toast.error('Vous ne pouvez pas sélectionner une date passée');
             return;
         }
-        if (!startDate) {
-            setStartDate(date);
-        } else if (!endDate && date >= startDate) {
-            setEndDate(date);
-            setShowTimeModal(true);
-        } else {
-            setStartDate(date);
-            setEndDate(null);
-        }
+
+        // Pour les membres : un clic sur un jour ouvre directement le formulaire
+        const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        setStartDate(localDate);
+        setEndDate(localDate);
+        setStartTime('09:00'); // Heure par défaut
+        setEndTime('18:00'); // Heure par défaut
+        setShowTimeModal(true);
     };
     // Démarrer la sélection de période
     const startPeriodSelection = () => {
@@ -141,8 +190,82 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
         setEndTime('');
         setShowTimeModal(false);
     };
-    // Valider la disponibilité (logique existante ou à compléter)
-    // ...
+    // Valider la disponibilité
+    const validateAvailability = async () => {
+        if (!startDate || !endDate || !startTime || !endTime) {
+            toast.error('Veuillez remplir tous les champs');
+            return;
+        }
+
+        if (!selectedAssociation?.id || !user?.sub) {
+            toast.error('Erreur: association ou utilisateur non trouvé');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            
+            // Créer les dates de début et fin avec les heures
+            const startDateTime = new Date(startDate);
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            startDateTime.setHours(startHour, startMinute, 0, 0);
+
+            const endDateTime = new Date(endDate);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+            endDateTime.setHours(endHour, endMinute, 0, 0);
+
+            // Vérifier que la date de fin est après la date de début
+            if (endDateTime <= startDateTime) {
+                toast.error('La date de fin doit être après la date de début');
+                return;
+            }
+
+            // Vérifier les conflits avec les disponibilités existantes
+            const existingDispos = await userService.getDisponibilities(selectedAssociation.id);
+            const userDispos = existingDispos.filter((dispo: Disponibility) => dispo.userId === user.sub);
+            
+            const hasConflict = userDispos.some((dispo: Disponibility) => {
+                const existingStart = new Date(dispo.start);
+                const existingEnd = new Date(dispo.end);
+                
+                // Vérifier s'il y a un chevauchement
+                return (
+                    (startDateTime >= existingStart && startDateTime < existingEnd) ||
+                    (endDateTime > existingStart && endDateTime <= existingEnd) ||
+                    (startDateTime <= existingStart && endDateTime >= existingEnd)
+                );
+            });
+
+            if (hasConflict) {
+                toast.error('Vous avez déjà une disponibilité sur cette plage horaire ou ce jour');
+                return;
+            }
+
+            // Créer la disponibilité
+            const disponibilityData = {
+                userId: user.sub,
+                associationId: selectedAssociation.id,
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString()
+            };
+
+            // Appeler le service pour créer la disponibilité
+            await userService.createDisponibility(disponibilityData);
+            
+            toast.success('Disponibilité ajoutée avec succès !');
+            
+            // Réinitialiser et recharger
+            cancelSelection();
+            await loadUserAvailabilities();
+            
+        } catch (error: any) {
+            console.error('Erreur lors de la création de la disponibilité:', error);
+            toast.error(error.message || 'Erreur lors de la création de la disponibilité');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const days = getDaysInMonth(currentDate);
     const startDay = getMonthStartDay(currentDate);
     const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
@@ -203,13 +326,19 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                         const dayDate = new Date(day);
                         dayDate.setHours(0, 0, 0, 0);
                         const isPastDate = dayDate < today;
-                        const dateKey = formatDate(day);
+                        const dateKey = formatDateForAvailabilityKey(day);
                         const isAvailable = !!userAvailabilities[dateKey];
                         let bgColor = 'bg-white dark:bg-gray-800';
                         let textColor = 'text-gray-700 dark:text-gray-300';
                         let borderColor = 'border-gray-100 dark:border-gray-700';
-                        if (!isPastDate) {
-                            if (isAvailable) {
+                        if (isAvailable) {
+                            if (isPastDate) {
+                                // Disponibilités du passé en violet
+                                bgColor = 'bg-purple-500';
+                                textColor = 'text-white';
+                                borderColor = 'border-purple-500';
+                            } else {
+                                // Disponibilités futures en vert
                                 bgColor = 'bg-green-500';
                                 textColor = 'text-white';
                                 borderColor = 'border-green-500';
@@ -236,6 +365,93 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                     ))}
                 </div>
             </div>
+
+            {/* Modal de saisie des heures */}
+            {showTimeModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
+                    <div className="relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 border w-11/12 md:w-96 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <div className="text-center">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                Définir les heures de disponibilité
+                            </h3>
+                            
+                            <div className="mb-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                    Du {startDate?.toLocaleDateString('fr-FR')} au {endDate?.toLocaleDateString('fr-FR')}
+                                </p>
+                                
+                                {/* Champs de dates */}
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Jour de début
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={startDate ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}` : ''}
+                                            onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Jour de fin
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={endDate ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}` : ''}
+                                            onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                                
+                                {/* Champs d'heures */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Heure de début
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={startTime}
+                                            onChange={(e) => setStartTime(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Heure de fin
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={endTime}
+                                            onChange={(e) => setEndTime(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-between w-full">
+                                <button
+                                    onClick={cancelSelection}
+                                    className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-1 mr-2"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={validateAvailability}
+                                    disabled={loading}
+                                    className="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 ml-2"
+                                >
+                                    {loading ? 'Enregistrement...' : 'Enregistrer'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -246,6 +462,8 @@ const Planning: React.FC = () => {
     const isAuthenticated = useAuthStore(state => state.isAuthenticated);
     const { sidebarCollapsed } = useAssoStore();
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
+    const { toasts, removeToast, toast } = useToast();
+
     
     // Définir la largeur de la sidebar en pixels comme dans Stock
     const sidebarWidth = sidebarCollapsed ? '56px' : '';
@@ -309,6 +527,7 @@ const Planning: React.FC = () => {
             setAllDisponibilities(disponibilities || []);
         } catch (error) {
             console.error('Erreur lors du chargement des disponibilités:', error);
+            toast.error('Erreur lors du chargement des disponibilités');
             setAllDisponibilities([]);
         } finally {
             setLoadingDisponibilities(false);
@@ -326,6 +545,7 @@ const Planning: React.FC = () => {
             setTeamUsers(users);
         } catch (error) {
             console.error('Erreur lors du chargement des utilisateurs:', error);
+            toast.error('Erreur lors du chargement des utilisateurs');
         } finally {
             setLoadingUsers(false);
         }
@@ -347,6 +567,7 @@ const Planning: React.FC = () => {
             setAllEvents(events || []);
         } catch (error) {
             console.error('Erreur lors du chargement des événements:', error);
+            toast.error('Erreur lors du chargement des événements');
             setAllEvents([]);
         } finally {
             setLoadingEvents(false);
@@ -386,6 +607,7 @@ const Planning: React.FC = () => {
         loadAllDisponibilities();
         loadTeamUsers();
         loadAllEvents();
+        toast.success('Événement créé avec succès');
     };
 
     // Fonctions de gestion des événements
@@ -447,6 +669,7 @@ const Planning: React.FC = () => {
         loadAllEvents();
         setShowEditEventModal(false);
         setEditingEvent(null);
+        toast.success('Événement modifié avec succès');
     };
 
     // Fonctions d'aide pour les événements
@@ -569,6 +792,7 @@ const Planning: React.FC = () => {
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [showTimeModal, setShowTimeModal] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const startPeriodSelection = () => {
         setIsSelectingPeriod(true);
         setStartDate(null);
@@ -598,9 +822,175 @@ const Planning: React.FC = () => {
 
         // 5. Rendu double calendrier
         const sidebarWidth = sidebarCollapsed ? 'pl-14' : '';
+        const [triggerAddDisponibility, setTriggerAddDisponibility] = useState(false);
+        const [startDate, setStartDate] = useState<Date | null>(null);
+        const [endDate, setEndDate] = useState<Date | null>(null);
+        const [startTime, setStartTime] = useState('');
+        const [endTime, setEndTime] = useState('');
+        const [showTimeModal, setShowTimeModal] = useState(false);
+        const [loading, setLoading] = useState(false);
+
+        const handleAddDisponibility = () => {
+            setTriggerAddDisponibility(true);
+        };
+
+        // Fonction spécifique pour les membres : clic sur un jour ouvre le formulaire de disponibilité
+        const handleMemberDateClick = async (date: Date) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const clickedDate = new Date(date);
+            clickedDate.setHours(0, 0, 0, 0);
+
+            // Toggle : si on clique sur le même jour déjà sélectionné, fermer le formulaire
+            if (startDate && endDate && clickedDate.getTime() === startDate.getTime() && clickedDate.getTime() === endDate.getTime() && showTimeModal) {
+                setShowTimeModal(false);
+                setStartDate(null);
+                setEndDate(null);
+                setStartTime('');
+                setEndTime('');
+                return;
+            }
+
+            if (clickedDate < today) {
+                toast.error('Vous ne pouvez pas sélectionner une date passée');
+                return;
+            }
+
+            // Vérifier les conflits de disponibilité avant d'ouvrir le formulaire
+            if (!selectedAssociation?.id || !user?.sub) return;
+            const existingDispos = await userService.getDisponibilities(selectedAssociation.id);
+            const userDispos = existingDispos.filter((dispo: Disponibility) => dispo.userId === user.sub);
+            const hasConflict = userDispos.some((dispo: Disponibility) => {
+                const existingStart = new Date(dispo.start);
+                const existingEnd = new Date(dispo.end);
+                // On vérifie si le jour cliqué est inclus dans une dispo existante
+                return clickedDate >= existingStart && clickedDate <= existingEnd;
+            });
+            if (hasConflict) {
+                toast.error('Vous avez déjà une disponibilité sur cette plage horaire ou ce jour');
+                return;
+            }
+
+            // Ouvrir le formulaire avec ce jour
+            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            setStartDate(localDate);
+            setEndDate(localDate);
+            setStartTime('09:00');
+            setEndTime('18:00');
+            setShowTimeModal(true);
+        };
+
+        // Annuler la sélection
+        const cancelSelection = () => {
+            setStartDate(null);
+            setEndDate(null);
+            setStartTime('');
+            setEndTime('');
+            setShowTimeModal(false);
+        };
+
+        // Valider la disponibilité pour les membres
+        const validateMemberAvailability = async () => {
+            if (!startDate || !endDate || !startTime || !endTime) {
+                toast.error('Veuillez remplir tous les champs');
+                return;
+            }
+
+            if (!selectedAssociation?.id || !user?.sub) {
+                toast.error('Erreur: association ou utilisateur non trouvé');
+                return;
+            }
+
+            try {
+                setLoading(true);
+                
+                // Créer les dates de début et fin avec les heures
+                const startDateTime = new Date(startDate);
+                const [startHour, startMinute] = startTime.split(':').map(Number);
+                startDateTime.setHours(startHour, startMinute, 0, 0);
+
+                const endDateTime = new Date(endDate);
+                const [endHour, endMinute] = endTime.split(':').map(Number);
+                endDateTime.setHours(endHour, endMinute, 0, 0);
+
+                // Vérifier que la date de fin est après la date de début
+                if (endDateTime <= startDateTime) {
+                    toast.error('La date de fin doit être après la date de début');
+                    return;
+                }
+
+                // Vérifier les conflits avec les disponibilités existantes
+                const existingDispos = await userService.getDisponibilities(selectedAssociation.id);
+                const userDispos = existingDispos.filter((dispo: Disponibility) => dispo.userId === user.sub);
+                
+                const hasConflict = userDispos.some((dispo: Disponibility) => {
+                    const existingStart = new Date(dispo.start);
+                    const existingEnd = new Date(dispo.end);
+                    
+                    // Vérifier s'il y a un chevauchement
+                    return (
+                        (startDateTime >= existingStart && startDateTime < existingEnd) ||
+                        (endDateTime > existingStart && endDateTime <= existingEnd) ||
+                        (startDateTime <= existingStart && endDateTime >= existingEnd)
+                    );
+                });
+
+                if (hasConflict) {
+                    toast.error('Vous avez déjà une disponibilité sur cette plage horaire ou ce jour');
+                    return;
+                }
+
+                // Créer la disponibilité
+                const disponibilityData = {
+                    userId: user.sub,
+                    associationId: selectedAssociation.id,
+                    start: startDateTime.toISOString(),
+                    end: endDateTime.toISOString()
+                };
+
+                // Appeler le service pour créer la disponibilité
+                await userService.createDisponibility(disponibilityData);
+                
+                toast.success('Disponibilité ajoutée avec succès !');
+                
+                // Réinitialiser et recharger
+                cancelSelection();
+                // Recharger les disponibilités
+                await loadAllDisponibilities();
+                // Forcer le rafraîchissement du composant UserAvailabilityView
+                setRefreshTrigger(prev => prev + 1);
+                
+            } catch (error: any) {
+                console.error('Erreur lors de la création de la disponibilité:', error);
+                toast.error(error.message || 'Erreur lors de la création de la disponibilité');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // État pour le modal de détail des missions du jour
+        const [showMissionsModal, setShowMissionsModal] = useState(false);
+        const [selectedDayMissions, setSelectedDayMissions] = useState<Event[]>([]);
+        const [selectedDayLabel, setSelectedDayLabel] = useState<string>('');
+
+        // Handler pour ouvrir le modal de missions du jour
+        const handleMissionDayClick = (day: Date) => {
+            const dayDate = new Date(day); dayDate.setHours(0,0,0,0);
+            const missions = myEvents.filter(ev => {
+                const start = new Date(ev.beginningDate); start.setHours(0,0,0,0);
+                const end = new Date(ev.endDate); end.setHours(0,0,0,0);
+                return dayDate >= start && dayDate <= end;
+            });
+            if (missions.length > 0) {
+                setSelectedDayMissions(missions);
+                setSelectedDayLabel(dayDate.toLocaleDateString('fr-FR'));
+                setShowMissionsModal(true);
+            }
+        };
+
         return (
             <>
-                <PlanningNavbar onAddDisponibility={startPeriodSelection} />
+                <PlanningNavbar onAddDisponibility={handleAddDisponibility} />
                 <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pt-16 ${sidebarWidth}`}>
                     {/* Container pour les deux calendriers côte à côte */}
                     <div className="flex flex-row gap-6 justify-start items-start ">
@@ -608,7 +998,16 @@ const Planning: React.FC = () => {
                         <div className="flex-1 min-w-[400px] max-w-[600px] h-full flex flex-col items-center justify-start">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">Mes disponibilités</h2>
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
-                              <UserAvailabilityView hideAddButton externalAddButtonId="add-dispo-navbar-btn" flat />
+                              <UserAvailabilityView 
+                                hideAddButton 
+                                externalAddButtonId="add-dispo-navbar-btn" 
+                                flat 
+                                triggerAdd={triggerAddDisponibility}
+                                onTriggerReset={() => setTriggerAddDisponibility(false)}
+                                onDateClick={handleMemberDateClick}
+                                refreshTrigger={refreshTrigger}
+                                toast={toast}
+                              />
                             </div>
                         </div>
                         {/* Calendrier des événements où je participe */}
@@ -676,6 +1075,7 @@ const Planning: React.FC = () => {
                                                 key={idx}
                                                 className={`aspect-square rounded-md border transition-all duration-200 ${bgColor} ${textColor} ${borderColor} ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''} ${eventsForDay.length > 0 ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:brightness-110 shadow-sm' : ''}`}
                                                 title={eventsForDay.map(ev => ev.title).join(', ')}
+                                                onClick={() => handleMissionDayClick(day)}
                                             >
                                                 <div className="h-full flex flex-col items-center justify-center p-0.5">
                                                     <div className="text-xs font-semibold">{day.getDate()}</div>
@@ -701,6 +1101,123 @@ const Planning: React.FC = () => {
                         <div className="flex items-center"><div className="w-2.5 h-2.5 bg-violet-500 border border-violet-600 rounded mr-1.5"></div><span>Événement(s) passé(s)</span></div>
                     </div>
                 </div>
+
+                {/* Modal de saisie des heures pour les membres */}
+                {showTimeModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
+                        <div className="relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 border w-11/12 md:w-[500px] shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                                    Définir la disponibilité
+                                </h3>
+                                
+                                <div className="mb-6">
+                                    {/* Champs de dates */}
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Jour de début
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={startDate ? `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}` : ''}
+                                                onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Jour de fin
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={endDate ? `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}` : ''}
+                                                onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Champs d'heures */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Heure de début
+                                            </label>
+                                            <input
+                                                type="time"
+                                                value={startTime}
+                                                onChange={(e) => setStartTime(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Heure de fin
+                                            </label>
+                                            <input
+                                                type="time"
+                                                value={endTime}
+                                                onChange={(e) => setEndTime(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex justify-between w-full">
+                                    <button
+                                        onClick={cancelSelection}
+                                        className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-1 mr-2"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        onClick={validateMemberAvailability}
+                                        disabled={loading}
+                                        className="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 ml-2"
+                                    >
+                                        {loading ? 'Enregistrement...' : 'Enregistrer'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Modal de détail des missions du jour */}
+                {showMissionsModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
+                        <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                            <div className="mt-3">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                        Missions du {selectedDayLabel} ({selectedDayMissions.length})
+                                    </h3>
+                                    <button
+                                        onClick={() => setShowMissionsModal(false)}
+                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    >
+                                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    {selectedDayMissions.map((mission, idx) => (
+                                        <div key={mission.id} className="p-4 rounded-lg border bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                                            <div className="font-semibold text-lg text-maraudr-blue dark:text-maraudr-orange mb-1">{mission.title}</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">{mission.description}</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                {new Date(mission.beginningDate).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })} - {new Date(mission.endDate).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </>
         );
     }
@@ -726,9 +1243,9 @@ const Planning: React.FC = () => {
     };
 
     const formatDate = (date: Date) => {
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return date.toISOString().split('T')[0];
     };
-
+    
     const changeMonth = (increment: number) => {
         const newDate = new Date(currentDateAsso);
         newDate.setMonth(newDate.getMonth() + increment);
@@ -1078,25 +1595,17 @@ const Planning: React.FC = () => {
                                         let bgColor = 'bg-white dark:bg-gray-800';
                                         let textColor = 'text-gray-700 dark:text-gray-300';
                                         let borderColor = 'border-gray-100 dark:border-gray-700';
-                                        if (!isPastDate) {
-                                            if (isAvailable) {
+                                        if (isAvailable) {
+                                            if (isPastDate) {
+                                                // Disponibilités du passé en violet
+                                                bgColor = 'bg-purple-500';
+                                                textColor = 'text-white';
+                                                borderColor = 'border-purple-500';
+                                            } else {
+                                                // Disponibilités futures en vert
                                                 bgColor = 'bg-green-500';
                                                 textColor = 'text-white';
                                                 borderColor = 'border-green-500';
-                                            } else {
-                                                bgColor = 'bg-red-500';
-                                                textColor = 'text-white';
-                                                borderColor = 'border-red-500';
-                                            }
-                                        } else {
-                                            if (isAvailable) {
-                                                bgColor = 'bg-green-500';
-                                                textColor = 'text-white';
-                                                borderColor = 'border-green-500';
-                                            } else {
-                                                bgColor = 'bg-red-500';
-                                                textColor = 'text-white';
-                                                borderColor = 'border-red-500';
                                             }
                                         }
                                         return (
@@ -1120,7 +1629,8 @@ const Planning: React.FC = () => {
                                 </div>
                                 {/* Légende user */}
                                 <div className="mt-4 flex flex-wrap gap-4 text-sm justify-center">
-                                    <div className="flex items-center"><div className="w-3 h-3 bg-green-500 border border-green-600 rounded mr-2"></div><span>Disponible</span></div>
+                                    <div className="flex items-center"><div className="w-3 h-3 bg-green-500 border border-green-600 rounded mr-2"></div><span>Disponible (futur)</span></div>
+                                    <div className="flex items-center"><div className="w-3 h-3 bg-purple-500 border border-purple-600 rounded mr-2"></div><span>Disponible (passé)</span></div>
                                     <div className="flex items-center"><div className="w-3 h-3 bg-red-500 border border-red-600 rounded mr-2"></div><span>Non disponible</span></div>
                                 </div>
                             </div>
@@ -1312,6 +1822,17 @@ const Planning: React.FC = () => {
                     </div>
                 )}
             </main>
+
+            {/* Affichage des toasts */}
+            {toasts.map((toastItem) => (
+                <Toast
+                    key={toastItem.id}
+                    message={toastItem.message}
+                    type={toastItem.type}
+                    duration={toastItem.duration}
+                    onClose={() => removeToast(toastItem.id)}
+                />
+            ))}
         </div>
     );
 };
