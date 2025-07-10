@@ -141,7 +141,7 @@ function App() {
                     } />
                     <Route path="mcp-server" element={
                       <ProtectedAssociationRoute 
-                        title="Serveur MCP"
+                        title="Assistance IA"
                         message=""
                       >
                         <McpServer />

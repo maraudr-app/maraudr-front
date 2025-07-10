@@ -148,7 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
     {
       to: '/maraudApp/mcp-server',
       icon: <Cog6ToothIcon className="w-5 h-5" />,
-      label: t('sidebar.mcp', 'Serveur MCP'),
+      label: t('sidebar.mcp', 'Assistance IA'),
       key: 'mcp-server',
       showForManager: false
     },

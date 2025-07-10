@@ -16,9 +16,11 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import CreateEventModal from '../../components/planning/CreateEventModal';
 import { planningService } from '../../services/planningService';
-import { Event } from '../../types/planning/event';
+import type { Event } from '../../types/planning/event';
 import { Input } from '../../components/common/input/input';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { PlanningNavbar } from '../../components/planning/PlanningNavbar';
+import { Button } from '../../components/common/button/button';
 
 // Interface simplifiée pour les disponibilités par utilisateur
 interface UserAvailability {
@@ -29,8 +31,13 @@ interface UserAvailability {
     }
 }
 
+interface UserAvailabilityViewProps {
+  hideAddButton?: boolean;
+  externalAddButtonId?: string;
+  flat?: boolean;
+}
 // Composant pour la vue utilisateur simple (disponibilités)
-const UserAvailabilityView: React.FC = () => {
+const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButton, externalAddButtonId, flat }) => {
     const user = useAuthStore(state => state.user);
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -141,101 +148,92 @@ const UserAvailabilityView: React.FC = () => {
     const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
     const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-            <div className="max-w-6xl mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Mes Disponibilités
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Gérez vos créneaux de disponibilité pour les missions de l'association
-                    </p>
+        <div>
+            {!hideAddButton && !isSelectingPeriod && (
+                <div className="mb-4 flex w-full justify-end">
+                    <button
+                        onClick={startPeriodSelection}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                        id={externalAddButtonId || 'add-dispo-btn'}
+                    >
+                        Ajouter une disponibilité
+                    </button>
                 </div>
-                <div className="mb-6 flex flex-wrap gap-4">
-                    {!isSelectingPeriod ? (
-                        <button
-                            onClick={startPeriodSelection}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
-                        >
-                            Ajouter une disponibilité
-                        </button>
-                    ) : null}
+            )}
+            <div className={flat ? '' : "bg-white dark:bg-gray-800 rounded-lg shadow p-6"}>
+                <div className="flex justify-between items-center mb-6">
+                    <button
+                        onClick={() => changeMonth(-1)}
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h2 className="text-xl font-semibold">
+                        {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                    </h2>
+                    <button
+                        onClick={() => changeMonth(1)}
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
                 </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <button
-                            onClick={() => changeMonth(-1)}
-                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                    {daysOfWeek.map((day, index) => (
+                        <div
+                            key={index}
+                            className="text-center py-2 text-sm font-medium text-gray-500 dark:text-gray-400"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <h2 className="text-xl font-semibold">
-                            {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-                        </h2>
-                        <button
-                            onClick={() => changeMonth(1)}
-                            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 mb-2">
-                        {daysOfWeek.map((day, index) => (
+                            {day}
+                        </div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                    {Array.from({ length: startDay }).map((_, index) => (
+                        <div key={`empty-start-${index}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
+                    ))}
+                    {days.map((day, index) => {
+                        const isToday = new Date().toDateString() === day.toDateString();
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const dayDate = new Date(day);
+                        dayDate.setHours(0, 0, 0, 0);
+                        const isPastDate = dayDate < today;
+                        const dateKey = formatDate(day);
+                        const isAvailable = !!userAvailabilities[dateKey];
+                        let bgColor = 'bg-white dark:bg-gray-800';
+                        let textColor = 'text-gray-700 dark:text-gray-300';
+                        let borderColor = 'border-gray-100 dark:border-gray-700';
+                        if (!isPastDate) {
+                            if (isAvailable) {
+                                bgColor = 'bg-green-500';
+                                textColor = 'text-white';
+                                borderColor = 'border-green-500';
+                            }
+                        }
+                        return (
                             <div
                                 key={index}
-                                className="text-center py-2 text-sm font-medium text-gray-500 dark:text-gray-400"
+                                onClick={() => handleDateClick(day)}
+                                className={`aspect-square rounded-md border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md
+                                    ${bgColor} ${textColor} ${borderColor}
+                                    ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''}
+                                    ${isPastDate ? 'opacity-50 cursor-not-allowed' : ''}
+                                `}
                             >
-                                {day}
-                            </div>
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-1">
-                        {Array.from({ length: startDay }).map((_, index) => (
-                            <div key={`empty-start-${index}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
-                        ))}
-                        {days.map((day, index) => {
-                            const isToday = new Date().toDateString() === day.toDateString();
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            const dayDate = new Date(day);
-                            dayDate.setHours(0, 0, 0, 0);
-                            const isPastDate = dayDate < today;
-                            const dateKey = formatDate(day);
-                            const isAvailable = !!userAvailabilities[dateKey];
-                            let bgColor = 'bg-white dark:bg-gray-800';
-                            let textColor = 'text-gray-700 dark:text-gray-300';
-                            let borderColor = 'border-gray-100 dark:border-gray-700';
-                            if (!isPastDate) {
-                                if (isAvailable) {
-                                    bgColor = 'bg-green-500';
-                                    textColor = 'text-white';
-                                    borderColor = 'border-green-500';
-                                }
-                            }
-                            return (
-                                <div
-                                    key={index}
-                                    onClick={() => handleDateClick(day)}
-                                    className={`aspect-square rounded-md border transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md
-                                        ${bgColor} ${textColor} ${borderColor}
-                                        ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''}
-                                        ${isPastDate ? 'opacity-50 cursor-not-allowed' : ''}
-                                    `}
-                                >
-                                    <div className="h-full flex flex-col items-center justify-center p-1">
-                                        <div className="text-sm font-semibold">{day.getDate()}</div>
-                                    </div>
+                                <div className="h-full flex flex-col items-center justify-center p-1">
+                                    <div className="text-sm font-semibold">{day.getDate()}</div>
                                 </div>
-                            );
-                        })}
-                        {Array.from({ length: (7 - (days.length + startDay) % 7) % 7 }).map((_, index) => (
-                            <div key={`empty-end-${index}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
-                        ))}
-                    </div>
+                            </div>
+                        );
+                    })}
+                    {Array.from({ length: (7 - (days.length + startDay) % 7) % 7 }).map((_, index) => (
+                        <div key={`empty-end-${index}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
+                    ))}
                 </div>
             </div>
         </div>
@@ -562,10 +560,146 @@ const Planning: React.FC = () => {
         );
     }
 
-    // Si l'utilisateur n'est pas un manager, afficher la vue des disponibilités
+    // Si l'utilisateur n'est pas un manager, afficher la double vue membre
     const isManager = user.userType === 'Manager';
+    // États globaux pour la sélection de période (dispo)
+    const [isSelectingPeriod, setIsSelectingPeriod] = useState(false);
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
+    const [showTimeModal, setShowTimeModal] = useState(false);
+    const startPeriodSelection = () => {
+        setIsSelectingPeriod(true);
+        setStartDate(null);
+        setEndDate(null);
+        setStartTime('');
+        setEndTime('');
+    };
     if (!isManager) {
-        return <UserAvailabilityView />;
+        // 1. Filtrer les événements où l'utilisateur est participant
+        const myEvents = allEvents.filter(event => event.participantsIds && event.participantsIds.includes(user.sub));
+        // 2. Filtrer les dispos de l'utilisateur
+        const myDisponibilities = allDisponibilities.filter(dispo => dispo.userId === user.sub);
+        // 3. Etats pour les mois affichés
+        const [currentDateDispo, setCurrentDateDispo] = useState(new Date());
+        const [currentDateEvents, setCurrentDateEvents] = useState(new Date());
+        // 4. Helpers pour les jours/mois
+        const getDaysInMonth = (date: Date) => {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            return Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
+        };
+        const getMonthStartDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+        const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+        // 5. Rendu double calendrier
+        const sidebarWidth = sidebarCollapsed ? 'pl-14' : 'pl-[192px]';
+        return (
+            <>
+                <PlanningNavbar onAddDisponibility={startPeriodSelection} />
+                <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pt-16 ${sidebarWidth}`}>
+                    {/* Calendrier des disponibilités (flat, sans encadrement) */}
+                    <div className="flex-1 min-w-[320px] max-w-[500px] h-full flex flex-col items-center justify-start">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">Mes disponibilités</h2>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
+                          <UserAvailabilityView hideAddButton externalAddButtonId="add-dispo-navbar-btn" flat />
+                        </div>
+                    </div>
+                    {/* Calendrier des événements où je participe */}
+                    <div className="flex-1 min-w-[320px] max-w-[500px] h-full flex flex-col items-center justify-start">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">Mes missions</h2>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
+                            {/* Navigation mois */}
+                            <div className="flex justify-between items-center mb-4">
+                                <button onClick={() => setCurrentDateEvents(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                <h3 className="text-lg font-medium min-w-[130px] text-center text-gray-900 dark:text-white">
+                                    {months[currentDateEvents.getMonth()]} {currentDateEvents.getFullYear()}
+                                </h3>
+                                <button onClick={() => setCurrentDateEvents(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            </div>
+                            {/* Grille calendrier missions */}
+                            <div className="grid grid-cols-7 gap-1 mb-2">
+                                {daysOfWeek.map((day, idx) => (
+                                    <div key={idx} className="text-center py-2 text-sm font-medium text-gray-500 dark:text-gray-400">{day}</div>
+                                ))}
+                            </div>
+                            <div className="grid grid-cols-7 gap-1">
+                                {Array.from({ length: getMonthStartDay(currentDateEvents) }).map((_, idx) => (
+                                    <div key={`empty-start-myevents-${idx}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
+                                ))}
+                                {getDaysInMonth(currentDateEvents).map((day, idx) => {
+                                    const isToday = new Date().toDateString() === day.toDateString();
+                                    const today = new Date(); today.setHours(0,0,0,0);
+                                    const dayDate = new Date(day); dayDate.setHours(0,0,0,0);
+                                    const isPastDate = dayDate < today;
+                                    // Trouver les events où user participe ce jour
+                                    const eventsForDay = myEvents.filter(ev => {
+                                        const start = new Date(ev.beginningDate); start.setHours(0,0,0,0);
+                                        const end = new Date(ev.endDate); end.setHours(0,0,0,0);
+                                        return dayDate >= start && dayDate <= end;
+                                    });
+                                    let bgColor = 'bg-white dark:bg-gray-800';
+                                    let textColor = 'text-gray-700 dark:text-gray-300';
+                                    let borderColor = 'border-gray-100 dark:border-gray-700';
+                                    if (!isPastDate) {
+                                        if (eventsForDay.length === 1) {
+                                            bgColor = 'bg-green-100 dark:bg-green-900/30';
+                                            borderColor = 'border-green-200 dark:border-green-700';
+                                        } else if (eventsForDay.length === 2) {
+                                            bgColor = 'bg-orange-100 dark:bg-orange-900/30';
+                                            borderColor = 'border-orange-200 dark:border-orange-700';
+                                        } else if (eventsForDay.length >= 3) {
+                                            bgColor = 'bg-red-100 dark:bg-red-900/30';
+                                            borderColor = 'border-red-200 dark:border-red-700';
+                                        }
+                                    }
+                                    if (isPastDate && eventsForDay.length > 0) {
+                                        bgColor = 'bg-violet-200 dark:bg-violet-900/30';
+                                        borderColor = 'border-violet-400 dark:border-violet-700';
+                                    }
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`aspect-square rounded-md border transition-all duration-200 ${bgColor} ${textColor} ${borderColor} ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''} ${eventsForDay.length > 0 ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:brightness-110 shadow-sm' : ''}`}
+                                            title={eventsForDay.map(ev => ev.title).join(', ')}
+                                        >
+                                            <div className="h-full flex flex-col items-center justify-center p-0.5">
+                                                <div className="text-xs font-semibold">{day.getDate()}</div>
+                                                {eventsForDay.length > 0 && (
+                                                    <div className="text-xs opacity-90 mt-0.5">{eventsForDay.length}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {Array.from({ length: (7 - (getDaysInMonth(currentDateEvents).length + getMonthStartDay(currentDateEvents)) % 7) % 7 }).map((_, idx) => (
+                                    <div key={`empty-end-myevents-${idx}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {/* Légende code couleur sous les deux calendriers */}
+                    <div className="mt-6 flex flex-wrap gap-x-3 gap-y-2 text-xs justify-center items-center w-full">
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded mr-1.5"></div><span>1 événement</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-orange-500 border border-orange-600 rounded mr-1.5"></div><span>2 événements</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded mr-1.5"></div><span>3+ événements</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-violet-500 border border-violet-600 rounded mr-1.5"></div><span>Événement(s) passé(s)</span></div>
+                    </div>
+                </div>
+            </>
+        );
     }
 
     // Fonctions d'aide pour le calendrier
@@ -679,42 +813,35 @@ const Planning: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* Navbar fixe */}
-            <nav className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300" style={{ left: sidebarWidth }}>
-                <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center gap-3 pl-7">
-                        <CalendarIcon className="w-5 h-5" />
-                        <div className="text-gray-900 dark:text-white">
-                            Planning des Disponibilités
-                        </div>
+            {/* Affiche la navbar planning uniquement pour les membres */}
+            <PlanningNavbar onAddDisponibility={startPeriodSelection} isAddButtonDisabled={isManager} />
+            {/* Place the navbar at the top, sticky/fixed, flush with header and sidebar */}
+            <nav
+                className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300 border-b border-gray-200 dark:border-gray-800"
+                style={{ left: sidebarWidth }}
+            >
+                <div className="flex items-center justify-between h-16 px-7">
+                    <div className="flex items-center gap-3">
+                        <CalendarIcon className="w-6 h-6 text-maraudr-blue dark:text-maraudr-orange" />
+                        <span className="text-gray-900 dark:text-white text-lg font-bold">Planification & Disponibilités</span>
                     </div>
-                    
-                    <div className="flex items-center space-x-3 px-4">
-                        <button
-                            onClick={() => setShowCreateEventModal(true)}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                        >
-                            <PlusIcon className="w-4 h-4 mr-2" />
-                            Créer un événement
-                        </button>
-                        
-                        <button
-                            onClick={() => {
-                                loadAllDisponibilities();
-                                loadTeamUsers();
-                                loadAllEvents();
-                            }}
-                            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                            <ArrowPathIcon className="w-4 h-4 mr-2" />
-                            Actualiser
-                        </button>
+                    <div className="flex items-center space-x-4">
+                        {/* Example: Add main action buttons here, conditionally rendered by role */}
+                        {!isManager && (
+                            <Button
+                                onClick={startPeriodSelection}
+                                className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                            >
+                                Ajouter une disponibilité
+                            </Button>
+                        )}
+                        {/* Add more buttons/filters as needed */}
                     </div>
                 </div>
             </nav>
-
-            {/* Contenu principal */}
-            <main className="pt-16 w-full px-4 py-8">
+            {/* Main content scrolls under the navbar, with correct padding */}
+            <div className="pt-16" />
+            <main className="w-full px-4 py-8" style={{ paddingLeft: sidebarWidth }}>
                 <div className="w-full flex flex-col md:flex-row gap-4">
                     {/* Sidebar équipe */}
                     <div className="w-full md:w-1/4">
