@@ -248,7 +248,7 @@ const Planning: React.FC = () => {
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
     
     // Définir la largeur de la sidebar en pixels comme dans Stock
-    const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
+    const sidebarWidth = sidebarCollapsed ? '56px' : '';
 
     // États pour la vue manager
     const [currentDateAsso, setCurrentDateAsso] = useState(new Date());
@@ -597,7 +597,7 @@ const Planning: React.FC = () => {
         const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
         // 5. Rendu double calendrier
-        const sidebarWidth = sidebarCollapsed ? 'pl-14' : 'pl-[192px]';
+        const sidebarWidth = sidebarCollapsed ? 'pl-14' : '';
         return (
             <>
                 <PlanningNavbar onAddDisponibility={startPeriodSelection} />
@@ -806,6 +806,21 @@ const Planning: React.FC = () => {
         );
     };
 
+    // Fonction pour vérifier si un utilisateur est disponible aujourd'hui
+    const isUserAvailableToday = (userId: string): boolean => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const userDispos = getDisponibilitiesByUser(userId);
+        return userDispos.some((dispo: Disponibility) => {
+            const start = new Date(dispo.start);
+            const end = new Date(dispo.end);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            return today >= start && today <= end;
+        });
+    };
+
     // Rendu pour les managers
     const daysAsso = getDaysInMonth(currentDateAsso);
     const startDayAsso = getMonthStartDay(currentDateAsso);
@@ -843,7 +858,7 @@ const Planning: React.FC = () => {
                 </div>
             </nav>
             {/* Main content scrolls under the navbar, with correct padding */}
-            <div className="pt-16" />
+            <div className="pt-8" />
             <main className="w-full px-4 py-8" style={{ paddingLeft: sidebarWidth }}>
                 <div className="w-full flex flex-col md:flex-row gap-4">
                     {/* Sidebar équipe */}
@@ -890,9 +905,22 @@ const Planning: React.FC = () => {
                                             alt={`${user.firstname} ${user.lastname}`}
                                             className="w-8 h-8 rounded-full"
                                         />
-                                        <div className="ml-3">
+                                        <div className="ml-3 flex-1">
                                             <div className="font-medium">{user.firstname} {user.lastname}</div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">{user.isManager ? "Manager" : "Membre"}</div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
+                                                <span>{user.isManager ? "Manager" : "Membre"}</span>
+                                                {isUserAvailableToday(user.id) ? (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
+                                                        Disponible
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></div>
+                                                        Non disponible
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </button>
                                 ))}
