@@ -186,6 +186,11 @@ const Plan: React.FC = () => {
     const { sidebarCollapsed } = useAssoStore();
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
 
+    // Ajoute les états pour la suppression d'itinéraire
+    const [showDeleteItineraryModal, setShowDeleteItineraryModal] = useState(false);
+    const [itineraryToDelete, setItineraryToDelete] = useState<any>(null);
+    const [deletingItinerary, setDeletingItinerary] = useState(false);
+
     // Obtenir la position de l'utilisateur au chargement
     useEffect(() => {
         const getUserPosition = async () => {
@@ -648,6 +653,43 @@ const Plan: React.FC = () => {
         }
     };
 
+    // Ajoute la fonction de suppression d'itinéraire
+    const handleDeleteItinerary = async () => {
+        if (!itineraryToDelete || !selectedAssociation?.id) return;
+        setDeletingItinerary(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error('Token manquant');
+            const response = await fetch(`http://localhost:8084/itineraries/${itineraryToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) throw new Error('Erreur API');
+            toast.success('Itinéraire supprimé avec succès');
+            setShowDeleteItineraryModal(false);
+            setItineraryToDelete(null);
+            // Recharge la liste
+            const refreshed = await fetch(`http://localhost:8084/itineraries?associationId=${selectedAssociation.id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (refreshed.ok) {
+                const data = await refreshed.json();
+                setItineraries(data.filter((it: any) => it.associationId === selectedAssociation.id));
+            }
+        } catch (error) {
+            toast.error('Erreur lors de la suppression de l\'itinéraire');
+        } finally {
+            setDeletingItinerary(false);
+        }
+    };
+
     return (
         <div className="h-full bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             {/* Navbar Carte, style StockNavbar */}
@@ -900,6 +942,11 @@ const Plan: React.FC = () => {
                                                             <span>Voir sur Google Maps</span>
                                                         </a>
                                                     )}
+                                                    <button onClick={e => { e.stopPropagation(); setItineraryToDelete(itinerary); setShowDeleteItineraryModal(true); }}
+                                                        className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors ml-2"
+                                                        title="Supprimer l'itinéraire">
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </Popup>
                                         </Marker>
@@ -1094,6 +1141,11 @@ const Plan: React.FC = () => {
                                                             </a>
                                                         )}
                                                     </div>
+                                                    <button onClick={e => { e.stopPropagation(); setItineraryToDelete(itinerary); setShowDeleteItineraryModal(true); }}
+                                                        className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors ml-2"
+                                                        title="Supprimer l'itinéraire">
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         );
@@ -1343,6 +1395,35 @@ const Plan: React.FC = () => {
                     />
                 ))}
             </div>
+
+            {showDeleteItineraryModal && itineraryToDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Supprimer l'itinéraire
+                        </h3>
+                        <p className="text-gray-700 dark:text-gray-300 mb-6">
+                            Êtes-vous sûr de vouloir supprimer cet itinéraire ? Cette action est irréversible.
+                        </p>
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={() => setShowDeleteItineraryModal(false)}
+                                disabled={deletingItinerary}
+                                className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleDeleteItinerary}
+                                disabled={deletingItinerary}
+                                className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-all"
+                            >
+                                {deletingItinerary ? 'Suppression...' : 'Confirmer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

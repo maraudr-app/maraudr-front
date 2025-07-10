@@ -602,91 +602,94 @@ const Planning: React.FC = () => {
             <>
                 <PlanningNavbar onAddDisponibility={startPeriodSelection} />
                 <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pt-16 ${sidebarWidth}`}>
-                    {/* Calendrier des disponibilités (flat, sans encadrement) */}
-                    <div className="flex-1 min-w-[320px] max-w-[500px] h-full flex flex-col items-center justify-start">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">Mes disponibilités</h2>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
-                          <UserAvailabilityView hideAddButton externalAddButtonId="add-dispo-navbar-btn" flat />
+                    {/* Container pour les deux calendriers côte à côte */}
+                    <div className="flex flex-row gap-6 justify-start items-start ">
+                        {/* Calendrier des disponibilités (flat, sans encadrement) */}
+                        <div className="flex-1 min-w-[400px] max-w-[600px] h-full flex flex-col items-center justify-start">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">Mes disponibilités</h2>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
+                              <UserAvailabilityView hideAddButton externalAddButtonId="add-dispo-navbar-btn" flat />
+                            </div>
                         </div>
-                    </div>
-                    {/* Calendrier des événements où je participe */}
-                    <div className="flex-1 min-w-[320px] max-w-[500px] h-full flex flex-col items-center justify-start">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">Mes missions</h2>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
-                            {/* Navigation mois */}
-                            <div className="flex justify-between items-center mb-4">
-                                <button onClick={() => setCurrentDateEvents(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                <h3 className="text-lg font-medium min-w-[130px] text-center text-gray-900 dark:text-white">
-                                    {months[currentDateEvents.getMonth()]} {currentDateEvents.getFullYear()}
-                                </h3>
-                                <button onClick={() => setCurrentDateEvents(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                            </div>
-                            {/* Grille calendrier missions */}
-                            <div className="grid grid-cols-7 gap-1 mb-2">
-                                {daysOfWeek.map((day, idx) => (
-                                    <div key={idx} className="text-center py-2 text-sm font-medium text-gray-500 dark:text-gray-400">{day}</div>
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-7 gap-1">
-                                {Array.from({ length: getMonthStartDay(currentDateEvents) }).map((_, idx) => (
-                                    <div key={`empty-start-myevents-${idx}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
-                                ))}
-                                {getDaysInMonth(currentDateEvents).map((day, idx) => {
-                                    const isToday = new Date().toDateString() === day.toDateString();
-                                    const today = new Date(); today.setHours(0,0,0,0);
-                                    const dayDate = new Date(day); dayDate.setHours(0,0,0,0);
-                                    const isPastDate = dayDate < today;
-                                    // Trouver les events où user participe ce jour
-                                    const eventsForDay = myEvents.filter(ev => {
-                                        const start = new Date(ev.beginningDate); start.setHours(0,0,0,0);
-                                        const end = new Date(ev.endDate); end.setHours(0,0,0,0);
-                                        return dayDate >= start && dayDate <= end;
-                                    });
-                                    let bgColor = 'bg-white dark:bg-gray-800';
-                                    let textColor = 'text-gray-700 dark:text-gray-300';
-                                    let borderColor = 'border-gray-100 dark:border-gray-700';
-                                    if (!isPastDate) {
-                                        if (eventsForDay.length === 1) {
-                                            bgColor = 'bg-green-100 dark:bg-green-900/30';
-                                            borderColor = 'border-green-200 dark:border-green-700';
-                                        } else if (eventsForDay.length === 2) {
-                                            bgColor = 'bg-orange-100 dark:bg-orange-900/30';
-                                            borderColor = 'border-orange-200 dark:border-orange-700';
-                                        } else if (eventsForDay.length >= 3) {
-                                            bgColor = 'bg-red-100 dark:bg-red-900/30';
-                                            borderColor = 'border-red-200 dark:border-red-700';
+                        {/* Calendrier des événements où je participe */}
+                        <div className="flex-1 min-w-[400px] max-w-[600px] h-full flex flex-col items-center justify-start">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">Mes missions</h2>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
+                                {/* Navigation mois */}
+                                <div className="flex justify-between items-center mb-4">
+                                    <button onClick={() => setCurrentDateEvents(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <h3 className="text-lg font-medium min-w-[130px] text-center text-gray-900 dark:text-white">
+                                        {months[currentDateEvents.getMonth()]} {currentDateEvents.getFullYear()}
+                                    </h3>
+                                    <button onClick={() => setCurrentDateEvents(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                {/* Grille calendrier missions */}
+                                <div className="grid grid-cols-7 gap-1 mb-2">
+                                    {daysOfWeek.map((day, idx) => (
+                                        <div key={idx} className="text-center py-2 text-sm font-medium text-gray-500 dark:text-gray-400">{day}</div>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-7 gap-1">
+                                    {Array.from({ length: getMonthStartDay(currentDateEvents) }).map((_, idx) => (
+                                        <div key={`empty-start-myevents-${idx}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
+                                    ))}
+                                    {getDaysInMonth(currentDateEvents).map((day, idx) => {
+                                        const isToday = new Date().toDateString() === day.toDateString();
+                                        const today = new Date(); today.setHours(0,0,0,0);
+                                        const dayDate = new Date(day); dayDate.setHours(0,0,0,0);
+                                        const isPastDate = dayDate < today;
+                                        // Trouver les events où user participe ce jour
+                                        const eventsForDay = myEvents.filter(ev => {
+                                            const start = new Date(ev.beginningDate); start.setHours(0,0,0,0);
+                                            const end = new Date(ev.endDate); end.setHours(0,0,0,0);
+                                            return dayDate >= start && dayDate <= end;
+                                        });
+                                        let bgColor = 'bg-white dark:bg-gray-800';
+                                        let textColor = 'text-gray-700 dark:text-gray-300';
+                                        let borderColor = 'border-gray-100 dark:border-gray-700';
+                                        if (!isPastDate) {
+                                            if (eventsForDay.length === 1) {
+                                                bgColor = 'bg-green-100 dark:bg-green-900/30';
+                                                borderColor = 'border-green-200 dark:border-green-700';
+                                            } else if (eventsForDay.length === 2) {
+                                                bgColor = 'bg-orange-100 dark:bg-orange-900/30';
+                                                borderColor = 'border-orange-200 dark:border-orange-700';
+                                            } else if (eventsForDay.length >= 3) {
+                                                bgColor = 'bg-red-100 dark:bg-red-900/30';
+                                                borderColor = 'border-red-200 dark:border-red-700';
+                                            }
                                         }
-                                    }
-                                    if (isPastDate && eventsForDay.length > 0) {
-                                        bgColor = 'bg-violet-200 dark:bg-violet-900/30';
-                                        borderColor = 'border-violet-400 dark:border-violet-700';
-                                    }
-                                    return (
-                                        <div
-                                            key={idx}
-                                            className={`aspect-square rounded-md border transition-all duration-200 ${bgColor} ${textColor} ${borderColor} ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''} ${eventsForDay.length > 0 ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:brightness-110 shadow-sm' : ''}`}
-                                            title={eventsForDay.map(ev => ev.title).join(', ')}
-                                        >
-                                            <div className="h-full flex flex-col items-center justify-center p-0.5">
-                                                <div className="text-xs font-semibold">{day.getDate()}</div>
-                                                {eventsForDay.length > 0 && (
-                                                    <div className="text-xs opacity-90 mt-0.5">{eventsForDay.length}</div>
-                                                )}
+                                        if (isPastDate && eventsForDay.length > 0) {
+                                            bgColor = 'bg-violet-200 dark:bg-violet-900/30';
+                                            borderColor = 'border-violet-400 dark:border-violet-700';
+                                        }
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`aspect-square rounded-md border transition-all duration-200 ${bgColor} ${textColor} ${borderColor} ${isToday ? 'ring-2 ring-blue-400 ring-offset-1' : ''} ${eventsForDay.length > 0 ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:brightness-110 shadow-sm' : ''}`}
+                                                title={eventsForDay.map(ev => ev.title).join(', ')}
+                                            >
+                                                <div className="h-full flex flex-col items-center justify-center p-0.5">
+                                                    <div className="text-xs font-semibold">{day.getDate()}</div>
+                                                    {eventsForDay.length > 0 && (
+                                                        <div className="text-xs opacity-90 mt-0.5">{eventsForDay.length}</div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                                {Array.from({ length: (7 - (getDaysInMonth(currentDateEvents).length + getMonthStartDay(currentDateEvents)) % 7) % 7 }).map((_, idx) => (
-                                    <div key={`empty-end-myevents-${idx}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
-                                ))}
+                                        );
+                                    })}
+                                    {Array.from({ length: (7 - (getDaysInMonth(currentDateEvents).length + getMonthStartDay(currentDateEvents)) % 7) % 7 }).map((_, idx) => (
+                                        <div key={`empty-end-myevents-${idx}`} className="aspect-square rounded-md bg-gray-50 dark:bg-gray-700" />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>

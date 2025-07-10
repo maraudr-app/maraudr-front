@@ -13,6 +13,7 @@ const Media: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'photos' | 'documents'>('photos');
   const [documents, setDocuments] = useState<MediaFile[]>([]);
   const [photos, setPhotos] = useState<MediaFile[]>([]);
+  const [allDocuments, setAllDocuments] = useState<MediaFile[]>([]); // Pour le filtrage côté client
   const [isLoading, setIsLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<MediaFile | null>(null);
@@ -38,6 +39,17 @@ const Media: React.FC = () => {
     }
   }, [selectedAssociation, activeTab, filter]);
 
+  // Filtrage côté client pour les documents
+  useEffect(() => {
+    if (activeTab === 'documents' && allDocuments.length > 0) {
+      const searchTerm = filter.name || '';
+      const filtered = allDocuments.filter(doc => 
+        doc.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setDocuments(filtered);
+    }
+  }, [filter.name, allDocuments, activeTab]);
+
   const fetchData = async () => {
     if (!selectedAssociation?.id) return;
 
@@ -46,6 +58,7 @@ const Media: React.FC = () => {
       if (activeTab === 'documents') {
         const docs = await mediaService.getDocuments(selectedAssociation.id, filter);
         setDocuments(docs);
+        setAllDocuments(docs); // Mettre à jour l'état pour le filtrage côté client
       } else {
         const pics = await mediaService.getPhotos(selectedAssociation.id, filter);
         setPhotos(pics);
@@ -96,19 +109,22 @@ const Media: React.FC = () => {
 
   const confirmDelete = async () => {
     if (!selectedFileToDelete) return;
-    // Fermer la modale immédiatement
-    setShowDeleteModal(false);
-    setSelectedFileToDelete(null);
+    
     try {
       const success = await mediaService.deleteFile(selectedFileToDelete.id, selectedAssociation!.id);
       if (success) {
         toast.success('Fichier supprimé avec succès');
         await fetchData();
+        // Fermer la modale seulement après succès
+        setShowDeleteModal(false);
+        setSelectedFileToDelete(null);
       } else {
         toast.error('Erreur lors de la suppression');
+        // Garder la modale ouverte en cas d'erreur
       }
     } catch (error) {
       toast.error('Erreur lors de la suppression du fichier');
+      // Garder la modale ouverte en cas d'erreur
     }
   };
 
@@ -205,60 +221,6 @@ const Media: React.FC = () => {
         {activeTab === 'photos' && (
           <div className="mb-8">
             <div className="rounded-xl p-6">
-              {/* Filtres fixes en haut */}
-              <div className="sticky top-0 z-10 mb-6 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    Photos de l'association
-                  </h3>
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-maraudr-blue to-maraudr-orange text-white text-sm font-medium rounded-lg hover:from-maraudr-orange hover:to-maraudr-blue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <FaImages className="w-4 h-4 mr-2" />
-                    {uploading ? 'Upload en cours...' : 'Ajouter une photo'}
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Input
-                    type="text"
-                    name="name"
-                    value={filter.name}
-                    onChange={handleFilterChange}
-                    placeholder="Rechercher une photo"
-                  />
-                  <Select
-                    name="category"
-                    value={filter.category}
-                    onChange={handleFilterChange}
-                    placeholder="Toutes les catégories"
-                  >
-                    <option value="">Toutes les catégories</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </Select>
-                  <Select
-                    name="uploadedBy"
-                    value={filter.uploadedBy}
-                    onChange={handleFilterChange}
-                    placeholder="Tous les uploaders"
-                  >
-                    <option value="">Tous les uploaders</option>
-                    {uploaders.map(uploader => (
-                      <option key={uploader} value={uploader}>{uploader}</option>
-                    ))}
-                  </Select>
-                  <Button
-                    onClick={handleResetFilters}
-                    className="text-xs bg-gray-200 dark:bg-gray-600 px-3 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    Réinitialiser
-                  </Button>
-                </div>
-              </div>
-
               {isLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-maraudr-blue mx-auto mb-4"></div>
@@ -312,61 +274,18 @@ const Media: React.FC = () => {
         {activeTab === 'documents' && (
           <div className="mb-8">
             <div className="rounded-xl p-6">
-              {/* Filtres fixes en haut */}
-              <div className="sticky top-0 z-10 mb-6 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    Documents de l'association
-                  </h3>
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-maraudr-blue to-maraudr-orange text-white text-sm font-medium rounded-lg hover:from-maraudr-orange hover:to-maraudr-blue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <FaFileAlt className="w-4 h-4 mr-2" />
-                    {uploading ? 'Upload en cours...' : 'Ajouter un fichier'}
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Input
-                    type="text"
-                    name="name"
-                    value={filter.name}
-                    onChange={handleFilterChange}
-                    placeholder="Rechercher un document"
-                  />
-                  <Select
-                    name="category"
-                    value={filter.category}
-                    onChange={handleFilterChange}
-                    placeholder="Toutes les catégories"
-                  >
-                    <option value="">Toutes les catégories</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </Select>
-                  <Select
-                    name="uploadedBy"
-                    value={filter.uploadedBy}
-                    onChange={handleFilterChange}
-                    placeholder="Tous les uploaders"
-                  >
-                    <option value="">Tous les uploaders</option>
-                    {uploaders.map(uploader => (
-                      <option key={uploader} value={uploader}>{uploader}</option>
-                    ))}
-                  </Select>
-                  <Button
-                    onClick={handleResetFilters}
-                    className="text-xs bg-gray-200 dark:bg-gray-600 px-3 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    Réinitialiser
-                  </Button>
-                </div>
+              {/* Filtre de recherche par nom */}
+              <div className="mb-6">
+                <Input
+                  type="text"
+                  name="name"
+                  value={filter.name}
+                  onChange={handleFilterChange}
+                  placeholder="Rechercher un document par nom..."
+                  className="max-w-md"
+                />
               </div>
 
-              {/* Tableau des documents avec hauteur fixe et scroll */}
               {isLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-maraudr-blue mx-auto mb-4"></div>

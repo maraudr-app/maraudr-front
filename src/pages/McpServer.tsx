@@ -125,7 +125,8 @@ const McpServer: React.FC = () => {
             </nav>
             {/* Main content scrolls under the navbar, with correct padding */}
             <div className="pt-16" />
-            <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="h-[calc(100vh-4rem)] overflow-y-auto">
+                <div className="max-w-4xl mx-auto px-4 py-6">
                 {/* Quick Actions */}
                 <div className="mb-6">
                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -250,6 +251,7 @@ const McpServer: React.FC = () => {
                         </span>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );
