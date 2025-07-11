@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { tokenManager } from './tokenManager';
+import { getModuleApiUrl } from '../config/api';
 
-const CHAT_API_URL = import.meta.env.VITE_CHAT_API_URL || 'http://localhost:8086';
+const CHAT_API_URL = getModuleApiUrl('mcp');
 
 // Instance API spécifique pour le chat sur le port 8086
 const chatApi = axios.create({

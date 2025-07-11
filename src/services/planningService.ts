@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { tokenManager } from './tokenManager';
+import { getModuleApiUrl } from '../config/api';
 
-// Instance API spécifique pour le planning (port 8085)
+// Instance API spécifique pour le planning
 const planningApi = axios.create({
-    baseURL: 'http://localhost:8085/api',
+    baseURL: getModuleApiUrl('planning'),
     headers: {
         'Content-Type': 'application/json',
     },

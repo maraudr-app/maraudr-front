@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { tokenManager } from './tokenManager';
+import { getModuleApiUrl } from '../config/api';
 
 // Créer une instance axios avec la configuration de base
 export const api = axios.create({
-    baseURL: 'http://localhost:8082/api', // URL directe du backend
+    baseURL: getModuleApiUrl('user'), // Utilise le module 'user' par défaut
     headers: {
         'Content-Type': 'application/json',
     },

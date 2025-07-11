@@ -266,7 +266,7 @@ const Home = () => {
             <div>
               <div className="text-4xl font-bold text-maraudr-orange dark:text-maraudr-blue mb-2">100%</div>
               <div className="text-maraudr-darkText dark:text-maraudr-lightText">Responsive</div>
-            </div>
+          </div>
             <div>
               <div className="text-4xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2">24/7</div>
               <div className="text-maraudr-darkText dark:text-maraudr-lightText">Disponible</div>

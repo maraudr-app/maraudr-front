@@ -250,7 +250,7 @@ const Media: React.FC = () => {
                         <p className="text-gray-900 dark:text-white text-xs truncate font-medium">{photo.name}</p>
                         <p className="text-gray-500 dark:text-gray-400 text-xs">
                           {new Date(photo.uploadedAt).toLocaleDateString()}
-                        </p>
+                      </p>
                       </div>
                     </div>
                   ))}
@@ -276,11 +276,11 @@ const Media: React.FC = () => {
             <div className="rounded-xl p-6">
               {/* Filtre de recherche par nom */}
               <div className="mb-6">
-                <Input
-                  type="text"
-                  name="name"
-                  value={filter.name}
-                  onChange={handleFilterChange}
+                  <Input
+                    type="text"
+                    name="name"
+                    value={filter.name}
+                    onChange={handleFilterChange}
                   placeholder="Rechercher un document par nom..."
                   className="max-w-md"
                 />

@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { tokenManager } from './tokenManager';
+import { getModuleApiUrl } from '../config/api';
 
-const DOCUMENT_API_URL = 'http://localhost:8087';
+const DOCUMENT_API_URL = getModuleApiUrl('document');
 
 // Instance API spécifique pour les documents
 const documentApi = axios.create({

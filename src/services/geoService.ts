@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { tokenManager } from './tokenManager';
+import { getModuleApiUrl, getModuleBaseUrl } from '../config/api';
 
-const GEO_API_URL = 'http://localhost:8084';
+const GEO_API_URL = getModuleApiUrl('geo');
+const GEO_BASE_URL = getModuleBaseUrl('geo');
 
 // Instance API spécifique pour la géolocalisation (port 8084)
 const geoApi = axios.create({
@@ -138,7 +140,11 @@ export const geoService = {
 
     // Créer une connexion WebSocket pour les mises à jour en temps réel
     createLiveConnection: (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): WebSocket => {
-        const socket = new WebSocket(`ws://localhost:8084/geo/live?associationId=${associationId}`);
+        const isProd = import.meta.env.VITE_NODE_ENV === 'production';
+        const wsUrl = isProd 
+            ? `wss://${import.meta.env.VITE_API_DOMAIN_PROD?.replace('https://', '')}/geo/geo/live?associationId=${associationId}`
+            : `ws://localhost:8084/geo/live?associationId=${associationId}`;
+        const socket = new WebSocket(wsUrl);
         
         socket.onopen = () => {
             console.log('WebSocket connection opened for association:', associationId);

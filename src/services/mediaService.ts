@@ -1,4 +1,5 @@
-import { api } from './api';
+import axios from 'axios';
+import { getModuleApiUrl } from '../config/api';
 import { tokenManager } from './tokenManager';
 
 export interface MediaFile {
@@ -24,11 +25,11 @@ export interface MediaFilter {
 }
 
 class MediaService {
-    private baseUrl = 'http://localhost:8087';
+    private baseUrl = getModuleApiUrl('document');
 
     async getMediaFiles(associationId: string, filter?: MediaFilter): Promise<MediaFile[]> {
         try {
-            const response = await api.get(`${this.baseUrl}/download/${associationId}`);
+            const response = await axios.get(`${this.baseUrl}/download/${associationId}`);
             
             // Mapper le format de réponse du backend au format attendu par le frontend
             const mappedFiles: MediaFile[] = response.data.map((file: any) => ({
@@ -66,7 +67,7 @@ class MediaService {
             const formData = new FormData();
             formData.append('file', file);
 
-            const response = await api.post(`${this.baseUrl}/upload/${associationId}`, formData, {
+            const response = await axios.post(`${this.baseUrl}/upload/${associationId}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -80,7 +81,7 @@ class MediaService {
 
     async deleteFile(fileId: string, associationId: string): Promise<boolean> {
         try {
-            await api.delete(`${this.baseUrl}/delete/${associationId}/document/${fileId}`);
+            await axios.delete(`${this.baseUrl}/delete/${associationId}/document/${fileId}`);
             return true;
         } catch (error) {
             console.error('Erreur lors de la suppression du fichier:', error);
@@ -90,7 +91,7 @@ class MediaService {
 
     async updateFile(fileId: string, updates: Partial<MediaFile>): Promise<MediaFile> {
         try {
-            const response = await api.put(`${this.baseUrl}/${fileId}`, updates);
+            const response = await axios.put(`${this.baseUrl}/${fileId}`, updates);
             return response.data;
         } catch (error) {
             console.error('Erreur lors de la mise à jour du fichier:', error);
@@ -100,7 +101,7 @@ class MediaService {
 
     async getCategories(): Promise<string[]> {
         try {
-            const response = await api.get(`${this.baseUrl}/categories`);
+            const response = await axios.get(`${this.baseUrl}/categories`);
             return response.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des catégories:', error);
@@ -111,7 +112,7 @@ class MediaService {
     async getUploaders(associationId: string): Promise<string[]> {
         try {
             // Endpoint temporaire - à ajuster selon l'API du backend
-            const response = await api.get(`${this.baseUrl}/users/${associationId}`);
+            const response = await axios.get(`${this.baseUrl}/users/${associationId}`);
             return response.data;
         } catch (error) {
             console.error('Erreur lors de la récupération des uploaders:', error);

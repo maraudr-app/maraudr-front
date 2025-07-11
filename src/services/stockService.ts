@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { tokenManager } from './tokenManager';
+import { getModuleApiUrl } from '../config/api';
 import { 
     StockItem, 
     CreateStockItemRequest, 
@@ -10,7 +11,7 @@ import {
     Category
 } from '../types/stock/StockItem';
 
-const API_URL = 'http://localhost:8081';
+const API_URL = getModuleApiUrl('stock');
 
 // Fonction utilitaire pour mapper les réponses du backend vers le frontend
 const mapBackendItemToFrontend = (backendItem: any): StockItem => {

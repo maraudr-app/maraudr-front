@@ -556,109 +556,109 @@ const DashBoard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendrier d'activité - 1/3 de la largeur */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {isManager ? 'Activité de l\'association' : 'Mon activité'}
-              </h3>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => navigateMonth('prev')}
-                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <ChevronLeftIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                </button>
-                <div className="text-sm text-gray-500 dark:text-gray-400 min-w-[120px] text-center">
-                  {getMonthName(selectedMonth)}
-                </div>
-                <button
-                  onClick={() => navigateMonth('next')}
-                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                </button>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {isManager ? 'Activité de l\'association' : 'Mon activité'}
+            </h3>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => navigateMonth('prev')}
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <ChevronLeftIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              </button>
+              <div className="text-sm text-gray-500 dark:text-gray-400 min-w-[120px] text-center">
+                {getMonthName(selectedMonth)}
+              </div>
+              <button
+                onClick={() => navigateMonth('next')}
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            {/* Légende */}
+            <div className="flex items-center space-x-4 text-xs">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                <span className="text-gray-600 dark:text-gray-400">Faible (1-2)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-orange-500 rounded-full mr-1"></div>
+                <span className="text-gray-600 dark:text-gray-400">Modérée (3-5)</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+                <span className="text-gray-600 dark:text-gray-400">Élevée (6+)</span>
               </div>
             </div>
-            
-            <div className="space-y-4">
-              {/* Légende */}
-              <div className="flex items-center space-x-4 text-xs">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
-                  <span className="text-gray-600 dark:text-gray-400">Faible (1-2)</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-orange-500 rounded-full mr-1"></div>
-                  <span className="text-gray-600 dark:text-gray-400">Modérée (3-5)</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
-                  <span className="text-gray-600 dark:text-gray-400">Élevée (6+)</span>
-                </div>
-              </div>
 
-              {/* Calendrier mini */}
-              <div className="grid grid-cols-7 gap-1">
-                {/* En-têtes des jours */}
-                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, index) => (
-                  <div key={index} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 p-1">
-                    {day}
-                  </div>
-                ))}
-                
-                {/* Jours du mois avec activité */}
-                {(() => {
-                  const daysInMonth = getDaysInMonth(selectedMonth);
-                  const monthActivities = generateRealMonthActivities(selectedMonth);
-                  const today = new Date();
-                  const isCurrentMonth = selectedMonth.getMonth() === today.getMonth() && 
-                                        selectedMonth.getFullYear() === today.getFullYear();
-                  
-                  return Array.from({ length: daysInMonth }, (_, i) => {
-                    const dayNumber = i + 1;
-                    const activities = monthActivities[i];
-                    const intensity = activities === 0 ? 'bg-gray-100 dark:bg-gray-700' :
-                                    activities <= 2 ? 'bg-green-200 dark:bg-green-800' :
-                                    activities <= 5 ? 'bg-orange-200 dark:bg-orange-800' :
-                                    'bg-red-200 dark:bg-red-800';
-                    
-                    const isToday = isCurrentMonth && dayNumber === today.getDate();
-                    
-                    return (
-                      <div
-                        key={dayNumber}
-                        className={`aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-all hover:scale-110 ${intensity} ${
-                          isToday ? 'ring-2 ring-blue-500 font-bold' : ''
-                        }`}
-                        title={`${dayNumber} ${getMonthName(selectedMonth).split(' ')[0]} - ${activities} activités`}
-                        onClick={() => handleDayClick(selectedMonth, dayNumber)}
-                      >
-                        {dayNumber}
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
+            {/* Calendrier mini */}
+            <div className="grid grid-cols-7 gap-1">
+              {/* En-têtes des jours */}
+              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, index) => (
+                <div key={index} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 p-1">
+                  {day}
+                </div>
+              ))}
+              
+                             {/* Jours du mois avec activité */}
+               {(() => {
+                 const daysInMonth = getDaysInMonth(selectedMonth);
+                 const monthActivities = generateRealMonthActivities(selectedMonth);
+                 const today = new Date();
+                 const isCurrentMonth = selectedMonth.getMonth() === today.getMonth() && 
+                                       selectedMonth.getFullYear() === today.getFullYear();
+                 
+                 return Array.from({ length: daysInMonth }, (_, i) => {
+                   const dayNumber = i + 1;
+                   const activities = monthActivities[i];
+                   const intensity = activities === 0 ? 'bg-gray-100 dark:bg-gray-700' :
+                                   activities <= 2 ? 'bg-green-200 dark:bg-green-800' :
+                                   activities <= 5 ? 'bg-orange-200 dark:bg-orange-800' :
+                                   'bg-red-200 dark:bg-red-800';
+                   
+                   const isToday = isCurrentMonth && dayNumber === today.getDate();
+                   
+                   return (
+                     <div
+                       key={dayNumber}
+                       className={`aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-all hover:scale-110 ${intensity} ${
+                         isToday ? 'ring-2 ring-blue-500 font-bold' : ''
+                       }`}
+                       title={`${dayNumber} ${getMonthName(selectedMonth).split(' ')[0]} - ${activities} activités`}
+                       onClick={() => handleDayClick(selectedMonth, dayNumber)}
+                     >
+                       {dayNumber}
+                     </div>
+                   );
+                 });
+               })()}
+            </div>
 
-              {/* Statistiques rapides */}
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                    {dashboardData.userEvents.length}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Mes missions</div>
+            {/* Statistiques rapides */}
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                  {dashboardData.userEvents.length}
                 </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                    {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">À venir</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Mes missions</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length}
                 </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {dashboardData.userEvents.filter(event => new Date(event.endDate) < new Date()).length}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Terminées</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">À venir</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {dashboardData.userEvents.filter(event => new Date(event.endDate) < new Date()).length}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Terminées</div>
                 </div>
               </div>
             </div>
@@ -667,7 +667,7 @@ const DashBoard = () => {
 
         {/* Graphe d'activité des événements pour les managers (2/3 de la largeur), prochaines missions pour membres */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             {isManager ? (
               <div className="w-full">
                 <div className="flex items-center justify-between mb-6">
@@ -689,8 +689,8 @@ const DashBoard = () => {
                         </option>
                       ))}
                     </select>
+                    </div>
                   </div>
-                </div>
                 
                 <div className="w-full h-96">
                   <ResponsiveContainer width="100%" height="100%">
@@ -749,7 +749,7 @@ const DashBoard = () => {
                       />
                     </LineChart>
                   </ResponsiveContainer>
-                </div>
+                    </div>
                 
                 <div className="mt-4 flex justify-center space-x-8 text-sm">
                   <div className="flex items-center">
@@ -765,88 +765,88 @@ const DashBoard = () => {
                         .filter(e => new Date(e.beginningDate).getFullYear() === selectedYear)
                         .reduce((total, event) => total + (event.participantsIds?.length || 0), 0)})
                     </span>
-                  </div>
+                </div>
                 </div>
               </div>
             ) : (
               <>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Prochaines missions</h3>
-                <div className="space-y-3">
-                  {dashboardData.userEvents
-                    .filter(event => new Date(event.beginningDate) > new Date())
+              <div className="space-y-3">
+                {dashboardData.userEvents
+                  .filter(event => new Date(event.beginningDate) > new Date())
                     .slice(0, 3)
-                    .map((event, index) => {
-                      const eventDate = new Date(event.beginningDate);
-                      const endDate = new Date(event.endDate);
-                      const isToday = eventDate.toDateString() === new Date().toDateString();
-                      const isTomorrow = eventDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
-                      let dateText = '';
-                      if (isToday) {
-                        dateText = `Aujourd'hui ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-                      } else if (isTomorrow) {
-                        dateText = `Demain ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-                      } else {
-                        dateText = eventDate.toLocaleDateString('fr-FR', { 
-                          weekday: 'long', 
-                          day: 'numeric', 
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        });
-                      }
-                      return (
-                        <div 
-                          key={event.id} 
-                          className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                          onClick={() => {
-                            setSelectedEvent(event);
-                            setShowEventModal(true);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            <MapPinIcon className="w-5 h-5 text-blue-500 mr-3" />
-                            <div>
-                              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                                {event.title}
+                  .map((event, index) => {
+                    const eventDate = new Date(event.beginningDate);
+                    const endDate = new Date(event.endDate);
+                    const isToday = eventDate.toDateString() === new Date().toDateString();
+                    const isTomorrow = eventDate.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                    let dateText = '';
+                    if (isToday) {
+                      dateText = `Aujourd'hui ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                    } else if (isTomorrow) {
+                      dateText = `Demain ${eventDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+                    } else {
+                      dateText = eventDate.toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        day: 'numeric', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+                    }
+                    return (
+                      <div 
+                        key={event.id} 
+                        className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setShowEventModal(true);
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <MapPinIcon className="w-5 h-5 text-blue-500 mr-3" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              {event.title}
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-300">
+                              {dateText}
+                            </p>
+                            {event.location && (
+                              <p className="text-xs text-blue-500 dark:text-blue-400">
+                                📍 {event.location}
                               </p>
-                              <p className="text-xs text-blue-600 dark:text-blue-300">
-                                {dateText}
-                              </p>
-                              {event.location && (
-                                <p className="text-xs text-blue-500 dark:text-blue-400">
-                                  📍 {event.location}
-                                </p>
-                              )}
-                            </div>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
-                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length === 0 && (
-                    <div className="text-center py-8">
-                      <CalendarDaysIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">
-                        Aucune mission prévue
-                      </p>
-                      <Link
-                        to="/maraudApp/planing"
-                        className="inline-flex items-center mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                      >
-                        Voir le planning
-                      </Link>
-                    </div>
-                  )}
-                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length > 3 && (
-                    <div className="text-center pt-2">
-                      <Link
-                        to="/maraudApp/planing"
-                        className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                      >
-                        Voir toutes les missions ({dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length})
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    );
+                  })}
+                {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length === 0 && (
+                  <div className="text-center py-8">
+                    <CalendarDaysIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      Aucune mission prévue
+                    </p>
+                    <Link
+                      to="/maraudApp/planing"
+                      className="inline-flex items-center mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    >
+                      Voir le planning
+                    </Link>
+                  </div>
+                )}
+                {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length > 3 && (
+                  <div className="text-center pt-2">
+                    <Link
+                      to="/maraudApp/planing"
+                      className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    >
+                      Voir toutes les missions ({dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length})
+                    </Link>
+                  </div>
+                )}
+              </div>
               </>
             )}
           </div>

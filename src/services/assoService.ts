@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { userService } from './userService';
+import { getModuleApiUrl } from '../config/api';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = getModuleApiUrl('association');
 
 
 interface AssoResponse {

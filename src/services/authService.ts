@@ -1,9 +1,11 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { LoginResponse, DecodedToken, User } from '../types/auth/auth';
+import { useAuthStore } from '../store/authStore';
+import { getModuleApiUrl } from '../config/api';
 
 
-const API_URL = 'http://localhost:8082/api';
+const API_URL = getModuleApiUrl('user');
 
 
 interface ContactInfo {

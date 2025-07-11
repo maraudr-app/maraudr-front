@@ -702,7 +702,7 @@ const Plan: React.FC = () => {
                         <MapPinIcon className="w-6 h-6 text-orange-500" />
                         <span className="text-gray-900 dark:text-white text-lg font-bold">Plan & Géolocalisation</span>
                         <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${isConnected ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'}`}> <WifiIcon className="w-4 h-4" /> <span>{isConnected ? 'Temps réel actif' : 'Hors ligne'}</span> </div>
-                    </div>
+                        </div>
                     <div className="flex items-center space-x-6">
                         <select
                             value={daysFilter}
@@ -731,12 +731,12 @@ const Plan: React.FC = () => {
                             }}
                             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all"
                         >
-                            <PlusIcon className="w-4 h-4" />
+                                    <PlusIcon className="w-4 h-4" />
                             <span>Créer une route</span>
                         </button>
                        
-                    </div>
-                </div>
+                        </div>
+                        </div>
             </nav>
             {/* Main content scrolls under the navbar, with correct padding */}
             <div className="pt-16" />

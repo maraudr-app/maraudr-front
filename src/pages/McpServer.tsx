@@ -50,31 +50,31 @@ const McpServer: React.FC = () => {
         setLoading(true);
         setStreamingResponse('');
         try {
-            setIsStreaming(true);
-            await chatService.sendMessageStream(
-                {
-                    message: currentMessage,
-                    conversationHistory: updatedHistory
-                },
-                (chunk: string) => {
-                    setStreamingResponse(prev => prev + chunk);
-                },
-                (fullResponse: string) => {
-                    const assistantMessage: ChatMessage = {
-                        role: 'assistant',
-                        content: fullResponse
-                    };
-                    setConversationHistory(prev => chatService.manageConversationHistory(prev, assistantMessage));
-                    setStreamingResponse('');
-                    setIsStreaming(false);
-                    setLoading(false);
-                },
-                (error: string) => {
-                    toast.error(`Erreur: ${error}`);
-                    setIsStreaming(false);
-                    setLoading(false);
-                }
-            );
+                setIsStreaming(true);
+                await chatService.sendMessageStream(
+                    {
+                        message: currentMessage,
+                        conversationHistory: updatedHistory
+                    },
+                    (chunk: string) => {
+                        setStreamingResponse(prev => prev + chunk);
+                    },
+                    (fullResponse: string) => {
+                        const assistantMessage: ChatMessage = {
+                            role: 'assistant',
+                            content: fullResponse
+                        };
+                        setConversationHistory(prev => chatService.manageConversationHistory(prev, assistantMessage));
+                        setStreamingResponse('');
+                        setIsStreaming(false);
+                        setLoading(false);
+                    },
+                    (error: string) => {
+                        toast.error(`Erreur: ${error}`);
+                        setIsStreaming(false);
+                        setLoading(false);
+                    }
+                );
         } catch (error: any) {
             toast.error(error.message || 'Erreur lors de l\'envoi du message');
             setLoading(false);
@@ -111,22 +111,22 @@ const McpServer: React.FC = () => {
                     <div className="flex items-center gap-3">
                         <ChatBubbleLeftRightIcon className="w-6 h-6 text-maraudr-blue dark:text-maraudr-orange" />
                         <span className="text-gray-900 dark:text-white text-lg font-bold">Assistance IA</span>
-                    </div>
+                            </div>
                     <div className="flex items-center space-x-4">
-                        <button
-                            onClick={clearHistory}
-                            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                            title="Effacer l'historique"
-                        >
-                            <XMarkIcon className="w-5 h-5" />
-                        </button>
+                            <button
+                                onClick={clearHistory}
+                                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                title="Effacer l'historique"
+                            >
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
-                </div>
             </nav>
             {/* Main content scrolls under the navbar, with correct padding */}
             <div className="pt-16" />
             <div className="h-[calc(100vh-4rem)] overflow-y-auto">
-                <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="max-w-4xl mx-auto px-4 py-6">
                 {/* Quick Actions */}
                 <div className="mb-6">
                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -250,8 +250,8 @@ const McpServer: React.FC = () => {
                             }
                         </span>
                     </div>
+                    </div>
                 </div>
-            </div>
             </div>
         </div>
     );
