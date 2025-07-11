@@ -134,7 +134,7 @@ const DashBoard = () => {
   // Générer des données d'activité mockées pour le mois sélectionné
   const generateMonthActivities = (date: Date) => {
     const daysInMonth = getDaysInMonth(date);
-    const activities = [];
+    const activities: number[] = [];
     
     for (let i = 0; i < daysInMonth; i++) {
       // Générer des activités pseudo-aléatoires basées sur le mois et le jour

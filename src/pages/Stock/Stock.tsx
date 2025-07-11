@@ -571,7 +571,6 @@ export const Stock = () => {
                                                                         setReduceQuantity('');
                                                                     }}
                                                                     className="text-orange-500 hover:text-orange-600 p-2"
-                                                                    title="Réduire le stock"
                                                                 >
                                                                     <MinusCircleIcon className="h-5 w-5" />
                                                                 </Button>
@@ -799,7 +798,7 @@ export const Stock = () => {
                                 onClick={async () => {
                                     setLoadingReduce(true);
                                     try {
-                                        await stockService.reduceItemStock(itemToReduce.barCode, {
+                                        await stockService.reduceItemStock(itemToReduce.barCode || '', {
                                             associationId: selectedAssociation.id,
                                             quantity: Number(reduceQuantity),
                                         });

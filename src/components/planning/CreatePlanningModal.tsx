@@ -6,7 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
 import { planningService } from '../../services/planningService';
 import { userService } from '../../services/userService';
-import { CreateEventRequest } from '../../types/planning/event';
+import { CreateEventRequest, CreateEventDto } from '../../types/planning/event';
 import { User } from '../../types/user/user';
 import { toast } from 'react-hot-toast';
 
@@ -142,9 +142,8 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
             setLoading(true);
             setError(null);
 
-            const eventData: CreateEventRequest = {
-                planningId: currentPlanningId,
-                organizerId: user.sub,
+            const eventData: CreateEventDto = {
+                associationId: selectedAssociation?.id || '',
                 participantsIds: newEvent.participantsIds,
                 title: newEvent.title.trim(),
                 description: newEvent.description.trim(),

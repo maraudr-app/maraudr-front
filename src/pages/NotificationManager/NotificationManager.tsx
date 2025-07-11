@@ -77,7 +77,7 @@ const NotificationManager: React.FC = () => {
                             state: teamMember.state,
                             postalCode: teamMember.postalCode,
                             country: teamMember.country,
-                            languages: (teamMember.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language)),
+                            languages: (teamMember.languages || []).filter((lang: string): lang is Language => Object.values(Language).includes(lang as Language)),
                             isManager: teamMember.isManager,
                             createdAt: teamMember.createdAt,
                             updatedAt: teamMember.updatedAt
@@ -98,7 +98,7 @@ const NotificationManager: React.FC = () => {
                         state: teamMember.state,
                         postalCode: teamMember.postalCode,
                         country: teamMember.country,
-                        languages: (teamMember.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language)),
+                        languages: (teamMember.languages || []).filter((lang: string): lang is Language => Object.values(Language).includes(lang as Language)),
                         isManager: teamMember.isManager,
                         createdAt: teamMember.createdAt,
                         updatedAt: teamMember.updatedAt

@@ -64,7 +64,7 @@ class TokenManager {
     localStorage.removeItem('asso-storage');
     
     // Nettoyer complètement si nécessaire
-    const keysToRemove = [];
+    const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && (key.includes('auth') || key.includes('user') || key.includes('asso') || key.includes('token'))) {

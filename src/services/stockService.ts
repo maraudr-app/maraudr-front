@@ -48,6 +48,27 @@ export const stockService = {
         }
     },
 
+    // Créer un stock pour une association
+    createStock: async (associationId: string): Promise<string> => {
+        const token = await tokenManager.ensureValidToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const response = await axios.post<{ stockId: string }>(
+            `${API_URL}/stock`,
+            { associationId },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            }
+        );
+        return response.data.stockId;
+    },
+
     // Récupérer tous les articles d'une association
     getStockItems: async (associationId: string, filter?: StockItemFilter): Promise<StockItem[]> => {
         const token = await tokenManager.ensureValidToken();

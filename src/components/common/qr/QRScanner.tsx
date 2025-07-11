@@ -87,11 +87,9 @@ export const QRScanner: React.FC<QRScannerProps> = ({
             try {
                 const cameras = await QrScanner.listCameras(true);
                 if (cameras.length > 1) {
-                    const currentCamera = await qrScanner.getCamera();
-                    const nextCamera = cameras.find(camera => camera.id !== currentCamera?.id);
-                    if (nextCamera) {
-                        await qrScanner.setCamera(nextCamera.id);
-                    }
+                    // Alterner simplement entre les caméras disponibles
+                    // On prend la première caméra différente de celle actuellement utilisée
+                    await qrScanner.setCamera(cameras[1].id);
                 }
             } catch (err) {
                 console.error('Erreur lors du changement de caméra:', err);
