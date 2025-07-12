@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { tokenManager } from './tokenManager';
-import { getModuleApiUrl } from '../config/api';
+import { getModuleApiUrl, debugApiUrls } from '../config/api';
+
+// Debug de la configuration API au démarrage
+debugApiUrls();
 
 // Créer une instance axios avec la configuration de base
 export const api = axios.create({

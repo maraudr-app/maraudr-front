@@ -1,5 +1,8 @@
-// Forcer le mode local uniquement
-const API_DOMAIN = import.meta.env.VITE_API_DOMAIN_LOCAL;
+// Configuration API selon l'environnement
+const isProduction = import.meta.env.PROD;
+const API_DOMAIN = isProduction 
+  ? import.meta.env.VITE_API_DOMAIN_PROD 
+  : import.meta.env.VITE_API_DOMAIN_LOCAL;
 const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api';
 
 const PORTS: Record<string, string> = {
@@ -14,34 +17,43 @@ const PORTS: Record<string, string> = {
 };
 
 /**
- * Génère l'URL d'API pour un module donné (local uniquement)
- * - user: http://localhost:8082/api/...
- * - stock: http://localhost:8081/...
- * - association: http://localhost:8080/...
+ * Génère l'URL d'API pour un module donné
+ * En production: https://api.maraudr.com/api/...
+ * En développement: http://localhost:8082/api/...
  */
 export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
-  if (module === 'user') {
-    // Module user en développement: http://localhost:8082/api/...
-    return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
+  if (isProduction) {
+    // En production, tous les modules utilisent le même domaine
+    return `${API_DOMAIN}${API_PREFIX}`;
   } else {
-    // Autres modules en développement: http://localhost:8081/...
-    return `${API_DOMAIN}:${PORTS[module]}`;
+    // En développement, chaque module a son propre port
+    if (module === 'user') {
+      // Module user en développement: http://localhost:8082/api/...
+      return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
+    } else {
+      // Autres modules en développement: http://localhost:8081/...
+      return `${API_DOMAIN}:${PORTS[module]}`;
+    }
   }
 };
 
 /**
- * Génère l'URL de base d'un module (sans /api, local uniquement)
- * - user: http://localhost:8082
- * - stock: http://localhost:8081
+ * Génère l'URL de base d'un module (sans /api)
+ * En production: https://api.maraudr.com
+ * En développement: http://localhost:8082
  */
 export const getModuleBaseUrl = (module: keyof typeof PORTS): string => {
-  return `${API_DOMAIN}:${PORTS[module]}`;
+  if (isProduction) {
+    return API_DOMAIN;
+  } else {
+    return `${API_DOMAIN}:${PORTS[module]}`;
+  }
 };
 
 // Fonction de debug pour vérifier les URLs générées
 export const debugApiUrls = () => {
   console.log('🔧 Configuration API Debug:');
-  console.log('Mode: LOCAL UNIQUEMENT');
+  console.log('Mode:', isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
   console.log('API_DOMAIN:', API_DOMAIN);
   console.log('API_PREFIX:', API_PREFIX);
 

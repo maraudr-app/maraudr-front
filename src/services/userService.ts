@@ -16,9 +16,13 @@ export const userService = {
 
   createAccount: async (userData: UserToCreate) => {
     try {
+      console.log('📡 Envoi de la requête POST vers /users avec les données:', userData);
       const response = await api.post('/users', userData);
+      console.log('📡 Réponse reçue du serveur:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('❌ Erreur lors de la création du compte:', error);
+      console.error('❌ Détails de l\'erreur:', error.response?.data);
       const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }

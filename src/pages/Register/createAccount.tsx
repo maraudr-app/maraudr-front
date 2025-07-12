@@ -159,12 +159,16 @@ const CreateAccount = () => {
         languages: [Language.French],
           } as NonManagerUserData;
 
+      console.log('🚀 Tentative de création d\'utilisateur avec les données:', userData);
+      
       const response = await userService.createAccount(userData);
+      
+      console.log('✅ Réponse de création d\'utilisateur:', response);
       
       if (response) {
         // Toast de succès
         toast.success('Compte créé avec succès ! Redirection vers la page de connexion...', {
-          duration: 10000,
+          duration: 3000,
           position: 'top-center',
           style: {
             background: '#10b981',
@@ -176,8 +180,8 @@ const CreateAccount = () => {
         
         // Naviguer vers login après 3 secondes
         setTimeout(() => {
-        
-        }, 10000);
+          navigate('/login');
+        }, 3000);
       }
     } catch (error: any) {
       let errorMessage = t_register('error.default');
