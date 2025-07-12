@@ -40,6 +40,15 @@ interface AuthState {
   setToken: (token: string | null) => void;
 }
 
+const getAvatarUrl = (firstName?: string, lastName?: string) => {
+  if (firstName && lastName) {
+    const firstInitial = firstName.trim().charAt(0).toUpperCase();
+    const lastInitial = lastName.trim().charAt(0).toUpperCase();
+    return `https://ui-avatars.com/api/?name=${firstInitial}${lastInitial}&background=random`;
+  }
+  return '';
+};
+
 // Création du store avec persistance
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -65,8 +74,14 @@ export const useAuthStore = create<AuthState>()(
                 firstName: decodedToken.firstName,
                 lastName: decodedToken.lastName,
                 userType: decodedToken.userType,
-                avatar: `https://ui-avatars.com/api/?name=${decodedToken.firstName}+${decodedToken.lastName}&background=random`
+                avatar: getAvatarUrl(decodedToken.firstName, decodedToken.lastName)
               };
+              // Ajout du log de vérification
+              if (!userData.firstName || !userData.lastName) {
+                console.warn('⚠️ Attention: firstName ou lastName manquant dans le token décodé:', decodedToken);
+              } else {
+                console.log('✅ userData bien construit:', userData);
+              }
               
               console.log('👤 Données utilisateur créées:', userData);
               
@@ -124,7 +139,7 @@ export const useAuthStore = create<AuthState>()(
               lastName: userData.lastname,
               userType: (userData as any).userType || currentUser.userType,
               // On garde l'avatar existant ou on en crée un nouveau
-              avatar: currentUser.avatar || `https://ui-avatars.com/api/?name=${userData.firstname}+${userData.lastname}&background=random`
+              avatar: currentUser.avatar || getAvatarUrl(userData.firstname, userData.lastname)
             }
           });
         } catch (error) {

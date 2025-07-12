@@ -31,11 +31,27 @@ import McpServer from './pages/McpServer';
 
 function App() {
   const { i18n } = useTranslation();
+  const { isAuthenticated, user, fetchUser } = useAuthStore();
 
   // Effet pour mettre à jour l'attribut lang de la balise html
   useEffect(() => {
     document.documentElement.lang = i18n.language;
   }, [i18n.language]);
+
+  // Effet pour initialiser l'authentification au démarrage
+  useEffect(() => {
+    const initializeAuth = async () => {
+      if (isAuthenticated && user && (!user.firstName || !user.lastName)) {
+        try {
+          await fetchUser();
+        } catch (error) {
+          console.error('Erreur lors du chargement des données utilisateur:', error);
+        }
+      }
+    };
+
+    initializeAuth();
+  }, [isAuthenticated, user, fetchUser]);
 
   return (
     <ThemeProvider>

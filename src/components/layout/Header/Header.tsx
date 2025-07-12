@@ -34,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
     const [forceUpdate, setForceUpdate] = useState(0);
     const [associationDetails, setAssociationDetails] = useState<any>(null);
     const [localSelectedAssociation, setLocalSelectedAssociation] = useState<any>(null);
+    const [isUserNameHighlighted, setIsUserNameHighlighted] = useState(false);
     const { t } = useTranslation(['common']);
     const location = useLocation();
     const { user, isAuthenticated, logout } = useAuthStore();
@@ -90,44 +91,8 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
         }
     }, [selectedAssociation]);
 
-    const getInitials = (firstName: string | undefined, lastName: string | undefined) => {
-        // Nettoyer et valider les entrées
-        const cleanFirstName = firstName?.trim();
-        const cleanLastName = lastName?.trim();
-        
-        // Si on a un prénom et nom valides, utiliser les premières lettres
-        if (cleanFirstName && cleanLastName) {
-            return `${cleanFirstName.charAt(0)}${cleanLastName.charAt(0)}`.toUpperCase();
-        }
-        
-        // Si on a seulement un prénom valide
-        if (cleanFirstName && !cleanLastName) {
-            return cleanFirstName.charAt(0).toUpperCase();
-        }
-        
-        // Si on a seulement un nom valide
-        if (!cleanFirstName && cleanLastName) {
-            return cleanLastName.charAt(0).toUpperCase();
-        }
-        
-        // Si on n'a ni prénom ni nom, essayer d'extraire de l'email
-        if (user?.email) {
-            const emailParts = user.email.split('@')[0];
-            if (emailParts.includes('.')) {
-                const parts = emailParts.split('.');
-                return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
-            } else {
-                return emailParts.charAt(0).toUpperCase();
-            }
-        }
-        
-        // Fallback : première lettre du nom d'utilisateur
-        if (user?.sub) {
-            return user.sub.charAt(0).toUpperCase();
-        }
-        
-        return "U";
-    };
+   
+
 
     const getAssociationInitials = (name: string | undefined) => {
         if (!name) return '';
@@ -141,6 +106,15 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
         return initials.toUpperCase();
     };
 
+    // Fonction utilitaire pour générer l'URL de l'avatar avec initiales
+    const getAvatarUrl = (firstName?: string, lastName?: string) => {
+      if (firstName && lastName) {
+        const firstInitial = firstName.trim().charAt(0).toUpperCase();
+        const lastInitial = lastName.trim().charAt(0).toUpperCase();
+        return `https://ui-avatars.com/api/?name=${firstInitial}${lastInitial}&background=random`;
+      }
+      return '';
+    };
 
 
     // Vérifier si le scroll a dépassé la section héro
@@ -202,6 +176,11 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
         localStorage.removeItem('auth-storage');
         localStorage.clear();
         window.location.href = '/login';
+    };
+
+    // Gérer le clic sur le nom d'utilisateur
+    const handleUserNameClick = () => {
+        setIsUserNameHighlighted(!isUserNameHighlighted);
     };
 
     // Calculer la largeur et la position du header selon l'état de la sidebar
@@ -334,13 +313,13 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                 {/* Bouton Créer une association - seulement pour les managers */}
                                 {isManager() && (
                                     isCreateAssoPage ? (
-                                        <span className="px-4 py-2 text-base font-medium border-b-2 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange">
+                                        <span className="px-2 md:px-4 py-1 md:py-2 text-xs md:text-base font-medium border-b-2 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange">
                                             {t('header.createAssociation', 'Créer une association')}
                                         </span>
                                     ) : (
                                     <Link
                                         to="/maraudApp/create-asso"
-                                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-sm"
+                                        className="px-2 md:px-4 py-1 md:py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-xs md:text-sm"
                                     >
                                         {t('header.createAssociation', 'Créer une association')}
                                     </Link>
@@ -348,22 +327,45 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                 )}
                                 
                                 <div className="relative" id="user-menu">
-                                <button
-                                    onClick={() => setShowUserMenu(!showUserMenu)}
-                                        className="flex items-center space-x-2 focus:outline-none"
-                                >
-                                    {user.avatar ? (
-                                        <img
-                                            src={user.avatar}
-                                            alt={`${user.firstName} ${user.lastName}`}
-                                            className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
-                                        />
-                                    ) : (
-                                        <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
-                                            {getInitials(user.firstName, user.lastName)}
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="focus:outline-none"
+                                    >
+                                        {user.firstName && user.lastName ? (
+                                            <img
+                                                src={getAvatarUrl(user.firstName, user.lastName)}
+                                                alt={`${user.firstName} ${user.lastName}`}
+                                                className="h-8 w-8 rounded-full border-2 border-maraudr-blue cursor-pointer"
+                                            />
+                                        ) : (
+                                            <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium cursor-pointer">
+                                               aaaa
+                                            </div>
+                                        )}
+                                    </button>
+                                    <div className="hidden md:block text-left">
+                                        <div 
+                                            onClick={handleUserNameClick}
+                                            className={`text-sm font-medium cursor-pointer transition-all duration-200 ${
+                                                isUserNameHighlighted 
+                                                    ? 'text-maraudr-orange bg-maraudr-orange/10 px-2 py-1 rounded' 
+                                                    : 'text-maraudr-darkText dark:text-maraudr-lightText hover:text-maraudr-orange'
+                                            }`}
+                                        >
+                                            {user.firstName} {user.lastName}
                                         </div>
-                                    )}
-                                </button>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            {user.email}
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="focus:outline-none"
+                                    >
+                                        <ChevronDownIcon className="h-4 w-4 text-maraudr-darkText dark:text-maraudr-lightText" />
+                                    </button>
+                                </div>
                                 
                                 {showUserMenu && (
                                         <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-10 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border border-gray-200 dark:border-gray-700">
@@ -407,18 +409,23 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                         <LanguageSwitcher />
                         
                         {isAuthenticated && user && (
-                            <div className="mx-2">
-                                {user.avatar ? (
+                            <div className="mx-2 flex items-center space-x-2">
+                                {user.firstName && user.lastName ? (
                                     <img
-                                        src={user.avatar}
+                                        src={getAvatarUrl(user.firstName, user.lastName)}
                                         alt={`${user.firstName} ${user.lastName}`}
                                         className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
                                     />
                                 ) : (
                                     <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
-                                        {getInitials(user.firstName, user.lastName)}
+                                        
                                     </div>
                                 )}
+                                <div className="hidden sm:block text-left">
+                                    <div className="text-xs font-medium text-maraudr-darkText dark:text-maraudr-lightText">
+                                        {user.firstName && user.lastName ? `${user.firstName.charAt(0).toUpperCase()}${user.lastName.toUpperCase()}` : ''}
+                                    </div>
+                                </div>
                             </div>
                         )}
                         
@@ -470,20 +477,23 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                             
                             <div className="px-4 py-2 border-t dark:border-gray-700">
                                 <div className="flex items-center space-x-2">
-                                    {user.avatar ? (
+                                    {user.firstName && user.lastName ? (
                                         <img
-                                            src={user.avatar}
+                                            src={getAvatarUrl(user.firstName, user.lastName)}
                                             alt={`${user.firstName} ${user.lastName}`}
                                             className="h-8 w-8 rounded-full border-2 border-maraudr-blue"
                                         />
                                     ) : (
                                         <div className="h-8 w-8 rounded-full border-2 border-maraudr-blue bg-maraudr-blue/20 dark:bg-maraudr-orange/20 flex items-center justify-center text-maraudr-blue dark:text-maraudr-orange font-medium">
-                                            {getInitials(user.firstName, user.lastName)}
+                                          aa
                                         </div>
                                     )}
                                     <div className="text-maraudr-darkText dark:text-maraudr-lightText font-medium">
-                                        {getInitials(user.firstName, user.lastName)}
+                                        {user.firstName} {user.lastName}
                                     </div>
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 ml-10 mt-1">
+                                    {user.email}
                                 </div>
                             </div>
                             <Link
