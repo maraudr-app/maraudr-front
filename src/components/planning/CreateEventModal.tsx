@@ -10,6 +10,7 @@ import { User } from '../../types/user/user';
 import { CreateEventDto } from '../../types/planning/event';
 import { Disponibility } from '../../types/disponibility/disponibility';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface CreateEventModalProps {
     isOpen: boolean;
@@ -40,6 +41,11 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
 }) => {
     const { user } = useAuthStore();
     const { selectedAssociation } = useAssoStore();
+    const { t } = useTranslation();
+
+    const t_planning = (key: string): string => {
+        return t(`planning.${key}` as any);
+    };
     
     // États pour la création d'événement
     const [loading, setLoading] = useState(false);
@@ -226,13 +232,13 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
     // Créer l'événement
     const createEvent = async () => {
         if (!selectedAssociation?.id || !user?.sub) {
-            setError('Association non sélectionnée ou utilisateur non connecté');
+            setError(t_planning('createEvent.associationOrUserError'));
             return;
         }
 
         // Validation
         if (!eventForm.title.trim() || !eventForm.beginningDate || !eventForm.endDate) {
-            setError('Veuillez remplir au moins le titre, la date de début et la date de fin');
+            setError(t_planning('createEvent.formError'));
             return;
         }
 
@@ -241,12 +247,12 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         const beginningDate = new Date(eventForm.beginningDate);
         
         if (beginningDate < now) {
-            setError('La date de début ne peut pas être dans le passé');
+            setError(t_planning('createEvent.datePastError'));
             return;
         }
 
         if (new Date(eventForm.beginningDate) >= new Date(eventForm.endDate)) {
-            setError('La date de fin doit être postérieure à la date de début');
+            setError(t_planning('createEvent.dateOrderError'));
             return;
         }
 
@@ -266,13 +272,13 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
             await planningService.createEvent(eventData);
             
-            toast.success('Événement créé avec succès !');
+            toast.success(t_planning('createEvent.success'));
             onEventCreated();
             onClose();
             
         } catch (err: any) {
             console.error('Erreur lors de la création de l\'événement:', err);
-            setError(err.message || 'Erreur lors de la création de l\'événement');
+            setError(err.message || t_planning('createEvent.error'));
         } finally {
             setLoading(false);
         }
@@ -329,7 +335,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                     {/* Messages d'erreur */}
                     {error && (
                         <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-md">
-                            {error}
+                            {error}##
                         </div>
                     )}
 
@@ -338,14 +344,14 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
                                 type="text"
-                                placeholder="Titre de l'événement *"
+                                placeholder={`${t_planning('createEvent.eventTitle')} *`}
                                 value={eventForm.title}
                                 onChange={(e) => handleFormChange('title', e.target.value)}
                                 className="w-full"
                             />
                             <Input
                                 type="text"
-                                placeholder="Lieu"
+                                placeholder={t_planning('createEvent.location')}
                                 value={eventForm.location}
                                 onChange={(e) => handleFormChange('location', e.target.value)}
                                 className="w-full"
@@ -354,7 +360,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
                         <Input
                             type="text"
-                            placeholder="Description"
+                            placeholder={t_planning('createEvent.description')}
                             value={eventForm.description}
                             onChange={(e) => handleFormChange('description', e.target.value)}
                             className="w-full"
@@ -383,7 +389,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                         {/* Sélection des participants */}
                         <div className="relative participants-dropdown">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Participants
+                                {t_planning('createEvent.participants')}
                             </label>
                             
                             {/* Champ de sélection principal */}
@@ -391,10 +397,10 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer flex justify-between items-center min-h-[42px]"
                             >
-                                <span className={eventForm.participantsIds.length === 0 ? "text-gray-400" : ""}>
-                                    {eventForm.participantsIds.length === 0 
-                                        ? "Sélectionner des participants..." 
-                                        : `${eventForm.participantsIds.length} participant(s) sélectionné(s)`
+                                                                <span className={eventForm.participantsIds.length === 0 ? "text-gray-400" : ""}>
+                                    {eventForm.participantsIds.length === 0
+                                        ? t_planning('createEvent.selectParticipants')
+                                        : t_planning('createEvent.participantsSelected').replace('{count}', eventForm.participantsIds.length.toString())
                                     }
                                 </span>
                                 <ChevronDownIcon 
@@ -424,7 +430,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                             </div>
                                         ) : filteredMembers.length === 0 ? (
                                             <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                                                {searchTerm ? 'Aucun membre trouvé' : 'Aucun membre disponible'}
+                                                {searchTerm ? t_planning('createEvent.noMembersFound') : t_planning('createEvent.noMembersAvailable')}
                                             </p>
                                         ) : (
                                             <div className="py-2">
@@ -521,11 +527,11 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                                         
                                                         {conflict.missingDates.length === 1 && conflict.missingDates[0].startsWith('Du ') ? (
                                                             <p className="text-sm text-orange-700 dark:text-orange-300">
-                                                                <span className="font-medium">Aucune disponibilité enregistrée</span> pour la période {conflict.missingDates[0].toLowerCase()}
+                                                                <span className="font-medium">{t_planning('createEvent.noAvailabilityRecorded')}</span> {t_planning('createEvent.forPeriod').replace('{period}', conflict.missingDates[0].toLowerCase())}
                                                             </p>
                                                         ) : (
                                                             <div className="text-sm text-orange-700 dark:text-orange-300">
-                                                                <span className="font-medium">Jours non disponibles :</span>
+                                                                <span className="font-medium">{t_planning('createEvent.unavailableDays')}</span>
                                                                 <div className="mt-1 flex flex-wrap gap-1">
                                                                     {conflict.missingDates.slice(0, 5).map((date, index) => (
                                                                         <span 
@@ -537,7 +543,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                                                     ))}
                                                                     {conflict.missingDates.length > 5 && (
                                                                         <span className="text-xs text-orange-600 dark:text-orange-400 px-2 py-1">
-                                                                            +{conflict.missingDates.length - 5} autres jours
+                                                                            {t_planning('createEvent.otherDays').replace('{count}', (conflict.missingDates.length - 5).toString())}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -548,7 +554,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                             })}
                                         </div>
                                         <p className="text-xs text-orange-600 dark:text-orange-400 mt-3">
-                                            💡 Ces participants pourront toujours être ajoutés à l'événement, mais assurez-vous qu'ils soient informés des dates concernées.
+                                            {t_planning('createEvent.availabilityWarning')}
                                         </p>
                                     </div>
                                 </div>

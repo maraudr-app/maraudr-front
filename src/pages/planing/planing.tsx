@@ -173,7 +173,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
         clickedDate.setHours(0, 0, 0, 0);
         
         if (clickedDate < today) {
-            toast?.error('Vous ne pouvez pas sélectionner une date passée');
+            toast?.error(t_planning('availability.pastDateError'));
             return;
         }
 
@@ -275,7 +275,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
         } catch (error: any) {
             console.error('Erreur lors de la création de la disponibilité:', error);
         // @ts-ignore
-            toast.error(error.message || t_planning('availability.error'));
+            toast.error(error.message || t_planning('availability.createError'));
         } finally {
             setLoading(false);
         }
@@ -283,8 +283,29 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
 
     const days = getDaysInMonth(currentDate);
     const startDay = getMonthStartDay(currentDate);
-    const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-    const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const daysOfWeek = [
+        t_planning('days.sunday'),
+        t_planning('days.monday'),
+        t_planning('days.tuesday'),
+        t_planning('days.wednesday'),
+        t_planning('days.thursday'),
+        t_planning('days.friday'),
+        t_planning('days.saturday')
+    ];
+    const months = [
+        t_planning('months.january'),
+        t_planning('months.february'),
+        t_planning('months.march'),
+        t_planning('months.april'),
+        t_planning('months.may'),
+        t_planning('months.june'),
+        t_planning('months.july'),
+        t_planning('months.august'),
+        t_planning('months.september'),
+        t_planning('months.october'),
+        t_planning('months.november'),
+        t_planning('months.december')
+    ];
     return (
         <div>
             {!hideAddButton && !isSelectingPeriod && (
@@ -844,8 +865,29 @@ const Planning: React.FC = () => {
         };
         const getMonthStartDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
         const formatDate = (date: Date) => date.toISOString().split('T')[0];
-        const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-        const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        const daysOfWeek = [
+            t_planning('days.sunday'),
+            t_planning('days.monday'),
+            t_planning('days.tuesday'),
+            t_planning('days.wednesday'),
+            t_planning('days.thursday'),
+            t_planning('days.friday'),
+            t_planning('days.saturday')
+        ];
+        const months = [
+            t_planning('months.january'),
+            t_planning('months.february'),
+            t_planning('months.march'),
+            t_planning('months.april'),
+            t_planning('months.may'),
+            t_planning('months.june'),
+            t_planning('months.july'),
+            t_planning('months.august'),
+            t_planning('months.september'),
+            t_planning('months.october'),
+            t_planning('months.november'),
+            t_planning('months.december')
+        ];
 
         // 5. Rendu double calendrier
         const sidebarWidth = sidebarCollapsed ? 'pl-14' : '';
@@ -984,8 +1026,8 @@ const Planning: React.FC = () => {
                 // Appeler le service pour créer la disponibilité
                 await userService.createDisponibility(disponibilityData);
                 
-        // @ts-ignore
-                toast.success('Disponibilité ajoutée avec succès !');
+                // @ts-ignore
+        toast.success(t_planning('availability.success'));
                 
                 // Réinitialiser et recharger
                 cancelSelection();
@@ -997,7 +1039,7 @@ const Planning: React.FC = () => {
             } catch (error: any) {
                 console.error('Erreur lors de la création de la disponibilité:', error);
         // @ts-ignore
-                toast.error(error.message || 'Erreur lors de la création de la disponibilité');
+                toast.error(error.message || t_planning('availability.createError'));
             } finally {
                 setLoading(false);
             }
@@ -1045,7 +1087,7 @@ const Planning: React.FC = () => {
                               />
                             </div>
                         </div>
-                        {/* Calendrier des événements où je participe */}
+                        {/* {t_planning('missions.myEvents')} */}
                         <div className="flex-1 min-w-[400px] max-w-[600px] h-full flex flex-col items-center justify-start">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">{t_planning('availability.missions')}</h2>
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
@@ -1220,7 +1262,7 @@ const Planning: React.FC = () => {
                     </div>
                 )}
 
-                {/* Modal de détail des missions du jour */}
+                                        {/* {t_planning('missions.dayMissions')} */}
                 {showMissionsModal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
                         <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -1344,7 +1386,7 @@ const Planning: React.FC = () => {
         const data = getEventsPerMonth(events);
         return (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">Évolution des événements par mois</h2>
+                                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">{t_planning('stats.evolutionTitle')}</h2>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -1378,8 +1420,29 @@ const Planning: React.FC = () => {
     const startDayAsso = getMonthStartDay(currentDateAsso);
     const daysUser = getDaysInMonth(currentDateUser);
     const startDayUser = getMonthStartDay(currentDateUser);
-    const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-    const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const daysOfWeek = [
+        t_planning('days.sunday'),
+        t_planning('days.monday'),
+        t_planning('days.tuesday'),
+        t_planning('days.wednesday'),
+        t_planning('days.thursday'),
+        t_planning('days.friday'),
+        t_planning('days.saturday')
+    ];
+    const months = [
+        t_planning('months.january'),
+        t_planning('months.february'),
+        t_planning('months.march'),
+        t_planning('months.april'),
+        t_planning('months.may'),
+        t_planning('months.june'),
+        t_planning('months.july'),
+        t_planning('months.august'),
+        t_planning('months.september'),
+        t_planning('months.october'),
+        t_planning('months.november'),
+        t_planning('months.december')
+    ];
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1399,7 +1462,7 @@ const Planning: React.FC = () => {
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                 <UserGroupIcon className="w-5 h-5 mr-2" />
-                                {t_planning('title')} ({teamUsers.length})
+                                {t_planning('team.title')} ({teamUsers.length})
                             </h2>
                             
 
@@ -1564,10 +1627,10 @@ const Planning: React.FC = () => {
                         <div className="w-full lg:w-5/12">
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 text-center">
-                                    Disponibilités de {teamUsers.find(u => u.id === selectedUser)?.firstname} {teamUsers.find(u => u.id === selectedUser)?.lastname}
+                                    {t_planning('availability.availabilitiesOf')} {teamUsers.find(u => u.id === selectedUser)?.firstname} {teamUsers.find(u => u.id === selectedUser)?.lastname}
                                 </h2>
                                 <div className="text-sm text-gray-500 dark:text-gray-400 mb-3 text-center">
-                                    {getMonthDisponibilitiesCount(selectedUser, currentDateUser)} disponibilité{getMonthDisponibilitiesCount(selectedUser, currentDateUser) > 1 ? 's' : ''} ce mois
+                                    {getMonthDisponibilitiesCount(selectedUser, currentDateUser)} {t_planning('availability.availabilities')} {getMonthDisponibilitiesCount(selectedUser, currentDateUser) > 1 ? 's' : ''} {t_planning('availability.thisMonth')}
                                 </div>
                                 <div className="flex justify-between items-center mb-4">
                                     <button onClick={() => setCurrentDateUser(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">

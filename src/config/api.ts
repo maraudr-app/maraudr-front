@@ -30,6 +30,9 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
     if (module === 'user') {
       // Module user en développement: http://localhost:8082/api/...
       return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
+    } else if (module === 'planning') {
+      // Module planning en développement: http://localhost:8085/api/...
+      return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
     } else {
       // Autres modules en développement: http://localhost:8081/...
       return `${API_DOMAIN}:${PORTS[module]}`;

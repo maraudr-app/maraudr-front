@@ -231,7 +231,14 @@
       "conflictError": "Vous avez déjà une disponibilité sur cette plage horaire ou ce jour",
       "success": "Disponibilité ajoutée avec succès !",
       "error": "Erreur lors de la création de la disponibilité",
-      "pastDateError": "Vous ne pouvez pas sélectionner une date passée"
+      "pastDateError": "Vous ne pouvez pas sélectionner une date passée",
+      "createError": "Erreur lors de la création de la disponibilité",
+      "dayMissions": "Missions du jour",
+      "myMissions": "Mes missions",
+      "myEvents": "Calendrier des événements où je participe",
+      "availabilitiesOf": "Disponibilités de",
+      "availabilities": "disponibilité",
+      "thisMonth": "ce mois"
     },
     "events": {
       "title": "Événements du jour",
@@ -253,7 +260,9 @@
     },
     "missions": {
       "title": "Missions du {date}",
-      "missionsCount": "({count})"
+      "missionsCount": "({count})",
+      "dayMissions": "Missions du jour",
+      "myEvents": "Calendrier des événements où je participe"
     },
     "months": {
       "january": "Janvier",
@@ -286,7 +295,11 @@
       "associationNotFound": "Erreur: association ou utilisateur non trouvé"
     },
     "stats": {
-      "evolutionTitle": "Évolution des événements par mois"
+      "evolutionTitle": "Évolution des événements par mois",
+      "noNewEvents": "Aucun nouvel événement ce mois",
+      "eventsEvolution": "Évolution des événements et participants",
+      "events": "Événements",
+      "participants": "Participants"
     },
     "createPlanning": {
       "modalTitle": "Créer un planning",
@@ -301,7 +314,20 @@
       "eventError": "Erreur lors de la création de l'événement",
       "eventFormError": "Veuillez remplir au moins le titre, la date de début et la date de fin",
       "eventDateError": "La date de fin doit être postérieure à la date de début",
-      "planningNotCreated": "Planning non créé ou utilisateur non connecté"
+      "planningNotCreated": "Planning non créé ou utilisateur non connecté",
+      "newEvent": "Nouvel événement",
+      "eventTitle": "Titre de l'événement",
+      "location": "Lieu",
+      "description": "Description",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "participants": "Participants",
+      "noMembersAvailable": "Aucun membre disponible",
+      "addAnotherEvent": "Ajouter un autre événement",
+      "finalizePlanning": "Finaliser le planning",
+      "participantsCount": "{count} participant(s)",
+      "addEvent": "Ajouter un événement",
+      "eventsAdded": "Événements ajoutés ({count})"
     },
     "createEvent": {
       "modalTitle": "Créer un événement",
@@ -310,7 +336,22 @@
       "formError": "Veuillez remplir au moins le titre, la date de début et la date de fin",
       "datePastError": "La date de début ne peut pas être dans le passé",
       "dateOrderError": "La date de fin doit être postérieure à la date de début",
-      "associationOrUserError": "Association non sélectionnée ou utilisateur non connecté"
+      "associationOrUserError": "Association non sélectionnée ou utilisateur non connecté",
+      "eventTitle": "Titre de l'événement",
+      "location": "Lieu",
+      "description": "Description",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "participants": "Participants",
+      "selectParticipants": "Sélectionner des participants...",
+      "participantsSelected": "{count} participant(s) sélectionné(s)",
+      "noMembersFound": "Aucun membre trouvé",
+      "noMembersAvailable": "Aucun membre disponible",
+      "availabilityWarning": "💡 Ces participants pourront toujours être ajoutés à l'événement, mais assurez-vous qu'ils soient informés des dates concernées.",
+      "noAvailabilityRecorded": "Aucune disponibilité enregistrée",
+      "unavailableDays": "Jours non disponibles :",
+      "otherDays": "+{count} autres jours",
+      "forPeriod": "pour la période {period}"
     }
   }
 } 

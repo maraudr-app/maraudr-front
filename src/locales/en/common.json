@@ -229,7 +229,14 @@
       "conflictError": "You already have availability for this time slot or day",
       "success": "Availability added successfully!",
       "error": "Error creating availability",
-      "pastDateError": "You cannot select a past date"
+      "pastDateError": "You cannot select a past date",
+      "createError": "Error creating availability",
+      "dayMissions": "Day missions",
+      "myMissions": "My missions",
+      "myEvents": "Calendar of events where I participate",
+      "availabilitiesOf": "Availabilities of",
+      "availabilities": "availability",
+      "thisMonth": "this month"
     },
     "events": {
       "title": "Day events",
@@ -251,7 +258,9 @@
     },
     "missions": {
       "title": "Missions of {date}",
-      "missionsCount": "({count})"
+      "missionsCount": "({count})",
+      "dayMissions": "Day missions",
+      "myEvents": "Calendar of events where I participate"
     },
     "months": {
       "january": "January",
@@ -284,7 +293,11 @@
       "associationNotFound": "Error: association or user not found"
     },
     "stats": {
-      "evolutionTitle": "Event evolution by month"
+      "evolutionTitle": "Event evolution by month",
+      "noNewEvents": "No new events this month",
+      "eventsEvolution": "Events and participants evolution",
+      "events": "Events",
+      "participants": "Participants"
     },
     "createPlanning": {
       "modalTitle": "Create planning",
@@ -299,7 +312,20 @@
       "eventError": "Error creating event",
       "eventFormError": "Please fill in at least the title, start date and end date",
       "eventDateError": "End date must be after start date",
-      "planningNotCreated": "Planning not created or user not connected"
+      "planningNotCreated": "Planning not created or user not connected",
+      "newEvent": "New event",
+      "eventTitle": "Event title",
+      "location": "Location",
+      "description": "Description",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "participants": "Participants",
+      "noMembersAvailable": "No members available",
+      "addAnotherEvent": "Add another event",
+      "finalizePlanning": "Finalize planning",
+      "participantsCount": "{count} participant(s)",
+      "addEvent": "Add event",
+      "eventsAdded": "Events added ({count})"
     },
     "createEvent": {
       "modalTitle": "Create event",
@@ -308,7 +334,22 @@
       "formError": "Please fill in at least the title, start date and end date",
       "datePastError": "Start date cannot be in the past",
       "dateOrderError": "End date must be after start date",
-      "associationOrUserError": "Association not selected or user not connected"
+      "associationOrUserError": "Association not selected or user not connected",
+      "eventTitle": "Event title",
+      "location": "Location",
+      "description": "Description",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "participants": "Participants",
+      "selectParticipants": "Select participants...",
+      "participantsSelected": "{count} participant(s) selected",
+      "noMembersFound": "No members found",
+      "noMembersAvailable": "No members available",
+      "availabilityWarning": "💡 These participants can still be added to the event, but make sure they are informed of the dates concerned.",
+      "noAvailabilityRecorded": "No availability recorded",
+      "unavailableDays": "Unavailable days:",
+      "otherDays": "+{count} other days",
+      "forPeriod": "for the period {period}"
     }
   }
 } 

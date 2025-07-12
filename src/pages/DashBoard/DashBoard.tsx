@@ -81,6 +81,10 @@ const EventStatsGraph = ({ events }: { events: Event[] }) => {
 
 const DashBoard = () => {
   const { t } = useTranslation();
+  
+  const t_planning = (key: string): string => {
+    return t(`planning.${key}` as any);
+  };
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
   const { selectedAssociation, associations } = useAssoStore();
@@ -535,7 +539,7 @@ const DashBoard = () => {
                     </span>
                   ) : card.variation === 0 && card.title === 'Événements prévus' ? (
                     <span className="ml-2 text-xs text-gray-400">
-                      Aucun nouvel événement ce mois
+                      {t_planning('stats.noNewEvents')}
                     </span>
                   ) : card.variation === 0 && card.title === 'Prochaines missions' ? (
                     <span className="ml-2 text-xs text-gray-400">
@@ -672,7 +676,7 @@ const DashBoard = () => {
               <div className="w-full">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Évolution des événements et participants
+                    {t_planning('stats.eventsEvolution')}
                   </h3>
                   <div className="flex items-center space-x-3">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -730,7 +734,7 @@ const DashBoard = () => {
                         }}
                         formatter={(value, name) => [
                           value, 
-                          name === 'events' ? 'Événements' : 'Participants'
+                          name === 'events' ? t_planning('stats.events') : t_planning('stats.participants')
                         ]}
                       />
                       <Line 
@@ -755,13 +759,13 @@ const DashBoard = () => {
                   <div className="flex items-center">
                     <div className="w-4 h-4 bg-orange-500 rounded-full mr-2"></div>
                     <span className="text-gray-600 dark:text-gray-400">
-                      Événements ({dashboardData.userEvents.filter(e => new Date(e.beginningDate).getFullYear() === selectedYear).length})
+                      {t_planning('stats.events')} ({dashboardData.userEvents.filter(e => new Date(e.beginningDate).getFullYear() === selectedYear).length})
                     </span>
                   </div>
                   <div className="flex items-center">
                     <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
                     <span className="text-gray-600 dark:text-gray-400">
-                      Participants ({dashboardData.userEvents
+                      {t_planning('stats.participants')} ({dashboardData.userEvents
                         .filter(e => new Date(e.beginningDate).getFullYear() === selectedYear)
                         .reduce((total, event) => total + (event.participantsIds?.length || 0), 0)})
                     </span>
@@ -923,7 +927,7 @@ const DashBoard = () => {
                 <div className="flex items-center text-sm">
                   <UserGroupIcon className="w-4 h-4 text-gray-400 mr-2" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    {selectedEvent.participantsIds?.length || 0} participant(s)
+                    {selectedEvent.participantsIds?.length || 0} {t_planning('stats.participants').toLowerCase()}
                   </span>
                 </div>
               </div>
