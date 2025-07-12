@@ -1373,36 +1373,18 @@ const Planning: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* Affiche la navbar planning uniquement pour les membres */}
-            <PlanningNavbar onAddDisponibility={startPeriodSelection} isAddButtonDisabled={isManager} />
-            {/* Place the navbar at the top, sticky/fixed, flush with header and sidebar */}
-            <nav
-                className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300 border-b border-gray-200 dark:border-gray-800"
-                style={{ left: sidebarWidth }}
-            >
-                <div className="flex items-center justify-between h-16 px-7">
-                    <div className="flex items-center gap-3">
-                        <CalendarIcon className="w-6 h-6 text-maraudr-blue dark:text-maraudr-orange" />
-                        <span className="text-gray-900 dark:text-white text-lg font-bold">Planification & Disponibilités</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        {/* Example: Add main action buttons here, conditionally rendered by role */}
-                        {!isManager && (
-                            <Button
-                                onClick={startPeriodSelection}
-                                className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                            >
-                                Ajouter une disponibilité
-                            </Button>
-                        )}
-                        {/* Add more buttons/filters as needed */}
-                    </div>
-                </div>
-            </nav>
+            {/* Affiche la navbar planning avec le bon bouton selon le rôle */}
+            <PlanningNavbar 
+                onAddDisponibility={startPeriodSelection} 
+                onAddEvent={() => setShowCreateEventModal(true)}
+                isManager={isManager}
+                isAddButtonDisabled={false}
+            />
+
             {/* Main content scrolls under the navbar, with correct padding */}
-            <div className="pt-8" />
-            <main className="w-full px-4 py-8" style={{ paddingLeft: sidebarWidth }}>
-                <div className="w-full flex flex-col md:flex-row gap-4">
+            <div className="pt-20 sm:pt-8" />
+            <main className="w-full px-2 sm:px-4 py-4 sm:py-8" style={{ paddingLeft: sidebarWidth }}>
+                <div className="w-full flex flex-col lg:flex-row gap-4">
                     {/* Sidebar équipe */}
                     <div className="w-full md:w-72 lg:w-80 xl:w-96">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
@@ -1449,21 +1431,19 @@ const Planning: React.FC = () => {
                                         />
                                         <div className="ml-3 flex-1 min-w-0">
                                             <div className="font-medium truncate">{user.firstname} {user.lastname}</div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400 flex flex-row gap-3  flex-wrap">
+                                            <div className="text-sm text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                                                 <span className="flex-shrink-0">{user.isManager ? "Manager" : "Membre"}</span>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {isUserAvailableToday(user.id) ? (
-                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
-                                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></div>
-                                                            Disponible
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
-                                                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 flex-shrink-0"></div>
-                                                            Non disponible
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                {isUserAvailableToday(user.id) ? (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap w-fit">
+                                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></div>
+                                                        Disponible
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap w-fit">
+                                                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 flex-shrink-0"></div>
+                                                        Non disponible
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </button>
@@ -1478,7 +1458,7 @@ const Planning: React.FC = () => {
                         </div>
                     </div>
                     {/* Calendrier asso */}
-                    <div className={`w-full ${selectedUser ? 'md:w-5/12' : 'md:w-1/2'}`}>
+                    <div className={`w-full ${selectedUser ? 'lg:w-5/12' : 'lg:w-1/2'}`}>
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 text-center">
                                 Planning de l'association
@@ -1572,7 +1552,7 @@ const Planning: React.FC = () => {
                     </div>
                     {/* Calendrier user (si sélectionné) */}
                     {selectedUser && (
-                        <div className="w-full md:w-5/12">
+                        <div className="w-full lg:w-5/12">
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 text-center">
                                     Disponibilités de {teamUsers.find(u => u.id === selectedUser)?.firstname} {teamUsers.find(u => u.id === selectedUser)?.lastname}
