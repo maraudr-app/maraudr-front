@@ -6,7 +6,8 @@
     "settings": "Paramètres",
     "contact": "Contact",
     "search": "Rechercher...",
-    "signup": "S'inscrire"
+    "signup": "S'inscrire",
+    "createAssociation": "Créer une association"
   },
   "sidebar": {
     "dashboard": "Tableau de bord",

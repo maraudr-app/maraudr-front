@@ -44,6 +44,11 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
     const sidebarCollapsed = useAssoStore(state => state.sidebarCollapsed);
     const { notificationCount } = useNotifications();
 
+    // Fonction pour les traductions du header (même pattern que CreateAccount)
+    const t_header = (key: string): string => {
+        return t(`header.${key}` as any);
+    };
+
     // Debug logs pour le rôle
     // User information silencieuse
 
@@ -162,11 +167,11 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
     const navLinks: NavLink[] = [];
     
     // Ajouter le lien Contact
-    navLinks.push({ name: t('header.contact'), path: '/contact', translationKey: 'header.contact' });
+    navLinks.push({ name: t_header('contact'), path: '/contact', translationKey: 'header.contact' });
 
     // Ajouter le lien Login seulement si on est sur la page Login
     if (isLoginPage) {
-        navLinks.push({ name: t('header.login'), path: '/login', translationKey: 'header.login' });
+        navLinks.push({ name: t_header('login'), path: '/login', translationKey: 'header.login' });
     }
 
     // Gérer la déconnexion
@@ -314,14 +319,14 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                 {isManager() && (
                                     isCreateAssoPage ? (
                                         <span className="px-2 md:px-4 py-1 md:py-2 text-xs md:text-base font-medium border-b-2 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange">
-                                            {t('header.createAssociation', 'Créer une association')}
+                                            {t_header('createAssociation')}
                                         </span>
                                     ) : (
                                     <Link
                                         to="/maraudApp/create-asso"
                                         className="px-2 md:px-4 py-1 md:py-2 bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300 text-xs md:text-sm"
                                     >
-                                        {t('header.createAssociation', 'Créer une association')}
+                                        {t_header('createAssociation')}
                                     </Link>
                                     )
                                 )}
@@ -397,7 +402,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                     to="/login"
                                     className="block w-full text-left px-4 py-2 text-sm bg-maraudr-blue text-white font-medium rounded-md hover:bg-maraudr-orange transition duration-300"
                                 >
-                                    {t('header.signup', 'Créer un compte')}
+                                    {t_header('signup')}
                                 </Link>
                             )
                         )}
@@ -462,7 +467,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                             {isManager() && (
                                 isCreateAssoPage ? (
                                     <span className="block px-4 py-2 text-sm font-medium border-l-4 border-maraudr-blue dark:border-maraudr-orange text-maraudr-blue dark:text-maraudr-orange bg-maraudr-blue/10 dark:bg-maraudr-orange/10">
-                                        {t('header.createAssociation', 'Créer une association')}
+                                        {t_header('createAssociation')}
                                     </span>
                                 ) : (
                                 <Link
@@ -470,7 +475,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                     onClick={() => setIsOpen(false)}
                                     className="block px-4 py-2 text-sm bg-gradient-to-r from-orange-500 to-blue-500 text-white font-medium rounded-md hover:bg-green-700 transition duration-300"
                                 >
-                                    {t('header.createAssociation', 'Créer une association')}
+                                    {t_header('createAssociation')}
                                 </Link>
                                 )
                             )}
@@ -524,7 +529,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                 onClick={() => setIsOpen(false)}
                                 className="block w-full text-left px-4 py-2 text-sm bg-maraudr-blue text-white font-medium rounded-md hover:bg-maraudr-orange transition duration-300"
                             >
-                                {t('header.signup', 'Créer un compte')}
+                                {t_header('signup')}
                             </Link>
                         )
                     )}

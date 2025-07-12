@@ -6,7 +6,8 @@
     "settings": "Settings",
     "contact": "Contact",
     "search": "Search...",
-    "signup": "Sign up"
+    "signup": "Sign up",
+    "createAssociation": "Create Association"
   },
   "sidebar": {
     "dashboard": "Dashboard",
