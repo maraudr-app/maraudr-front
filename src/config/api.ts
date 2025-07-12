@@ -1,9 +1,5 @@
-const isProd = import.meta.env.VITE_NODE_ENV === 'production';
-
-const API_DOMAIN = isProd
-  ? import.meta.env.VITE_API_DOMAIN_PROD
-  : import.meta.env.VITE_API_DOMAIN_LOCAL;
-
+// Forcer le mode local uniquement
+const API_DOMAIN = import.meta.env.VITE_API_DOMAIN_LOCAL;
 const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api';
 
 const PORTS: Record<string, string> = {
@@ -18,68 +14,39 @@ const PORTS: Record<string, string> = {
 };
 
 /**
- * Génère l'URL d'API pour un module donné
- * 
- * En développement:
- * - user: http://localhost:8082/api/... (seul user a /api/)
- * - stock: http://localhost:8081/... (pas de /api/)
- * - association: http://localhost:8080/... (pas de /api/)
- * 
- * En production:
- * - user: https://api.maraudr.eu/user/api/... (seul user a /api/)
- * - stock: https://api.maraudr.eu/stock/... (pas de /api/)
- * - association: https://api.maraudr.eu/association/... (pas de /api/)
+ * Génère l'URL d'API pour un module donné (local uniquement)
+ * - user: http://localhost:8082/api/...
+ * - stock: http://localhost:8081/...
+ * - association: http://localhost:8080/...
  */
 export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
-  if (isProd) {
-    if (module === 'user') {
-      // Module user en production: https://api.maraudr.eu/user/api/...
-      return `${API_DOMAIN}/${module}${API_PREFIX}`;
-    } else {
-      // Autres modules en production: https://api.maraudr.eu/stock/... (pas de /api/)
-      return `${API_DOMAIN}/${module}`;
-    }
+  if (module === 'user') {
+    // Module user en développement: http://localhost:8082/api/...
+    return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
   } else {
-    if (module === 'user') {
-      // Module user en développement: http://localhost:8082/api/...
-      return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
-    } else {
-      // Autres modules en développement: http://localhost:8081/... (pas de /api/)
-      return `${API_DOMAIN}:${PORTS[module]}`;
-    }
+    // Autres modules en développement: http://localhost:8081/...
+    return `${API_DOMAIN}:${PORTS[module]}`;
   }
 };
 
 /**
- * Génère l'URL de base d'un module (sans /api)
- * 
- * En développement:
- * - user: http://localhost:8082 (pour les routes comme /managers/team/)
+ * Génère l'URL de base d'un module (sans /api, local uniquement)
+ * - user: http://localhost:8082
  * - stock: http://localhost:8081
- * 
- * En production:
- * - user: https://api.maraudr.eu/user (pour les routes comme /managers/team/)
- * - stock: https://api.maraudr.eu/stock
  */
 export const getModuleBaseUrl = (module: keyof typeof PORTS): string => {
-  if (isProd) {
-    // Tous les modules en production ont leur préfixe: /user, /stock, etc.
-    return `${API_DOMAIN}/${module}`;
-  } else {
-    // Tous les modules en développement utilisent les ports: localhost:8082, etc.
-    return `${API_DOMAIN}:${PORTS[module]}`;
-  }
+  return `${API_DOMAIN}:${PORTS[module]}`;
 };
 
 // Fonction de debug pour vérifier les URLs générées
 export const debugApiUrls = () => {
   console.log('🔧 Configuration API Debug:');
-  console.log('Mode:', isProd ? 'PRODUCTION' : 'DEVELOPMENT');
+  console.log('Mode: LOCAL UNIQUEMENT');
   console.log('API_DOMAIN:', API_DOMAIN);
   console.log('API_PREFIX:', API_PREFIX);
-  
+
   const modules: (keyof typeof PORTS)[] = ['user', 'stock', 'association', 'geo', 'planning', 'mcp', 'document'];
-  
+
   modules.forEach(module => {
     console.log(`${module}:`);
     console.log(`  API URL: ${getModuleApiUrl(module)}`);

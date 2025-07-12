@@ -66,6 +66,7 @@
     "passwordMatchError": "Les mots de passe ne correspondent pas",
     "formError": "Veuillez corriger les erreurs avant de continuer",
     "success": "Compte créé avec succès !",
+     "createAccount": "Créer un compte",
     "error": {
       "400": "Données invalides",
       "401": "Non autorisé",
@@ -74,6 +75,7 @@
       "500": "Erreur serveur",
       "default": "Une erreur est survenue lors de la création du compte"
     }
+   
   },
   "themes": {
     "switchToLight": "Passer au mode clair",

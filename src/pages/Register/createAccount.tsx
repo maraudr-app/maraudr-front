@@ -164,7 +164,7 @@ const CreateAccount = () => {
       if (response) {
         // Toast de succès
         toast.success('Compte créé avec succès ! Redirection vers la page de connexion...', {
-          duration: 3000,
+          duration: 10000,
           position: 'top-center',
           style: {
             background: '#10b981',
@@ -176,8 +176,8 @@ const CreateAccount = () => {
         
         // Naviguer vers login après 3 secondes
         setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        
+        }, 10000);
       }
     } catch (error: any) {
       let errorMessage = t_register('error.default');
@@ -209,8 +209,8 @@ const CreateAccount = () => {
 
             {/* Header */}
             <div className="text-left mb-8">
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Add new client or company</h1>
-              <p className="text-gray-600 dark:text-gray-400">create a profile here.</p>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">{t_register('createAccount')}</h1>
+    
             </div>
 
             {/* Main Content Layout */}
@@ -225,9 +225,6 @@ const CreateAccount = () => {
                     +
                   </button>
                 </div>
-                <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm font-medium">
-                  Change Profile Picture
-                </button>
               </div>
 
               {/* Right Section - Form */}
@@ -386,66 +383,24 @@ const CreateAccount = () => {
               />
             </div>
 
-            {/* Manager Fields */}
-            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
-              <div className="flex items-center space-x-3 mb-4">
-                <input
-                  type="checkbox"
-                  id="isManager"
-                  name="isManager"
-                  checked={form.isManager}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-orange-500 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-orange-500"
-                />
-                <label htmlFor="isManager" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t_register('isManager')}
-                </label>
-              </div>
-
-              {!form.isManager && (
-                <Input
-                  placeholder={t_register('managerId')}
-                  name="managerId"
-                  value={form.managerId || ''}
-                  onChange={handleChange}
-                  required
-                  error={!form.isManager && !form.managerId?.trim() ? t_register('managerIdRequired') : undefined}
-                  rightIcon={!form.isManager && form.managerId?.trim() ? <FaCheckCircle className="text-green-500 text-lg" /> : undefined}
-                />
-              )}
-            </div>
+    
 
             {/* Erreur globale */}
             {formError && <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">{t_register('formError')}</div>}
 
-            {/* Terms */}
-            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <input
-                  id="terms"
-                  type="checkbox"
-                  required
-                  className="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded focus:ring-blue-500 mt-1"
-                />
-                <label htmlFor="terms" className="text-sm text-gray-700 dark:text-gray-300">
-                  {t_register('terms')}{" "}
-                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline">{t_register('termsLink')}</a>{" "}
-                  {t_register('and')}{" "}
-                  <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline">{t_register('privacyLink')}</a>
-                </label>
-              </div>
-            </div>
+          
 
             {/* Submit */}
             <div className="flex justify-end mt-8">
-              <Button 
+              <button 
+                onClick={handleSubmit}
                 type="submit" 
                 className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-md shadow-md" 
                 disabled={isLoading} 
-                isLoading={isLoading}
+              
               >
-                CREATE PROFILE
-              </Button>
+                {t_register('createAccount')}
+              </button>
             </div>
 
             {/* Already have account */}
