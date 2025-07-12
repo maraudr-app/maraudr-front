@@ -1,0 +1,98 @@
+{
+  "navbar": {
+    "title": "Planification & Disponibilités",
+    "addAvailability": "Ajouter une disponibilité",
+    "addEvent": "Ajouter un événement"
+  },
+  "team": {
+    "title": "Équipe",
+    "associationPlanning": "Planning de l'association",
+    "allPlannings": "Tous les plannings",
+    "manager": "Manager",
+    "member": "Membre",
+    "available": "Disponible",
+    "unavailable": "Non disponible"
+  },
+  "calendar": {
+    "associationPlanning": "Planning de l'association",
+    "eventsThisMonth": "événement(s) ce mois",
+    "userAvailability": "Disponibilités de",
+    "availabilitiesThisMonth": "disponibilité(s) ce mois",
+    "daysOfWeek": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    },
+    "months": {
+      "january": "Janvier",
+      "february": "Février",
+      "march": "Mars",
+      "april": "Avril",
+      "may": "Mai",
+      "june": "Juin",
+      "july": "Juillet",
+      "august": "Août",
+      "september": "Septembre",
+      "october": "Octobre",
+      "november": "Novembre",
+      "december": "Décembre"
+    }
+  },
+  "legend": {
+    "oneEvent": "1 événement",
+    "twoEvents": "2 événements",
+    "threePlusEvents": "3+ événements",
+    "pastEvents": "Événement(s) passé(s)",
+    "availableFuture": "Disponible (futur)",
+    "availablePast": "Disponible (passé)",
+    "unavailable": "Non disponible"
+  },
+  "modals": {
+    "createEvent": {
+      "title": "Créer un événement",
+      "name": "Nom de l'événement",
+      "description": "Description",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "location": "Lieu",
+      "participants": "Participants",
+      "create": "Créer",
+      "cancel": "Annuler"
+    },
+    "addAvailability": {
+      "title": "Ajouter une disponibilité",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "add": "Ajouter",
+      "cancel": "Annuler"
+    }
+  },
+  "errors": {
+    "loadEvents": "Erreur lors du chargement des événements",
+    "createEvent": "Erreur lors de la création de l'événement",
+    "updateEvent": "Erreur lors de la modification de l'événement",
+    "deleteEvent": "Erreur lors de la suppression de l'événement",
+    "loadAvailabilities": "Erreur lors du chargement des disponibilités",
+    "addAvailability": "Erreur lors de l'ajout de la disponibilité",
+    "loadTeam": "Erreur lors du chargement de l'équipe",
+    "pastDate": "Vous ne pouvez pas sélectionner une date passée"
+  },
+  "success": {
+    "eventCreated": "Événement créé avec succès !",
+    "eventUpdated": "Événement modifié avec succès !",
+    "eventDeleted": "Événement supprimé avec succès !",
+    "availabilityAdded": "Disponibilité ajoutée avec succès !"
+  },
+  "confirmations": {
+    "deleteEvent": "Êtes-vous sûr de vouloir supprimer cet événement ?",
+    "deleteEventTitle": "Supprimer l'événement"
+  }
+} 

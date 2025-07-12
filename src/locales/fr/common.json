@@ -184,5 +184,133 @@
       "title": "Note :",
       "content": "Le numéro SIRET permet de vérifier l'existence légale de votre association. Toutes vos données restent confidentielles et sécurisées."
     }
+  },
+  "planning": {
+    "team": {
+      "title": "Équipe",
+      "associationPlanning": "Planning de l'association",
+      "allPlannings": "Tous les plannings",
+      "manager": "Manager",
+      "member": "Membre",
+      "available": "Disponible",
+      "unavailable": "Non disponible",
+      "addEvent": "Ajouter un événement",
+      "addAvailability": "Ajouter une disponibilité"
+    },
+    "calendar": {
+      "associationPlanning": "Planning de l'association",
+      "eventsThisMonth": "événement(s) ce mois",
+      "userAvailability": "Disponibilités de",
+      "availabilitiesThisMonth": "disponibilité(s) ce mois"
+    },
+    "legend": {
+      "oneEvent": "1 événement",
+      "twoEvents": "2 événements",
+      "threePlusEvents": "3+ événements",
+      "pastEvents": "Événement(s) passé(s)",
+      "availableFuture": "Disponible (futur)",
+      "availablePast": "Disponible (passé)",
+      "unavailable": "Non disponible"
+    },
+    "availability": {
+      "title": "Mes disponibilités",
+      "missions": "Mes missions",
+      "addAvailability": "Ajouter une disponibilité",
+      "defineHours": "Définir les heures de disponibilité",
+      "defineAvailability": "Définir la disponibilité",
+      "fromTo": "Du {start} au {end}",
+      "startDay": "Jour de début",
+      "endDay": "Jour de fin",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "fillAllFields": "Veuillez remplir tous les champs",
+      "endDateAfterStart": "La date de fin doit être après la date de début",
+      "conflictError": "Vous avez déjà une disponibilité sur cette plage horaire ou ce jour",
+      "success": "Disponibilité ajoutée avec succès !",
+      "error": "Erreur lors de la création de la disponibilité",
+      "pastDateError": "Vous ne pouvez pas sélectionner une date passée"
+    },
+    "events": {
+      "title": "Événements du jour",
+      "searchPlaceholder": "Rechercher par titre, description ou lieu...",
+      "eventNumber": "Événement {number}",
+      "pastEvent": "Événement passé",
+      "modifyEvent": "Modifier l'événement",
+      "deleteEvent": "Supprimer l'événement",
+      "deleteConfirmTitle": "Supprimer l'événement",
+      "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer l'événement \"{title}\" ? Cette action est irréversible.",
+      "delete": "Supprimer",
+      "eventCreated": "Événement créé avec succès",
+      "eventUpdated": "Événement modifié avec succès",
+      "eventDeleted": "Événement supprimé avec succès",
+      "description": "Description:",
+      "participants": "Participants :",
+      "upcomingEvent": "Événement à venir",
+      "pastEventLegend": "Événement passé"
+    },
+    "missions": {
+      "title": "Missions du {date}",
+      "missionsCount": "({count})"
+    },
+    "months": {
+      "january": "Janvier",
+      "february": "Février",
+      "march": "Mars",
+      "april": "Avril",
+      "may": "Mai",
+      "june": "Juin",
+      "july": "Juillet",
+      "august": "Août",
+      "september": "Septembre",
+      "october": "Octobre",
+      "november": "Novembre",
+      "december": "Décembre"
+    },
+    "days": {
+      "sunday": "Dim",
+      "monday": "Lun",
+      "tuesday": "Mar",
+      "wednesday": "Mer",
+      "thursday": "Jeu",
+      "friday": "Ven",
+      "saturday": "Sam"
+    },
+    "errors": {
+      "loadAvailabilities": "Erreur lors du chargement des disponibilités",
+      "loadUsers": "Erreur lors du chargement des utilisateurs",
+      "loadEvents": "Erreur lors du chargement des événements",
+      "deleteEvent": "Erreur lors de la suppression de l'événement",
+      "associationNotFound": "Erreur: association ou utilisateur non trouvé"
+    },
+    "stats": {
+      "evolutionTitle": "Évolution des événements par mois"
+    },
+    "createPlanning": {
+      "modalTitle": "Créer un planning",
+      "modalSubtitle": "Créer un nouveau planning",
+      "modalDescription": "Créez un planning pour l'association <strong>{name}</strong>",
+      "createButton": "Créer le planning",
+      "success": "Planning créé avec succès ! Vous pouvez maintenant ajouter des événements.",
+      "finalSuccess": "Planning créé avec succès !",
+      "error": "Erreur lors de la création du planning",
+      "associationNotSelected": "Association non sélectionnée",
+      "eventAdded": "Événement ajouté avec succès !",
+      "eventError": "Erreur lors de la création de l'événement",
+      "eventFormError": "Veuillez remplir au moins le titre, la date de début et la date de fin",
+      "eventDateError": "La date de fin doit être postérieure à la date de début",
+      "planningNotCreated": "Planning non créé ou utilisateur non connecté"
+    },
+    "createEvent": {
+      "modalTitle": "Créer un événement",
+      "success": "Événement créé avec succès !",
+      "error": "Erreur lors de la création de l'événement",
+      "formError": "Veuillez remplir au moins le titre, la date de début et la date de fin",
+      "datePastError": "La date de début ne peut pas être dans le passé",
+      "dateOrderError": "La date de fin doit être postérieure à la date de début",
+      "associationOrUserError": "Association non sélectionnée ou utilisateur non connecté"
+    }
   }
 } 

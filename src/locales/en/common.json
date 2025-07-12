@@ -182,5 +182,133 @@
       "title": "Note:",
       "content": "The SIRET number allows us to verify the legal existence of your association. All your data remains confidential and secure."
     }
+  },
+  "planning": {
+    "team": {
+      "title": "Team",
+      "associationPlanning": "Association planning",
+      "allPlannings": "All plannings",
+      "manager": "Manager",
+      "member": "Member",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "addEvent": "Add event",
+      "addAvailability": "Add availability"
+    },
+    "calendar": {
+      "associationPlanning": "Association planning",
+      "eventsThisMonth": "event(s) this month",
+      "userAvailability": "Availability of",
+      "availabilitiesThisMonth": "availability(ies) this month"
+    },
+    "legend": {
+      "oneEvent": "1 event",
+      "twoEvents": "2 events",
+      "threePlusEvents": "3+ events",
+      "pastEvents": "Past event(s)",
+      "availableFuture": "Available (future)",
+      "availablePast": "Available (past)",
+      "unavailable": "Unavailable"
+    },
+    "availability": {
+      "title": "My availabilities",
+      "missions": "My missions",
+      "addAvailability": "Add availability",
+      "defineHours": "Define availability hours",
+      "defineAvailability": "Define availability",
+      "fromTo": "From {start} to {end}",
+      "startDay": "Start day",
+      "endDay": "End day",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "fillAllFields": "Please fill in all fields",
+      "endDateAfterStart": "End date must be after start date",
+      "conflictError": "You already have availability for this time slot or day",
+      "success": "Availability added successfully!",
+      "error": "Error creating availability",
+      "pastDateError": "You cannot select a past date"
+    },
+    "events": {
+      "title": "Day events",
+      "searchPlaceholder": "Search by title, description or location...",
+      "eventNumber": "Event {number}",
+      "pastEvent": "Past event",
+      "modifyEvent": "Modify event",
+      "deleteEvent": "Delete event",
+      "deleteConfirmTitle": "Delete event",
+      "deleteConfirmMessage": "Are you sure you want to delete the event \"{title}\"? This action is irreversible.",
+      "delete": "Delete",
+      "eventCreated": "Event created successfully",
+      "eventUpdated": "Event updated successfully",
+      "eventDeleted": "Event deleted successfully",
+      "description": "Description:",
+      "participants": "Participants:",
+      "upcomingEvent": "Upcoming event",
+      "pastEventLegend": "Past event"
+    },
+    "missions": {
+      "title": "Missions of {date}",
+      "missionsCount": "({count})"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "days": {
+      "sunday": "Sun",
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat"
+    },
+    "errors": {
+      "loadAvailabilities": "Error loading availabilities",
+      "loadUsers": "Error loading users",
+      "loadEvents": "Error loading events",
+      "deleteEvent": "Error deleting event",
+      "associationNotFound": "Error: association or user not found"
+    },
+    "stats": {
+      "evolutionTitle": "Event evolution by month"
+    },
+    "createPlanning": {
+      "modalTitle": "Create planning",
+      "modalSubtitle": "Create a new planning",
+      "modalDescription": "Create a planning for the association <strong>{name}</strong>",
+      "createButton": "Create planning",
+      "success": "Planning created successfully! You can now add events.",
+      "finalSuccess": "Planning created successfully!",
+      "error": "Error creating planning",
+      "associationNotSelected": "Association not selected",
+      "eventAdded": "Event added successfully!",
+      "eventError": "Error creating event",
+      "eventFormError": "Please fill in at least the title, start date and end date",
+      "eventDateError": "End date must be after start date",
+      "planningNotCreated": "Planning not created or user not connected"
+    },
+    "createEvent": {
+      "modalTitle": "Create event",
+      "success": "Event created successfully!",
+      "error": "Error creating event",
+      "formError": "Please fill in at least the title, start date and end date",
+      "datePastError": "Start date cannot be in the past",
+      "dateOrderError": "End date must be after start date",
+      "associationOrUserError": "Association not selected or user not connected"
+    }
   }
 } 
