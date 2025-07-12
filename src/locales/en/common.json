@@ -140,5 +140,47 @@
       "homeButton": "Back to home",
       "backButton": "Previous page"
     }
+  },
+  "createAssociation": {
+    "title": "Create Association",
+    "newAssociation": "New Association",
+    "description": "Create your association to start managing your teams and actions",
+    "siretLabel": "SIRET number of your association",
+    "siretPlaceholder": "Ex: 12345678901234",
+    "progress": "Progress",
+    "remainingDigits": "{count} digits remaining",
+    "siretInvalid": "This SIRET number is not valid",
+    "siretValid": "Valid SIRET number!",
+    "createButton": "Create my association",
+    "creating": "Creating...",
+    "onlyManagers": "Only managers can create an association.",
+    "errorTitle": "Error during creation",
+    "successMessage": "Association created successfully!",
+    "associationSelected": "Association \"{name}\" selected!",
+    "defaultError": "An error occurred while creating the association",
+    "invalidSiretError": "Please enter a valid SIRET number",
+    "loadingAssociations": "Loading associations...",
+    "siretNotFound": "This SIRET number was not found in the official database. Please verify the number.",
+    "notAssociation": "This SIRET does not correspond to a declared association. Only declared associations are accepted.",
+    "siretApiError": "Connection error with the SIRET API. Please try again later.",
+    "siretConnectionError": "Connection error to the SIRET API. The service is temporarily unavailable.",
+    "siretAlreadyExists": "An association with this SIRET number already exists in our database.",
+    "featuresTitle": "What can you do with your association?",
+    "teamManagement": {
+      "title": "Team Management",
+      "description": "Organize your volunteers and members"
+    },
+    "actionTracking": {
+      "title": "Action Tracking",
+      "description": "Measure the impact of your activities"
+    },
+    "security": {
+      "title": "Security",
+      "description": "Your data is protected"
+    },
+    "note": {
+      "title": "Note:",
+      "content": "The SIRET number allows us to verify the legal existence of your association. All your data remains confidential and secure."
+    }
   }
 } 

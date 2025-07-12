@@ -1404,7 +1404,7 @@ const Planning: React.FC = () => {
             <main className="w-full px-4 py-8" style={{ paddingLeft: sidebarWidth }}>
                 <div className="w-full flex flex-col md:flex-row gap-4">
                     {/* Sidebar équipe */}
-                    <div className="w-full md:w-1/4">
+                    <div className="w-full md:w-72 lg:w-80 xl:w-96">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                 <UserGroupIcon className="w-5 h-5 mr-2" />
@@ -1447,21 +1447,23 @@ const Planning: React.FC = () => {
                                             alt={`${user.firstname} ${user.lastname}`}
                                             className="w-8 h-8 rounded-full"
                                         />
-                                        <div className="ml-3 flex-1">
-                                            <div className="font-medium">{user.firstname} {user.lastname}</div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
-                                                <span>{user.isManager ? "Manager" : "Membre"}</span>
-                                                {isUserAvailableToday(user.id) ? (
-                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
-                                                        Disponible
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></div>
-                                                        Non disponible
-                                                    </span>
-                                                )}
+                                        <div className="ml-3 flex-1 min-w-0">
+                                            <div className="font-medium truncate">{user.firstname} {user.lastname}</div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-400 flex flex-row gap-3  flex-wrap">
+                                                <span className="flex-shrink-0">{user.isManager ? "Manager" : "Membre"}</span>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {isUserAvailableToday(user.id) ? (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
+                                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></div>
+                                                            Disponible
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
+                                                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 flex-shrink-0"></div>
+                                                            Non disponible
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </button>

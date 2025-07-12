@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
+import { useAssoStore } from './store/assoStore';
 import MaraudrApp from "./pages/MaraudrApp.tsx";
 import Profile from "./pages/Profile/Profile.tsx";
 import Plan from "./pages/plan/plan.tsx";
@@ -32,6 +33,7 @@ import McpServer from './pages/McpServer';
 function App() {
   const { i18n } = useTranslation();
   const { isAuthenticated, user, fetchUser } = useAuthStore();
+  const { associations } = useAssoStore();
 
   // Effet pour mettre à jour l'attribut lang de la balise html
   useEffect(() => {
@@ -53,6 +55,19 @@ function App() {
     initializeAuth();
   }, [isAuthenticated, user, fetchUser]);
 
+  // Fonction pour déterminer la redirection intelligente
+  const getSmartRedirect = () => {
+    if (!isAuthenticated || !user) {
+      return <Home />; // Page d'accueil
+    }
+
+    if (user.userType === 'Manager' && associations.length === 0) {
+      return <Navigate to="/maraudApp/create-asso" replace />; // Créer association
+    }
+
+    return <Navigate to="/maraudApp/dashboard" replace />; // Dashboard
+  };
+
   return (
     <ThemeProvider>
       <Router>
@@ -67,7 +82,7 @@ function App() {
         <main className="pt-16 min-h-screen bg-white dark:bg-gray-900 transition-colors">
           <Routes>
                   {/* Routes publiques */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={getSmartRedirect()} />
                   <Route path="/login" element={<ProtectedRoute requireAuth={false}><Login /></ProtectedRoute>} />
                   <Route path="/forgot-password" element={<ProtectedRoute requireAuth={false}><ForgotPassword /></ProtectedRoute>} />
                   <Route path="/reset-password" element={<ProtectedRoute requireAuth={false}><ResetPassword /></ProtectedRoute>} />

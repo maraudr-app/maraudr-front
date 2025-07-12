@@ -142,5 +142,47 @@
       "homeButton": "Retour à l'accueil",
       "backButton": "Page précédente"
     }
+  },
+  "createAssociation": {
+    "title": "Créer une association",
+    "newAssociation": "Nouvelle association",
+    "description": "Créez votre association pour commencer à gérer vos équipes et vos actions",
+    "siretLabel": "Numéro SIRET de votre association",
+    "siretPlaceholder": "Ex: 12345678901234",
+    "progress": "Progression",
+    "remainingDigits": "Encore {count} chiffres à saisir",
+    "siretInvalid": "Ce numéro SIRET n'est pas valide",
+    "siretValid": "Numéro SIRET valide !",
+    "createButton": "Créer mon association",
+    "creating": "Création en cours...",
+    "onlyManagers": "Seuls les managers peuvent créer une association.",
+    "errorTitle": "Erreur lors de la création",
+    "successMessage": "Association créée avec succès !",
+    "associationSelected": "Association \"{name}\" sélectionnée !",
+    "defaultError": "Une erreur est survenue lors de la création de l'association",
+    "invalidSiretError": "Veuillez entrer un numéro SIRET valide",
+    "loadingAssociations": "Chargement des associations...",
+    "siretNotFound": "Ce numéro SIRET n'a pas été trouvé dans la base de données officielle. Veuillez vérifier le numéro.",
+    "notAssociation": "Ce SIRET ne correspond pas à une association déclarée. Seules les associations déclarées sont acceptées.",
+    "siretApiError": "Erreur de connexion avec l'API SIRET. Veuillez réessayer plus tard.",
+    "siretConnectionError": "Erreur de connexion à l'API SIRET. Le service est temporairement indisponible.",
+    "siretAlreadyExists": "Une association avec ce numéro SIRET existe déjà dans notre base de données.",
+    "featuresTitle": "Que pouvez-vous faire avec votre association ?",
+    "teamManagement": {
+      "title": "Gestion d'équipe",
+      "description": "Organisez vos bénévoles et membres"
+    },
+    "actionTracking": {
+      "title": "Suivi d'actions",
+      "description": "Mesurez l'impact de vos activités"
+    },
+    "security": {
+      "title": "Sécurité",
+      "description": "Vos données sont protégées"
+    },
+    "note": {
+      "title": "Note :",
+      "content": "Le numéro SIRET permet de vérifier l'existence légale de votre association. Toutes vos données restent confidentielles et sécurisées."
+    }
   }
 } 
