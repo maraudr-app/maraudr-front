@@ -1,7 +1,7 @@
 export interface Event {
   id: string;
   planningId: string;
-  organizerId: string;
+  organizerdId: string;
   participantsIds: string[];
   beginningDate: string; // ISO string format
   endDate: string; // ISO string format
@@ -12,7 +12,7 @@ export interface Event {
 
 export interface CreateEventRequest {
   planningId: string;
-  organizerId: string;
+  organizerdId: string;
   participantsIds: string[];
   title: string;
   description: string;
@@ -35,7 +35,7 @@ export interface CreateEventDto {
 export interface UpdateEventRequest {
   id: string;
   planningId?: string;
-  organizerId?: string;
+  organizerdId?: string;
   participantsIds?: string[];
   title?: string;
   description?: string;

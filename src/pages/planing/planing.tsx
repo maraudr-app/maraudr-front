@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/common/toast/Toast';
 import CreateEventModal from '../../components/planning/CreateEventModal';
+import EditEventModal from '../../components/planning/EditEventModal';
 import { planningService } from '../../services/planningService';
 import type { Event } from '../../types/planning/event';
 import { Input } from '../../components/common/input/input';
@@ -273,7 +274,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             await loadUserAvailabilities();
             
         } catch (error: any) {
-            console.error('Erreur lors de la création de la disponibilité:', error);
+            console.error(t_planning('errors.createAvailability') + ':', error);
         // @ts-ignore
             toast.error(error.message || t_planning('availability.createError'));
         } finally {
@@ -588,7 +589,7 @@ const Planning: React.FC = () => {
         } catch (error) {
             console.error('Erreur lors du chargement des utilisateurs:', error);
         // @ts-ignore
-            toast.error('Erreur lors du chargement des utilisateurs');
+            toast.error(t_planning('errors.loadUsers'));
         } finally {
             setLoadingUsers(false);
         }
@@ -611,7 +612,7 @@ const Planning: React.FC = () => {
         } catch (error) {
             console.error('Erreur lors du chargement des événements:', error);
         // @ts-ignore
-            toast.error('Erreur lors du chargement des événements');
+            toast.error(t_planning('errors.loadEvents'));
             setAllEvents([]);
         } finally {
             setLoadingEvents(false);
@@ -659,16 +660,25 @@ const Planning: React.FC = () => {
     const canEditEvent = (event: Event): boolean => {        
         if (!user) return false;
         
+        console.log('🔍 canEditEvent debug:', {
+            userType: user.userType,
+            userSub: user.sub,
+            eventOrganizerId: event.organizerdId,
+            isManager: user.userType === 'Manager',
+            isOrganizer: event.organizerdId === user.sub
+        });
+        
         // Manager peut modifier tous les événements (avec M majuscule)
         if (user.userType === 'Manager') return true;
         
         // Organisateur peut modifier ses propres événements
-        if (event.organizerId === user.sub) return true;
+        if (event.organizerdId === user.sub) return true;
         
         return false;
     };
 
     const handleEditEvent = (event: Event) => {
+       
         setEditingEvent(event);
         setEditFormData({
             title: event.title,
@@ -1722,6 +1732,16 @@ const Planning: React.FC = () => {
                     isOpen={showCreateEventModal}
                     onClose={() => setShowCreateEventModal(false)}
                     onEventCreated={handleEventCreated}
+                />
+
+                {/* Modal d'édition d'événement */}
+                <EditEventModal
+                    isOpen={showEditEventModal}
+                    onClose={() => setShowEditEventModal(false)}
+                    onEventUpdated={handleEventUpdated}
+                    event={editingEvent}
+                    editFormData={editFormData}
+                    selectedParticipants={editSelectedParticipants}
                 />
 
                 {/* Modal de confirmation de suppression */}

@@ -214,7 +214,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Créer un planning
+                        {t_planning('createPlanning.modalTitle')}
                     </h2>
                     <button
                         onClick={onClose}

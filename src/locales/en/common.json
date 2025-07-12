@@ -285,13 +285,7 @@
       "friday": "Fri",
       "saturday": "Sat"
     },
-    "errors": {
-      "loadAvailabilities": "Error loading availabilities",
-      "loadUsers": "Error loading users",
-      "loadEvents": "Error loading events",
-      "deleteEvent": "Error deleting event",
-      "associationNotFound": "Error: association or user not found"
-    },
+
     "stats": {
       "evolutionTitle": "Event evolution by month",
       "noNewEvents": "No new events this month",
@@ -350,6 +344,53 @@
       "unavailableDays": "Unavailable days:",
       "otherDays": "+{count} other days",
       "forPeriod": "for the period {period}"
+    },
+    "editEvent": {
+      "modalTitle": "Edit event",
+      "success": "Event updated successfully!",
+      "error": "Error updating event",
+      "formError": "Please fill in at least the title, start date and end date",
+      "datePastError": "Start date cannot be in the past",
+      "dateOrderError": "End date must be after start date",
+      "associationOrUserError": "Association not selected or user not connected",
+      "eventTitle": "Event title",
+      "location": "Location",
+      "description": "Description",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "participants": "Participants",
+      "selectParticipants": "Select participants...",
+      "participantsSelected": "{count} participant(s) selected",
+      "noMembersFound": "No members found",
+      "noMembersAvailable": "No members available",
+      "availabilityWarning": "💡 These participants can still be added to the event, but make sure they are informed of the dates concerned.",
+      "noAvailabilityRecorded": "No availability recorded",
+      "unavailableDays": "Unavailable days:",
+      "otherDays": "+{count} other days",
+      "forPeriod": "for the period {period}",
+      "titleRequired": "Title is required",
+      "dateRequired": "Start and end dates are required",
+      "endDateAfterStart": "End date must be after start date",
+      "updating": "Updating...",
+      "update": "Update",
+      "cancel": "Cancel",
+      "searchMembers": "Search members...",
+      "availabilityConflicts": "Availability conflicts detected",
+      "unknownMember": "Unknown member"
+    },
+    "errors": {
+      "loadMembers": "Error loading members",
+      "loadAvailabilities": "Error loading availabilities",
+      "loadUsers": "Error loading users",
+      "loadEvents": "Error loading events",
+      "deleteEvent": "Error deleting event",
+      "associationNotFound": "Error: association or user not found",
+      "createEvent": "Error creating event",
+      "updateEvent": "Error updating event",
+      "createPlanning": "Error creating planning",
+      "createAvailability": "Error creating availability",
+      "loadTeamMembers": "Error loading team members",
+      "loadAllAvailabilities": "Error loading all availabilities"
     }
   }
 } 

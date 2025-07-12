@@ -287,13 +287,7 @@
       "friday": "Ven",
       "saturday": "Sam"
     },
-    "errors": {
-      "loadAvailabilities": "Erreur lors du chargement des disponibilités",
-      "loadUsers": "Erreur lors du chargement des utilisateurs",
-      "loadEvents": "Erreur lors du chargement des événements",
-      "deleteEvent": "Erreur lors de la suppression de l'événement",
-      "associationNotFound": "Erreur: association ou utilisateur non trouvé"
-    },
+
     "stats": {
       "evolutionTitle": "Évolution des événements par mois",
       "noNewEvents": "Aucun nouvel événement ce mois",
@@ -352,6 +346,53 @@
       "unavailableDays": "Jours non disponibles :",
       "otherDays": "+{count} autres jours",
       "forPeriod": "pour la période {period}"
+    },
+    "editEvent": {
+      "modalTitle": "Modifier l'événement",
+      "success": "Événement modifié avec succès !",
+      "error": "Erreur lors de la modification de l'événement",
+      "formError": "Veuillez remplir au moins le titre, la date de début et la date de fin",
+      "datePastError": "La date de début ne peut pas être dans le passé",
+      "dateOrderError": "La date de fin doit être postérieure à la date de début",
+      "associationOrUserError": "Association non sélectionnée ou utilisateur non connecté",
+      "eventTitle": "Titre de l'événement",
+      "location": "Lieu",
+      "description": "Description",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "participants": "Participants",
+      "selectParticipants": "Sélectionner des participants...",
+      "participantsSelected": "{count} participant(s) sélectionné(s)",
+      "noMembersFound": "Aucun membre trouvé",
+      "noMembersAvailable": "Aucun membre disponible",
+      "availabilityWarning": "💡 Ces participants pourront toujours être ajoutés à l'événement, mais assurez-vous qu'ils soient informés des dates concernées.",
+      "noAvailabilityRecorded": "Aucune disponibilité enregistrée",
+      "unavailableDays": "Jours non disponibles :",
+      "otherDays": "+{count} autres jours",
+      "forPeriod": "pour la période {period}",
+      "titleRequired": "Le titre est requis",
+      "dateRequired": "Les dates de début et de fin sont requises",
+      "endDateAfterStart": "La date de fin doit être après la date de début",
+      "updating": "Modification en cours...",
+      "update": "Modifier",
+      "cancel": "Annuler",
+      "searchMembers": "Rechercher des membres...",
+      "availabilityConflicts": "Conflits de disponibilité détectés",
+      "unknownMember": "Membre inconnu"
+    },
+    "errors": {
+      "loadMembers": "Erreur lors du chargement des membres",
+      "loadAvailabilities": "Erreur lors du chargement des disponibilités",
+      "loadUsers": "Erreur lors du chargement des utilisateurs",
+      "loadEvents": "Erreur lors du chargement des événements",
+      "deleteEvent": "Erreur lors de la suppression de l'événement",
+      "associationNotFound": "Erreur: association ou utilisateur non trouvé",
+      "createEvent": "Erreur lors de la création de l'événement",
+      "updateEvent": "Erreur lors de la modification de l'événement",
+      "createPlanning": "Erreur lors de la création du planning",
+      "createAvailability": "Erreur lors de la création de la disponibilité",
+      "loadTeamMembers": "Erreur lors du chargement des membres de l'équipe",
+      "loadAllAvailabilities": "Erreur lors du chargement de toutes les disponibilités"
     }
   }
 } 
