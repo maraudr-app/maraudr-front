@@ -48,12 +48,29 @@ declare module 'i18next' {
           login: string;
           settings: string;
           contact: string;
+          signup: string;
+          createAssociation: string;
         };
         auth: {
           login: string;
           welcome: string;
           email: string;
           password: string;
+          remember: string;
+          forgot: string;
+          loginButton: string;
+          noAccount: string;
+          register: string;
+          or: string;
+          google: string;
+          microsoft: string;
+          logout: string;
+          invalidCredentials: string;
+          authenticationError: string;
+          networkError: string;
+          accountBlocked: string;
+          serverError: string;
+          loginError: string;
         };
         theme: {
           light: string;

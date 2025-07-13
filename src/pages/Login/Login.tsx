@@ -23,6 +23,11 @@ const Login = () => {
   const { handleCloseLoginPage } = useLoginNavigation();
   const login = useAuthStore(state => state.login);
 
+  // Fonction pour les traductions d'authentification (même pattern que les autres composants)
+  const t_auth = (key: string): string => {
+    return t(`auth.${key}` as any);
+  };
+
   // Hide login button in navbar when on home page
   const isHomePage = location.pathname === '/';
   if (isHomePage) {
@@ -59,30 +64,27 @@ const Login = () => {
       } else {
         // Si login retourne false, c'est une erreur d'authentification
        
-        setError(t('auth.invalidCredentials'));
+        setError(t_auth('invalidCredentials'));
       }
     } catch (error: any) {
       console.error('Login error:', error);
       
-      // Gérer différents types d'erreurs
+      // Gérer différents types d'erreurs avec les traductions appropriées
       if (error.message?.includes('User not authenticated')) {
-        // @ts-ignore
-        setError(t('auth.authenticationError'));
-      } else if (error.message?.includes('Network')) {
-        // @ts-ignore
-        setError(t('auth.networkError'));
+        setError(t_auth('authenticationError'));
+      } else if (error.message?.includes('Network') || error.code === 'NETWORK_ERROR') {
+        setError(t_auth('networkError'));
       } else if (error.response?.status === 401) {
-        // @ts-ignore
-        setError(t('auth.invalidCredentials'));
+        setError(t_auth('invalidCredentials'));
       } else if (error.response?.status === 403) {
-        // @ts-ignore
-        setError(t('auth.accountBlocked'));
+        setError(t_auth('accountBlocked'));
       } else if (error.response?.status >= 500) {
-        // @ts-ignore
-        setError(t('auth.serverError'));
+        setError(t_auth('serverError'));
+      } else if (error.response?.data?.message) {
+        // Si le backend retourne un message d'erreur spécifique, l'utiliser
+        setError(error.response.data.message);
       } else {
-        // @ts-ignore
-        setError(t('auth.loginError'));
+        setError(t_auth('loginError'));
       }
     } finally {
       setIsLoading(false);
@@ -114,10 +116,10 @@ const Login = () => {
               </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors">
      
-                {t('auth.welcome')}
+                {t_auth('welcome')}
               </h2>
         
-              <p className="text-sm text-gray-700 dark:text-gray-300 transition-colors">{t('auth.login')}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 transition-colors">{t_auth('login')}</p>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -128,7 +130,7 @@ const Login = () => {
                   type="email"
                   required
        
-                  placeholder={t('auth.email')}
+                  placeholder={t_auth('email')}
                   value={email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -141,7 +143,7 @@ const Login = () => {
                   type="password"
                   required
       
-                  placeholder={t('auth.password')}
+                  placeholder={t_auth('password')}
                   value={password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -160,14 +162,14 @@ const Login = () => {
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
        
-                    {t('auth.remember')}
+                    {t_auth('remember')}
                   </label>
                 </div>
 
                 <div className="text-sm">
                   <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
      
-                    {t('auth.forgot')}
+                    {t_auth('forgot')}
                   </Link>
                 </div>
               </div>
@@ -199,16 +201,16 @@ const Login = () => {
                 className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
               >
       
-                {t('auth.loginButton')}
+                {t_auth('loginButton')}
               </Button>
               
               <div className="text-center">
                 <span className="text-sm text-gray-700 dark:text-gray-300">
       
-                  {t('auth.noAccount')}{' '}
+                  {t_auth('noAccount')}{' '}
                   <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
       
-                    {t('auth.register')}
+                    {t_auth('register')}
                   </Link>
                 </span>
               </div>

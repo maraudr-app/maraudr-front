@@ -66,8 +66,7 @@ export const useAuthStore = create<AuthState>()(
             const decodedToken = jwtDecode<DecodedToken>(response.accessToken);
             
             if (decodedToken) {
-              console.log('🔍 Token décodé:', decodedToken);
-              
+             
               const userData: User = {
                 email: decodedToken.email,
                 sub: decodedToken.sub,  // sub est l'UUID de l'utilisateur
@@ -76,15 +75,7 @@ export const useAuthStore = create<AuthState>()(
                 userType: decodedToken.userType,
                 avatar: getAvatarUrl(decodedToken.firstName, decodedToken.lastName)
               };
-              // Ajout du log de vérification
-              if (!userData.firstName || !userData.lastName) {
-                console.warn('⚠️ Attention: firstName ou lastName manquant dans le token décodé:', decodedToken);
-              } else {
-                console.log('✅ userData bien construit:', userData);
-              }
-              
-              console.log('👤 Données utilisateur créées:', userData);
-              
+            
               // Sauvegarder le token et le refresh token s'il est fourni
               authService.setToken(response.accessToken, response.refreshToken);
               
@@ -100,7 +91,8 @@ export const useAuthStore = create<AuthState>()(
           }
           return false;
         } catch (error: any) {
-          return false;
+          // Propager l'erreur au lieu de retourner false
+          throw error;
         }
       },
       
