@@ -185,6 +185,62 @@
       "content": "Le numéro SIRET permet de vérifier l'existence légale de votre association. Toutes vos données restent confidentielles et sécurisées."
     }
   },
+  "events": {
+    "title": "Événements du jour",
+    "searchPlaceholder": "Rechercher par titre, description ou lieu...",
+    "eventNumber": "Événement {number}",
+    "pastEvent": "Événement passé",
+    "modifyEvent": "Modifier l'événement",
+    "deleteEvent": "Supprimer l'événement",
+    "deleteConfirmTitle": "Supprimer l'événement",
+    "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer l'événement \"{title}\" ? Cette action est irréversible.",
+    "delete": "Supprimer",
+    "eventCreated": "Événement créé avec succès",
+    "eventUpdated": "Événement modifié avec succès",
+    "eventDeleted": "Événement supprimé avec succès",
+    "description": "Description:",
+    "participants": "Participants :",
+    "upcomingEvent": "Événement à venir",
+    "pastEventLegend": "Événement passé",
+    "status": {
+      "created": "Créé",
+      "ongoing": "En cours",
+      "finished": "Terminé",
+      "canceled": "Annulé"
+    },
+    "actions": {
+      "start": "Démarrer",
+      "finish": "Terminer",
+      "cancel": "Annuler",
+      "confirm": "Confirmer",
+      "startConfirm": "Démarrer l'événement ?",
+      "finishConfirm": "Terminer l'événement ?",
+      "cancelConfirm": "Annuler l'événement ?",
+      "startSuccess": "Événement démarré avec succès",
+      "finishSuccess": "Événement terminé avec succès",
+      "cancelSuccess": "Événement annulé avec succès",
+      "startError": "Erreur lors du démarrage",
+      "finishError": "Erreur lors de la finalisation",
+      "cancelError": "Erreur lors de l'annulation"
+    },
+    "timing": {
+      "startsIn": "Démarre dans {time}",
+      "startsNow": "Démarre maintenant",
+      "ongoing": "En cours",
+      "endsIn": "Se termine dans {time}",
+      "ended": "Terminé",
+      "minutes": "min",
+      "hours": "h",
+      "days": "j"
+    },
+    "summary": {
+      "title": "Résumé des événements",
+      "total": "total",
+      "active": "actifs",
+      "startingSoon": "Démarrent bientôt",
+      "noEvents": "Aucun événement"
+    }
+  },
   "planning": {
     "team": {
       "title": "Équipe",
@@ -240,61 +296,6 @@
       "availabilities": "disponibilité",
       "thisMonth": "ce mois"
     },
-    "events": {
-      "title": "Événements du jour",
-      "searchPlaceholder": "Rechercher par titre, description ou lieu...",
-      "eventNumber": "Événement {number}",
-      "pastEvent": "Événement passé",
-      "modifyEvent": "Modifier l'événement",
-      "deleteEvent": "Supprimer l'événement",
-      "deleteConfirmTitle": "Supprimer l'événement",
-      "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer l'événement \"{title}\" ? Cette action est irréversible.",
-      "delete": "Supprimer",
-      "eventCreated": "Événement créé avec succès",
-      "eventUpdated": "Événement modifié avec succès",
-      "eventDeleted": "Événement supprimé avec succès",
-      "description": "Description:",
-      "participants": "Participants :",
-      "upcomingEvent": "Événement à venir",
-      "pastEventLegend": "Événement passé",
-      "status": {
-        "created": "Créé",
-        "ongoing": "En cours",
-        "finished": "Terminé",
-        "canceled": "Annulé"
-      },
-      "actions": {
-        "start": "Démarrer",
-        "finish": "Terminer",
-        "cancel": "Annuler",
-        "startConfirm": "Démarrer l'événement ?",
-        "finishConfirm": "Terminer l'événement ?",
-        "cancelConfirm": "Annuler l'événement ?",
-        "startSuccess": "Événement démarré avec succès",
-        "finishSuccess": "Événement terminé avec succès",
-        "cancelSuccess": "Événement annulé avec succès",
-        "startError": "Erreur lors du démarrage",
-        "finishError": "Erreur lors de la finalisation",
-        "cancelError": "Erreur lors de l'annulation"
-      },
-      "timing": {
-        "startsIn": "Démarre dans {time}",
-        "startsNow": "Démarre maintenant",
-        "ongoing": "En cours",
-        "endsIn": "Se termine dans {time}",
-        "ended": "Terminé",
-        "minutes": "min",
-        "hours": "h",
-        "days": "j"
-      },
-      "summary": {
-        "title": "Résumé des événements",
-        "total": "total",
-        "active": "actifs",
-        "startingSoon": "Démarrent bientôt",
-        "noEvents": "Aucun événement"
-      }
-    },
     "missions": {
       "title": "Missions du {date}",
       "missionsCount": "({count})",
@@ -349,16 +350,20 @@
       "newEvent": "Nouvel événement",
       "eventTitle": "Titre de l'événement",
       "location": "Lieu",
-      "description": "Description",
       "startDate": "Date de début",
       "endDate": "Date de fin",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "description": "Description",
       "participants": "Participants",
-      "noMembersAvailable": "Aucun membre disponible",
-      "addAnotherEvent": "Ajouter un autre événement",
-      "finalizePlanning": "Finaliser le planning",
-      "participantsCount": "{count} participant(s)",
-      "addEvent": "Ajouter un événement",
-      "eventsAdded": "Événements ajoutés ({count})"
+      "selectParticipants": "Sélectionner des participants",
+      "noParticipants": "Aucun participant sélectionné",
+      "addEvent": "Ajouter l'événement",
+      "updating": "Mise à jour...",
+      "updateEvent": "Mettre à jour l'événement",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet événement ?",
+      "deleteSuccess": "Événement supprimé avec succès",
+      "deleteError": "Erreur lors de la suppression de l'événement"
     },
     "createEvent": {
       "modalTitle": "Créer un événement",
@@ -378,6 +383,7 @@
       "participantsSelected": "{count} participant(s) sélectionné(s)",
       "noMembersFound": "Aucun membre trouvé",
       "noMembersAvailable": "Aucun membre disponible",
+      "searchMembers": "Rechercher un membre...",
       "availabilityWarning": "💡 Ces participants pourront toujours être ajoutés à l'événement, mais assurez-vous qu'ils soient informés des dates concernées.",
       "noAvailabilityRecorded": "Aucune disponibilité enregistrée",
       "unavailableDays": "Jours non disponibles :",
@@ -430,6 +436,170 @@
       "createAvailability": "Erreur lors de la création de la disponibilité",
       "loadTeamMembers": "Erreur lors du chargement des membres de l'équipe",
       "loadAllAvailabilities": "Erreur lors du chargement de toutes les disponibilités"
+    }
+  },
+  "team": {
+    "title": "Gestion de l'équipe",
+    "loading": "Chargement de l'équipe...",
+    "error": {
+      "loading": "Erreur lors du chargement des données",
+      "retry": "Réessayer",
+      "reconnect": "Se reconnecter"
+    },
+    "noAssociation": "Aucune association sélectionnée",
+    "noAssociationMessage": "Veuillez sélectionner une association pour voir l'équipe.",
+    "stats": {
+      "totalMembers": "Total Membres",
+      "managers": "Managers",
+      "activeMembers": "Membres Actifs"
+    },
+    "actions": {
+      "addMember": "Ajouter membre",
+      "refresh": "Actualiser",
+      "viewDisponibilities": "Voir les disponibilités",
+      "removeMember": "Retirer le membre",
+      "editMember": "Modifier le membre",
+      "viewDetails": "Voir les détails"
+    },
+    "modal": {
+      "addMember": {
+        "title": "Ajouter un nouveau membre",
+        "subtitle": "Invitez quelqu'un à rejoindre votre équipe",
+        "emailLabel": "Adresse e-mail",
+        "emailPlaceholder": "exemple@email.com",
+        "sendInvitation": "Envoyer l'invitation",
+        "sending": "Envoi en cours...",
+        "success": "Invitation envoyée avec succès !",
+        "error": "Erreur lors de l'envoi de l'invitation"
+      },
+      "addMemberModal": {
+        "title": "Ajouter un membre à l'équipe",
+        "invite": {
+          "tabTitle": "Inviter par email",
+          "emailPlaceholder": "Adresse email",
+          "emailDescription": "Un email d'invitation sera envoyé à cette adresse.",
+          "messagePlaceholder": "Message personnalisé (optionnel)",
+          "messageDescription": "Si aucun message n'est spécifié, un message par défaut sera utilisé.",
+          "sendInvitationButton": "Envoyer l'invitation"
+        },
+        "create": {
+          "tabTitle": "Créer utilisateur",
+          "managerOnlyDescription": "Seuls les managers peuvent créer des utilisateurs directement",
+          "firstnamePlaceholder": "Prénom *",
+          "lastnamePlaceholder": "Nom *",
+          "emailPlaceholder": "Adresse email *",
+          "phoneNumberPlaceholder": "Numéro de téléphone",
+          "streetPlaceholder": "Adresse (rue)",
+          "cityPlaceholder": "Ville",
+          "statePlaceholder": "État/Région",
+          "postalCodePlaceholder": "Code postal",
+          "countryPlaceholder": "Pays",
+          "createUserButton": "Créer l'utilisateur",
+          "requiredFieldsError": "Veuillez remplir tous les champs obligatoires (prénom, nom, email)",
+          "emailFormatError": "Veuillez saisir une adresse email valide",
+          "firstnameLengthError": "Le prénom doit contenir au moins 2 caractères",
+          "lastnameLengthError": "Le nom doit contenir au moins 2 caractères",
+          "managerOnlyError": "Seuls les managers peuvent créer des utilisateurs",
+          "invalidDataError": "Données invalides. Vérifiez les informations saisies.",
+          "unauthorizedError": "Vous n'êtes pas autorisé à créer des utilisateurs.",
+          "forbiddenError": "Accès interdit. Vous n'avez pas les permissions nécessaires.",
+          "userExistsError": "Un utilisateur avec cette adresse email existe déjà.",
+          "invalidDataFormatError": "Données non valides. Vérifiez le format des informations.",
+          "serverError": "Erreur du serveur. Veuillez réessayer plus tard.",
+          "connectionError": "Problème de connexion. Vérifiez votre connexion internet.",
+          "error": "Erreur lors de la création de l'utilisateur",
+          "success": "Utilisateur créé avec succès !"
+        }
+      },
+      "removeMember": {
+        "title": "Retirer le membre",
+        "message": "Êtes-vous sûr de vouloir retirer {name} de l'équipe ?",
+        "confirm": "Retirer",
+        "cancel": "Annuler",
+        "removing": "Retrait en cours...",
+        "success": "Membre retiré avec succès",
+        "error": "Erreur lors du retrait du membre",
+        "description": "Cette action ne peut pas être annulée. Le membre ne sera plus visible dans votre équipe."
+      },
+      "disponibilities": {
+        "title": "Disponibilités de {name}",
+        "noDisponibilities": "Aucune disponibilité",
+        "noDisponibilitiesMessage": "{name} n'a pas encore enregistré de disponibilités.",
+        "close": "Fermer",
+        "start": "Début",
+        "end": "Fin",
+        "duration": "Durée",
+        "days": "jour(s)"
+      },
+      "userDetails": {
+        "loading": "Chargement des informations...",
+        "personalInfo": "Informations personnelles",
+        "additionalInfo": "Informations additionnelles",
+        "languages": {
+          "english": "Anglais",
+          "french": "Français",
+          "spanish": "Espagnol",
+          "german": "Allemand",
+          "italian": "Italien",
+          "language": "Langue"
+        }
+      }
+    },
+    "member": {
+      "role": {
+        "manager": "Manager",
+        "member": "Membre"
+      },
+      "contact": {
+        "email": "Email",
+        "phone": "Téléphone",
+        "address": "Adresse"
+      },
+      "languages": "Langues",
+      "joinedOn": "Rejoint le {date}",
+      "lastActive": "Dernière activité : {date}",
+      "status": {
+        "active": "Actif"
+      },
+      "joinedSince": "Membre depuis",
+      "you": "Vous",
+      "notSpecified": "Non renseigné"
+    },
+    "orgChart": {
+      "title": "Organigramme de l'équipe",
+      "noMembers": "Aucun membre dans l'équipe",
+      "noMembersMessage": "Commencez par ajouter des membres à votre équipe.",
+      "integrationDate": "Intégration le {date}"
+    },
+    "search": {
+      "label": "Rechercher un membre",
+      "placeholder": "Nom, email ou téléphone..."
+    },
+    "toast": {
+      "memberAdded": "Membre ajouté avec succès !",
+      "memberRemoved": "Membre retiré avec succès !",
+      "error": "Une erreur s'est produite",
+      "memberAddedToTeam": "Membre ajouté avec succès à l'équipe",
+      "memberRemovedFromTeam": "Membre retiré de l'équipe avec succès",
+      "loadDisponibilitiesError": "Erreur lors du chargement des disponibilités"
+    }
+  },
+  "addMemberModalViainviation": {
+    "title": "Ajouter un membre à l'équipe",
+    "invite": {
+      "tabTitle": "Inviter par email",
+      "emailPlaceholder": "Adresse email",
+      "emailDescription": "Un email d'invitation sera envoyé à cette adresse.",
+      "messagePlaceholder": "Message personnalisé (optionnel)",
+      "messageDescription": "Si aucun message n'est spécifié, un message par défaut sera utilisé.",
+      "sendInvitationButton": "Envoyer l'invitation",
+      "invalidDataError": "Données invalides. Vérifiez l'adresse email.",
+      "unauthorizedError": "Vous n'êtes pas autorisé à envoyer des invitations.",
+      "forbiddenError": "Accès interdit. Vous n'avez pas les permissions nécessaires.",
+      "userExistsError": "Un utilisateur avec cette adresse email existe déjà.",
+      "serverError": "Erreur du serveur. Veuillez réessayer plus tard.",
+      "error": "Erreur lors de l'envoi de l'invitation.",
+      "connectionError": "Problème de connexion. Vérifiez votre connexion internet."
     }
   }
 } 

@@ -95,7 +95,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                 state: member.state || '',
                 postalCode: member.postalCode || '',
                 country: member.country || '',
-                languages: (member.languages || []).map(lang => lang as Language),
+                languages: member.languages || [],
                 managerId: null,
                 isManager: member.isManager,
                 createdAt: member.createdAt,
@@ -441,7 +441,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                     <div className="p-3 border-b border-gray-200 dark:border-gray-600">
                                         <Input
                                             type="text"
-                                            placeholder="Rechercher un membre..."
+                                            placeholder={t_planning('createEvent.searchMembers')}
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             className="w-full"

@@ -9,7 +9,7 @@ export interface TeamMember {
     state: string;
     postalCode: string;
     country: string;
-    languages: (string | number)[];
+    languages: string[];
     managerId?: string | null;
     isManager: boolean;
     createdAt: string;

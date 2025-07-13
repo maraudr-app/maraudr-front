@@ -22,8 +22,16 @@ import { useNavigate } from 'react-router-dom';
 import { OrgChart } from '../../components/team/OrgChart';
 import UserCard from '../../components/team/UserCard';
 import { Language } from '../../types/enums/Language';
+import { useTranslation } from 'react-i18next';
 
 const Team: React.FC = () => {
+    const { t } = useTranslation();
+    
+    // Fonction pour les traductions de l'équipe (même pattern que les autres composants)
+    const t_team = (key: string): string => {
+        return t(`team.${key}` as any);
+    };
+
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -72,7 +80,7 @@ const Team: React.FC = () => {
             state: member.state || '',
             postalCode: member.postalCode || '',
             country: member.country || '',
-            languages: (member.languages || []).filter((lang): lang is Language => Object.values(Language).includes(lang as Language)),
+            languages: member.languages || [],
             isManager: member.isManager,
             managerId: null,
             createdAt: member.createdAt,
@@ -101,7 +109,7 @@ const Team: React.FC = () => {
             console.log('Membres récupérés:', convertedMembers);
         } catch (err: any) {
             console.error('Erreur lors de la récupération des membres:', err);
-            setError(err.message || 'Erreur lors du chargement des données');
+            setError(err.message || t_team('error.loading'));
         } finally {
             setLoading(false);
         }
@@ -135,17 +143,17 @@ const Team: React.FC = () => {
 
     const handleMemberAdded = () => {
         fetchTeamMembers();
-        showToast('success', 'Membre ajouté avec succès à l\'équipe');
+        showToast('success', t_team('toast.memberAddedToTeam'));
     };
 
-    const confirmRemoveMember = async (memberId: string) => {
-        if (!user?.sub || !memberId) return;
+    const confirmRemoveMember = async (member: TeamMember | User) => {
+        if (!user?.sub || !member.id) return;
         
         try {
             setDeleting(true);
-            await teamService.removeTeamMember(user.sub, { userId: memberId });
+            await teamService.removeTeamMember(user.sub, { userId: member.id });
             await fetchTeamMembers();
-            showToast('success', 'Membre retiré de l\'équipe avec succès');
+            showToast('success', t_team('toast.memberRemovedFromTeam'));
         } catch (err: any) {
             setError(err.message);
             showToast('error', err.message);
@@ -179,7 +187,7 @@ const Team: React.FC = () => {
             setShowDisponibilities(true);
         } catch (err: any) {
             console.error('Erreur lors du chargement des disponibilités:', err);
-            showToast('error', 'Erreur lors du chargement des disponibilités');
+            showToast('error', t_team('toast.loadDisponibilitiesError'));
             setUserDisponibilities([]);
         } finally {
             setLoadingDispos(false);
@@ -202,7 +210,7 @@ const Team: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement de l'équipe...</p>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">{t_team('loading')}</p>
                 </div>
             </div>
         );
@@ -213,14 +221,14 @@ const Team: React.FC = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-red-500 text-lg mb-4">Erreur lors du chargement des données</div>
+                    <div className="text-red-500 text-lg mb-4">{t_team('error.loading')}</div>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
                 <div className="space-x-4">
                     <Button 
                             onClick={() => fetchTeamMembers()}
                         className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg transition-all"
                     >
-                        Réessayer
+                        {t_team('error.retry')}
                     </Button>
                     <Button 
                         onClick={() => {
@@ -229,7 +237,7 @@ const Team: React.FC = () => {
                         }}
                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all"
                     >
-                        Se reconnecter
+                        {t_team('error.reconnect')}
                     </Button>
                     </div>
                 </div>
@@ -242,9 +250,9 @@ const Team: React.FC = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="text-gray-500 text-lg mb-4">Aucune association sélectionnée</div>
+                    <div className="text-gray-500 text-lg mb-4">{t_team('noAssociation')}</div>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
-                        Veuillez sélectionner une association pour voir l'équipe.
+                        {t_team('noAssociationMessage')}
                     </p>
                 </div>
             </div>
@@ -259,7 +267,7 @@ const Team: React.FC = () => {
                     <div className="flex items-center gap-3 pl-7">
                         <UserGroupIcon className="w-5 h-5 text-orange-500" />
                         <div className="text-gray-900 dark:text-white font-medium">
-                            Gestion de l'équipe ({teamMembers.length})
+                            {t_team('title')} ({teamMembers.length})
                         </div>
                     </div>
                     
@@ -270,7 +278,7 @@ const Team: React.FC = () => {
                             className="flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-blue-500 rounded-lg hover:from-orange-600 hover:to-blue-600 transition-all shadow-sm"
                         >
                             <PlusIcon className="w-4 h-4 mr-2" />
-                            Ajouter membre
+                            {t_team('actions.addMember')}
                         </button>
                         )}
                         
@@ -280,7 +288,7 @@ const Team: React.FC = () => {
                             className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
                         >
                             <ArrowPathIcon className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                            Actualiser
+                            {t_team('actions.refresh')}
                         </button>
                     </div>
                 </div>
@@ -296,7 +304,7 @@ const Team: React.FC = () => {
                                 <UserGroupIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Membres</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t_team('stats.totalMembers')}</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.length}</p>
                             </div>
                         </div>
@@ -308,7 +316,7 @@ const Team: React.FC = () => {
                                 <MapIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Managers</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t_team('stats.managers')}</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {teamMembers.filter(m => m.isManager).length}
                                 </p>
@@ -322,7 +330,7 @@ const Team: React.FC = () => {
                                 <CalendarIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                             </div>
                             <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Membres Actifs</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t_team('stats.activeMembers')}</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {teamMembers.filter(m => !m.isManager).length}
                                 </p>
@@ -346,79 +354,70 @@ const Team: React.FC = () => {
                 {showDisponibilities && selectedUser && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
                         <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-orange-200/50 dark:border-gray-700">
-                            <div className="mt-3">
-                                <div className="flex justify-between items-center mb-6">
-                                    <div className="flex items-center">
-                                        <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-orange-500 to-blue-500 flex items-center justify-center mr-4">
-                                            <span className="text-white font-bold text-lg">
-                                                {selectedUser.firstname.charAt(0)}{selectedUser.lastname.charAt(0)}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                                Disponibilités de {selectedUser.firstname} {selectedUser.lastname}
-                                            </h3>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{selectedUser.email}</p>
-                                        </div>
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center">
+                                    <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-orange-500 to-blue-500 flex items-center justify-center mr-4">
+                                        <span className="text-white font-bold text-lg">
+                                            {selectedUser.firstname.charAt(0)}{selectedUser.lastname.charAt(0)}
+                                        </span>
                                     </div>
-                                    <button
-                                        onClick={() => setShowDisponibilities(false)}
-                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    >
-                                        <XMarkIcon className="h-6 w-6" />
-                                    </button>
+                                    <div>
+                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                            {t_team('modal.disponibilities.title').replace('{name}', `${selectedUser.firstname} ${selectedUser.lastname}`)}
+                                        </h3>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{selectedUser.email}</p>
+                                    </div>
                                 </div>
-                                
-                                {loadingDispos ? (
-                                    <div className="text-center py-12">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            Chargement des disponibilités...
-                                        </p>
-                                    </div>
-                                ) : userDisponibilities.length > 0 ? (
-                                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                                        {userDisponibilities.map((dispo) => (
-                                            <div
-                                                key={dispo.id}
-                                                className="border border-green-200 dark:border-green-600 rounded-lg p-4 bg-green-50 dark:bg-green-900/20"
-                                            >
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center mb-2">
-                                                            <CalendarIcon className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
-                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                Période de disponibilité
-                                                            </span>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                <span className="font-medium">Début:</span> {new Date(dispo.start).toLocaleString('fr-FR')}
-                                                            </p>
-                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                <span className="font-medium">Fin:</span> {new Date(dispo.end).toLocaleString('fr-FR')}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                                                Durée: {Math.ceil((new Date(dispo.end).getTime() - new Date(dispo.start).getTime()) / (1000 * 60 * 60 * 24))} jour(s)
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-12">
-                                        <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-full flex items-center justify-center mb-4">
-                                            <CalendarIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-                                        </div>
-                                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucune disponibilité</h3>
-                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                            {selectedUser?.firstname} n'a pas encore enregistré de disponibilités.
-                                        </p>
-                                </div>
-                                )}
+                                <button
+                                    onClick={() => setShowDisponibilities(false)}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                >
+                                    <XMarkIcon className="h-6 w-6" />
+                                </button>
                             </div>
+
+                            {loadingDispos ? (
+                                <div className="text-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        {t_team('loading')}
+                                    </p>
+                                </div>
+                            ) : userDisponibilities.length > 0 ? (
+                                <div className="space-y-4 max-h-96 overflow-y-auto">
+                                    {userDisponibilities.map((dispo, index) => (
+                                        <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                            <div className="flex items-center mb-2">
+                                                <CalendarIcon className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
+                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {t_team('modal.disponibilities.title')}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                    <span className="font-medium">{t_team('modal.disponibilities.start')}:</span> {new Date(dispo.start).toLocaleString('fr-FR')}
+                                                </p>
+                                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                    <span className="font-medium">{t_team('modal.disponibilities.end')}:</span> {new Date(dispo.end).toLocaleString('fr-FR')}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                    {t_team('modal.disponibilities.duration')}: {Math.ceil((new Date(dispo.end).getTime() - new Date(dispo.start).getTime()) / (1000 * 60 * 60 * 24))} {t_team('modal.disponibilities.days')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-100 to-blue-100 dark:from-orange-900/20 dark:to-blue-900/20 rounded-full flex items-center justify-center mb-4">
+                                        <CalendarIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                                    </div>
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">{t_team('modal.disponibilities.noDisponibilities')}</h3>
+                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                        {t_team('modal.disponibilities.noDisponibilitiesMessage').replace('{name}', selectedUser?.firstname || '')}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

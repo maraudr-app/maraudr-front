@@ -44,5 +44,5 @@ export interface User {
     address: Address;
     passwordHash: string;
     biography: string | null;
-    languages: number[];
+    languages: string[];
 } 

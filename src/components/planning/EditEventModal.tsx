@@ -122,7 +122,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                 state: member.state || '',
                 postalCode: member.postalCode || '',
                 country: member.country || '',
-                languages: (member.languages || []).map(lang => lang as Language),
+                languages: member.languages || [],
                 managerId: null,
                 isManager: member.isManager,
                 createdAt: member.createdAt,
@@ -439,7 +439,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                         <div className="p-3 border-b border-gray-100 dark:border-gray-600">
                                             <input
                                                 type="text"
-                                                placeholder={t_planning('editEvent.searchMembers')}
+                                                placeholder={t_planning('createEvent.searchMembers')}
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:text-white"

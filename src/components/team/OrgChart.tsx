@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { TeamMember } from '../../services/teamService';
+import { User } from '../../types/user/user';
 import { useAuthStore } from '../../store/authStore';
 import { EllipsisHorizontalIcon, TrashIcon, CalendarIcon, PhoneIcon, MapPinIcon, XMarkIcon, UserIcon, EnvelopeIcon, GlobeAltIcon, LanguageIcon } from '@heroicons/react/24/outline';
 import ConfirmationModal from '../common/modal/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 import { Language } from '../../types/enums/Language';
+import { useTranslation } from 'react-i18next';
 
 interface OrgChartProps {
-    members: TeamMember[];
-    onViewDisponibilities: (memberId: string) => void;
-    onRemoveMember?: (memberId: string) => void;
+    members: (TeamMember | User)[];
+    onViewDisponibilities?: (memberId: string) => void;
+    onRemoveMember?: (member: TeamMember | User) => void;
     associationName?: string;
 }
 
 export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibilities, onRemoveMember, associationName }) => {
+    const { t } = useTranslation();
+    
+    // Fonction pour les traductions de l'équipe (même pattern que les autres composants)
+    const t_team = (key: string): string => {
+        return t(`team.${key}` as any);
+    };
+
     const { user } = useAuthStore();
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -26,22 +35,22 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
         // Si c'est un nombre, on le convertit selon l'index
         if (typeof language === 'number') {
             const languagesByIndex: Record<number, string> = {
-                0: 'Anglais',
-                1: 'Français', 
-                2: 'Espagnol',
-                3: 'Allemand',
-                4: 'Italien'
+                0: t_team('modal.userDetails.languages.english'),
+                1: t_team('modal.userDetails.languages.french'), 
+                2: t_team('modal.userDetails.languages.spanish'),
+                3: t_team('modal.userDetails.languages.german'),
+                4: t_team('modal.userDetails.languages.italian')
             };
-            return languagesByIndex[language] || `Langue ${language}`;
+            return languagesByIndex[language] || `${t_team('modal.userDetails.languages.language')} ${language}`;
         }
         
         // Si c'est une string ou énumération
         const languageMap: Record<string, string> = {
-            'French': 'Français',
-            'English': 'Anglais',
-            'Spanish': 'Espagnol',
-            'German': 'Allemand',
-            'Italian': 'Italien'
+            'French': t_team('modal.userDetails.languages.french'),
+            'English': t_team('modal.userDetails.languages.english'),
+            'Spanish': t_team('modal.userDetails.languages.spanish'),
+            'German': t_team('modal.userDetails.languages.german'),
+            'Italian': t_team('modal.userDetails.languages.italian')
         };
         return languageMap[language as string] || (language as string);
     };
@@ -145,10 +154,14 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
         if (!memberToDelete || !onRemoveMember) return;
         
         try {
-            await onRemoveMember(memberToDelete.id);
-            toast.success(`${memberToDelete.name} a été retiré de l'équipe avec succès`);
+            // Trouver le membre dans la liste
+            const member = allMembers.find(m => m.id === memberToDelete.id);
+            if (member) {
+                await onRemoveMember(member);
+                toast.success(t_team('toast.memberRemoved'));
+            }
         } catch (error) {
-            toast.error('Erreur lors de la suppression du membre');
+            toast.error(t_team('toast.error'));
         } finally {
             setShowConfirmModal(false);
             setMemberToDelete(null);
@@ -156,7 +169,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
     };
 
     const handleViewDisponibilities = (member: TeamMember) => {
-        onViewDisponibilities(member.id);
+        onViewDisponibilities?.(member.id);
         setOpenMenuId(null);
     };
 
@@ -207,7 +220,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                     onClick={isCurrentUserManager() ? () => {
                         handleShowUserDetails(member);
                     } : undefined}
-                    title={isCurrentUserManager() ? "Voir les détails" : ""}
+                    title={isCurrentUserManager() ? t_team('actions.viewDetails') : ""}
                     >
                         <img 
                             src={profileImageUrl}
@@ -231,7 +244,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                     {/* Rôle sous la photo */}
                     <div className={`absolute left-1/2 transform -translate-x-1/2 ${isTopLevel ? 'top-20' : 'top-16'} z-20 pointer-events-none`}>
                         <span className={`${isTopLevel ? 'text-xs' : 'text-xs'} font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-0.5 rounded-full shadow-sm border border-gray-200 dark:border-gray-600 whitespace-nowrap`}>
-                            {member.isManager ? 'Manager' : 'Membre'}
+                            {member.isManager ? t_team('member.role.manager') : t_team('member.role.member')}
                         </span>
                     </div>
                     
@@ -244,7 +257,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                     handleViewDisponibilities(member);
                                 }}
                                 className="p-1 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full transition-colors group bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-600"
-                                title="Voir disponibilités"
+                                title={t_team('actions.viewDisponibilities')}
                             >
                                 <CalendarIcon className="w-3 h-3 text-green-600 dark:text-green-400" />
                             </button>
@@ -280,7 +293,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                         className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                                     >
                                         <CalendarIcon className="w-4 h-4 mr-2" />
-                                        Voir disponibilité
+                                        {t_team('actions.viewDisponibilities')}
                                     </button>
                                     {!member.isManager && !isCurrentUser(member.id) && onRemoveMember && (
                                         <>
@@ -290,7 +303,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                                 className="w-full flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                             >
                                                 <TrashIcon className="w-4 h-4 mr-2" />
-                                                Supprimer l'utilisateur
+                                                {t_team('actions.removeMember')}
                                             </button>
                                         </>
                                     )}
@@ -307,7 +320,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                 {member.firstname} {member.lastname}
                             </div>
                             {isCurrentUserCard && (
-                                <span className="ml-2 text-xs bg-orange-500 text-white px-1.5 py-0.5 rounded-full flex-shrink-0">Vous</span>
+                                <span className="ml-2 text-xs bg-orange-500 text-white px-1.5 py-0.5 rounded-full flex-shrink-0">{t_team('member.you')}</span>
                             )}
                         </div>
                         
@@ -315,7 +328,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         <div className="flex items-center space-x-1.5 min-w-0">
                             <PhoneIcon className={`${isTopLevel ? 'w-3 h-3' : 'w-3 h-3'} text-gray-500 dark:text-gray-400 flex-shrink-0`} />
                             <span className={`text-gray-900 dark:text-white ${isTopLevel ? 'text-xs' : 'text-xs'} font-medium truncate`}>
-                                {member.phoneNumber || 'Non renseigné'}
+                                {member.phoneNumber || t_team('member.notSpecified')}
                             </span>
                         </div>
                         
@@ -323,7 +336,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         <div className="flex items-center space-x-1.5 min-w-0">
                             <MapPinIcon className={`${isTopLevel ? 'w-3 h-3' : 'w-3 h-3'} text-gray-500 dark:text-gray-400 flex-shrink-0`} />
                             <span className={`text-gray-900 dark:text-white ${isTopLevel ? 'text-xs' : 'text-xs'} font-medium truncate`}>
-                                {member.city || 'Non renseigné'}
+                                {member.city || t_team('member.notSpecified')}
                             </span>
                         </div>
                     </div>
@@ -387,7 +400,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                             {/* Date d'intégration pour cette ligne - visible seulement pour les managers */}
                             {isCurrentUserManager() && (
                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                    Intégration le {new Date(row.date).toLocaleDateString('fr-FR')}
+                                    {t_team('orgChart.integrationDate').replace('{date}', new Date(row.date).toLocaleDateString('fr-FR'))}
                                 </div>
                             )}
                         </div>
@@ -400,10 +413,10 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                 <span className="text-4xl">👥</span>
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                                Aucun membre dans l'organisation
+                                {t_team('orgChart.noMembers')}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                                Commencez par ajouter des membres à votre équipe pour voir l'organigramme.
+                                {t_team('orgChart.noMembersMessage')}
                             </p>
                         </div>
                     )}
@@ -426,10 +439,10 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                     setMemberToDelete(null);
                 }}
                 onConfirm={confirmRemoveMember}
-                title="Retirer le membre"
-                message={memberToDelete ? `Êtes-vous sûr de vouloir retirer ${memberToDelete.name} de l'équipe ? Cette action ne peut pas être annulée.` : ''}
-                confirmText="Retirer"
-                cancelText="Annuler"
+                title={t_team('modal.removeMember.title')}
+                message={memberToDelete ? t_team('modal.removeMember.message').replace('{name}', memberToDelete.name) : ''}
+                confirmText={t_team('modal.removeMember.confirm')}
+                cancelText={t_team('modal.removeMember.cancel')}
                 type="danger"
             />
 
@@ -466,10 +479,10 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                                 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                                                 : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                         }`}>
-                                            {selectedMemberDetails.isManager ? 'Manager' : 'Membre'}
+                                            {selectedMemberDetails.isManager ? t_team('member.role.manager') : t_team('member.role.member')}
                                         </span>
                                         {isCurrentUser(selectedMemberDetails.id) && (
-                                            <span className="ml-2 text-xs bg-orange-500 text-white px-2 py-1 rounded-full">Vous</span>
+                                            <span className="ml-2 text-xs bg-orange-500 text-white px-2 py-1 rounded-full">{t_team('member.you')}</span>
                                         )}
                                     </div>
                                 </div>
@@ -487,14 +500,14 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                             <div className="space-y-4">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                     <UserIcon className="w-5 h-5 mr-2 text-orange-500" />
-                                    Informations personnelles
+                                    {t_team('modal.userDetails.personalInfo')}
                                 </h3>
                                 
                                 <div className="space-y-3">
                                     <div className="flex items-center">
                                         <EnvelopeIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Email</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{t_team('member.contact.email')}</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-300">{selectedMemberDetails.email}</p>
                                         </div>
                                     </div>
@@ -502,15 +515,15 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                     <div className="flex items-center">
                                         <PhoneIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Téléphone</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-300">{selectedMemberDetails.phoneNumber || 'Non renseigné'}</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{t_team('member.contact.phone')}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">{selectedMemberDetails.phoneNumber || t_team('member.notSpecified')}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-start">
                                         <MapPinIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Adresse</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{t_team('member.contact.address')}</p>
                                             <div className="text-sm text-gray-600 dark:text-gray-300">
                                                 {selectedMemberDetails.street && <p>{selectedMemberDetails.street}</p>}
                                                 <p>
@@ -518,7 +531,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                                 </p>
                                                 {selectedMemberDetails.country && <p>{selectedMemberDetails.country}</p>}
                                                 {!selectedMemberDetails.street && !selectedMemberDetails.city && !selectedMemberDetails.country && (
-                                                    <p>Non renseigné</p>
+                                                    <p>{t_team('member.notSpecified')}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -530,14 +543,14 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                             <div className="space-y-4">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                     <GlobeAltIcon className="w-5 h-5 mr-2 text-orange-500" />
-                                    Informations additionnelles
+                                    {t_team('modal.userDetails.additionalInfo')}
                                 </h3>
                                 
                                 <div className="space-y-3">
                                     <div className="flex items-start">
                                         <LanguageIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Langues</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{t_team('member.languages')}</p>
                                             <div className="flex flex-wrap gap-1 mt-1">
                                                 {selectedMemberDetails.languages && selectedMemberDetails.languages.length > 0 ? (
                                                     selectedMemberDetails.languages.map((lang, index) => (
@@ -546,7 +559,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                                         </span>
                                                     ))
                                                 ) : (
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300">Non renseigné</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300">{t_team('member.notSpecified')}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -555,7 +568,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                     <div className="flex items-center">
                                         <CalendarIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Membre depuis</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{t_team('member.joinedSince')}</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-300">
                                                 {new Date(selectedMemberDetails.createdAt).toLocaleDateString('fr-FR', {
                                                     year: 'numeric',
@@ -569,7 +582,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                     <div className="flex items-center">
                                         <UserIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">Dernière mise à jour</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{t_team('member.lastActive')}</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-300">
                                                 {new Date(selectedMemberDetails.updatedAt).toLocaleDateString('fr-FR', {
                                                     year: 'numeric',
@@ -579,8 +592,6 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                             </p>
                                         </div>
                                     </div>
-
-
                                 </div>
                             </div>
                         </div>
@@ -596,7 +607,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                     className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                 >
                                     <CalendarIcon className="w-4 h-4 mr-2" />
-                                    Voir disponibilités
+                                    {t_team('actions.viewDisponibilities')}
                                 </button>
                                 
                                 {!selectedMemberDetails.isManager && !isCurrentUser(selectedMemberDetails.id) && onRemoveMember && (
@@ -608,7 +619,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                         className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                                     >
                                         <TrashIcon className="w-4 h-4 mr-2" />
-                                        Retirer de l'équipe
+                                        {t_team('actions.removeMember')}
                                     </button>
                                 )}
                             </div>

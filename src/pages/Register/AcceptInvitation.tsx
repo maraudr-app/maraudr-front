@@ -27,7 +27,7 @@ interface InvitationFormData {
   country: string;
   password: string;
   confirmPassword: string;
-  languages: Language[];
+  languages: string[];
 }
 
 const AcceptInvitation = () => {
@@ -55,7 +55,7 @@ const AcceptInvitation = () => {
     country: "",
     password: "",
     confirmPassword: "",
-    languages: [Language.French],
+                    languages: ['French'],
   });
 
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -176,9 +176,11 @@ const AcceptInvitation = () => {
         ...form,
         isManager: false, // Toujours false pour une invitation
         managerToken: invitationToken, // Utiliser le token d'invitation comme managerToken
-        languages: [Language.French],
+        languages: form.languages,
       };
 
+      console.log('📡 Données formatées pour l\'API d\'invitation:', userData);
+      
       const response = await userService.createAccount(userData);
       
       if (response) {

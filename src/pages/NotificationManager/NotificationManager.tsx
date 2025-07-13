@@ -77,12 +77,12 @@ const NotificationManager: React.FC = () => {
                             state: teamMember.state,
                             postalCode: teamMember.postalCode,
                             country: teamMember.country,
-                            languages: (teamMember.languages || []).filter((lang: string): lang is Language => Object.values(Language).includes(lang as Language)),
-                            isManager: teamMember.isManager,
-                            createdAt: teamMember.createdAt,
-                            updatedAt: teamMember.updatedAt
-                        };
-                        pending.push(userMember);
+                                                    languages: teamMember.languages || [],
+                        isManager: teamMember.isManager,
+                        createdAt: teamMember.createdAt,
+                        updatedAt: teamMember.updatedAt
+                    };
+                    pending.push(userMember);
                     }
                 } catch (error) {
                     console.error(`Erreur lors de la vérification du membre ${teamMember.id}:`, error);
@@ -98,7 +98,7 @@ const NotificationManager: React.FC = () => {
                         state: teamMember.state,
                         postalCode: teamMember.postalCode,
                         country: teamMember.country,
-                        languages: (teamMember.languages || []).filter((lang: string): lang is Language => Object.values(Language).includes(lang as Language)),
+                        languages: teamMember.languages || [],
                         isManager: teamMember.isManager,
                         createdAt: teamMember.createdAt,
                         updatedAt: teamMember.updatedAt

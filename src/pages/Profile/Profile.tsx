@@ -13,11 +13,11 @@ import { UserCircleIcon } from '@heroicons/react/24/solid';
 
 // Mapping pour les langues - correspond aux valeurs de l'API
 const LANG_ENUM = [
-  { value: 1, label: "Français", apiName: "French" },
-  { value: 2, label: "Anglais", apiName: "English" },
-  { value: 3, label: "Espagnol", apiName: "Spanish" },
-  { value: 4, label: "Allemand", apiName: "German" },
-  { value: 5, label: "Italien", apiName: "Italian" },
+  { value: "French", label: "Français", apiName: "French" },
+  { value: "English", label: "Anglais", apiName: "English" },
+  { value: "Spanish", label: "Espagnol", apiName: "Spanish" },
+  { value: "German", label: "Allemand", apiName: "German" },
+  { value: "Italian", label: "Italien", apiName: "Italian" },
 ];
 
 const Profile: React.FC = () => {
@@ -33,7 +33,7 @@ const Profile: React.FC = () => {
     state: "",
     postalCode: "",
     country: "",
-    languages: [] as number[],
+    languages: [] as string[],
     biography: "",
     password: "",
     confirmPassword: "",
@@ -146,8 +146,8 @@ const Profile: React.FC = () => {
     fetchAssociationDetails();
   }, [activeTab, selectedAssociation]);
 
-  // Pour le MultiSelectDropdown, il faut passer des strings
-  const selectedLangs = form.languages.map(val => val.toString());
+  // Pour le MultiSelectDropdown, on utilise directement les strings
+  const selectedLangs = form.languages;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -157,7 +157,7 @@ const Profile: React.FC = () => {
   };
 
   const handleLanguagesChange = (langs: string[]) => {
-    setForm({ ...form, languages: langs.map(Number) });
+    setForm({ ...form, languages: langs });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -207,10 +207,7 @@ const Profile: React.FC = () => {
         state: form.state.trim(),
         postalCode: form.postalCode.trim(),
         country: form.country.trim(),
-        languages: form.languages.map(langId => {
-          const lang = LANG_ENUM.find(l => l.value === langId);
-          return lang ? lang.apiName : "";
-        }).filter(name => name !== ""), // Convertir les nombres en noms d'API
+        languages: form.languages, // Utiliser directement les strings
       };
 
       // Ajouter le mot de passe seulement s'il est fourni et valide
@@ -432,7 +429,7 @@ const Profile: React.FC = () => {
                 {/* Langues */}
                 <MultiSelectDropdown
                   label="Langues parlées"
-                  options={LANG_ENUM.map(l => ({ value: l.value.toString(), label: l.label }))}
+                  options={LANG_ENUM.map(l => ({ value: l.value, label: l.label }))}
                   selectedValues={selectedLangs}
                   onChange={handleLanguagesChange}
                   placeholder="Sélectionnez vos langues"
@@ -572,7 +569,11 @@ const Profile: React.FC = () => {
                       <span key={langId} className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm">
                         {lang.label}
                       </span>
-                    ) : null;
+                    ) : (
+                      <span key={langId} className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-sm">
+                        {langId}
+                      </span>
+                    );
                   })
                 ) : (
                   <span className="text-gray-500 dark:text-gray-400 text-sm">Aucune langue renseignée</span>

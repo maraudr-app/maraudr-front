@@ -24,16 +24,17 @@ interface BaseUserData {
   country: string;
   password: string;
   confirmPassword: string;
-  languages: Language[];
+  languages: string[];
 }
 
 interface ManagerUserData extends BaseUserData {
   isManager: true;
+  managerToken?: undefined; // Les managers n'ont pas de managerToken
 }
 
 interface NonManagerUserData extends BaseUserData {
   isManager: false;
-  managerId: string;
+  managerToken: string; // Obligatoire pour les utilisateurs
 }
 
 type UserData = ManagerUserData | NonManagerUserData;
@@ -46,7 +47,7 @@ const CreateAccount = () => {
     return t(`register.${key}` as any);
   };
 
-  const [form, setForm] = useState<BaseUserData & { isManager: boolean; managerId?: string }>({
+  const [form, setForm] = useState<BaseUserData & { isManager: boolean; managerToken?: string }>({
     firstname: "",
     lastname: "",
     email: "",
@@ -59,7 +60,7 @@ const CreateAccount = () => {
     password: "",
     confirmPassword: "",
     isManager: true,
-    languages: [Language.French],
+                    languages: ['French'],
   });
 
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -97,7 +98,7 @@ const CreateAccount = () => {
         const newForm = { ...prev, [name]: checked };
         // Si on devient manager, on supprime managerId
         if (name === 'isManager' && checked) {
-          delete newForm.managerId;
+          delete newForm.managerToken;
         }
         return newForm;
       });
@@ -140,8 +141,8 @@ const CreateAccount = () => {
       }
 
       // Validation spécifique selon le type d'utilisateur
-      if (!form.isManager && !form.managerId?.trim()) {
-        setFormError(t_register('managerIdRequired'));
+      if (!form.isManager && !form.managerToken?.trim()) {
+        setFormError(t_register('managerTokenRequired'));
         return;
       }
 
@@ -150,18 +151,28 @@ const CreateAccount = () => {
         ? {
             ...form,
             isManager: true,
-            languages: [Language.French],
+            languages: form.languages,
           } as ManagerUserData
         : {
         ...form,
             isManager: false,
-            managerId: form.managerId!,
-        languages: [Language.French],
+            managerToken: form.managerToken!,
+        languages: form.languages,
           } as NonManagerUserData;
 
       console.log('🚀 Tentative de création d\'utilisateur avec les données:', userData);
       
-      const response = await userService.createAccount(userData);
+      // Préparer les données pour le backend selon le type d'utilisateur
+      const backendData = {
+        ...userData,
+        // Pour les managers : pas de managerToken
+        // Pour les utilisateurs : utiliser le managerToken fourni
+        managerToken: !userData.isManager ? userData.managerToken : undefined
+      };
+      
+      console.log('📡 Données formatées pour le backend:', backendData);
+      
+      const response = await userService.createAccount(backendData);
       
       console.log('✅ Réponse de création d\'utilisateur:', response);
       

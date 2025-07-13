@@ -509,6 +509,11 @@ const Planning: React.FC = () => {
     const { toasts, removeToast, toast } = useToast();
     const { t } = useTranslation();
 
+    // Helper pour les traductions events
+    const t_events = (key: string) => t(`events.${key}` as any);
+    // Helper pour les traductions team
+    const t_team = (key: string) => t(`team.${key}` as any);
+
     const t_planning = (key: string): string => {
         return t(`planning.${key}` as any);
     };
@@ -607,7 +612,7 @@ const Planning: React.FC = () => {
                 state: member.state || '',
                 postalCode: member.postalCode || '',
                 country: member.country || '',
-                languages: (member.languages || []).map(lang => lang as Language),
+                languages: member.languages || [],
                 managerId: null,
                 isManager: member.isManager,
                 createdAt: member.createdAt,
@@ -1514,7 +1519,7 @@ const Planning: React.FC = () => {
             />
 
             {/* Main content scrolls under the navbar, with correct padding */}
-            <div className="pt-20 sm:pt-8" />
+            <div className="pt-3 sm:pt-8" />
             <main className="w-full px-2 sm:px-4 py-4 sm:py-8" style={{ paddingLeft: sidebarWidth }}>
                 {/* Résumé des événements */}
                 <EventSummary events={allEvents} className="mb-4" />
@@ -1525,7 +1530,7 @@ const Planning: React.FC = () => {
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                                 <UserGroupIcon className="w-5 h-5 mr-2" />
-                                {t_planning('team.title')} ({teamUsers.length})
+                                {t_team('title')} ({teamUsers.length})
                             </h2>
                             {/* Champ de recherche utilisateur */}
                             <div className="mb-4">
@@ -1533,8 +1538,8 @@ const Planning: React.FC = () => {
                                     type="text"
                                     value={searchTeam}
                                     onChange={e => setSearchTeam(e.target.value)}
-                                    label={t('common.team.searchLabel')}
-                                    placeholder={t('common.team.searchPlaceholder')}
+                                    label={t_team('search.label')}
+                                    placeholder={t_team('search.placeholder')}
                                     className="w-full"
                                 />
                             </div>
@@ -1551,8 +1556,8 @@ const Planning: React.FC = () => {
                                         A
                                     </div>
                                     <div className="ml-3">
-                                        <div className="font-medium">{t_planning('team.associationPlanning')}</div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">{t_planning('team.allPlannings')}</div>
+                                        <div className="font-medium">{t_team('associationPlanning')}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">{t_team('allPlannings')}</div>
                                     </div>
                                 </button>
                             </div>
@@ -1575,16 +1580,16 @@ const Planning: React.FC = () => {
                                         <div className="ml-3 flex-1 min-w-0">
                                             <div className="font-medium truncate">{user.firstname} {user.lastname}</div>
                                             <div className="text-sm text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                                <span className="flex-shrink-0">{user.isManager ? t_planning('team.manager') : t_planning('team.member')}</span>
+                                                <span className="flex-shrink-0">{user.isManager ? t_team('manager') : t_team('member')}</span>
                                                 {isUserAvailableToday(user.id) ? (
                                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap w-fit">
                                                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></div>
-                                                        {t_planning('team.available')}
+                                                        {t_team('available')}
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap w-fit">
                                                         <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 flex-shrink-0"></div>
-                                                        {t_planning('team.unavailable')}
+                                                        {t_team('unavailable')}
                                                     </span>
                                                 )}
                                             </div>
@@ -1818,11 +1823,11 @@ const Planning: React.FC = () => {
                                 </div>
                                 
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                    {t_planning('events.deleteConfirmTitle')}
+                                    {t_events('actions.cancel')}
                                 </h3>
                                 
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                                    {t_planning('events.deleteConfirmMessage').replace('{title}', eventToDelete.title)}
+                                    {t_events('actions.cancelConfirm')}
                                 </p>
                                 
                                 <div className="flex justify-center space-x-4">
@@ -1833,13 +1838,13 @@ const Planning: React.FC = () => {
                                         }}
                                         className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                     >
-                                        {t_planning('availability.cancel')}
+                                        {t_events('actions.cancel')}
                                     </button>
                                     <button
                                         onClick={confirmDeleteEvent}
                                         className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
                                     >
-                                        {t_planning('events.delete')}
+                                        {t_events('actions.confirm')}
                                     </button>
                                 </div>
                             </div>
@@ -1855,7 +1860,7 @@ const Planning: React.FC = () => {
                                 {/* Header */}
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                        {t_planning('events.title')} ({selectedDateEvents.length})
+                                        {t_events('title')} ({selectedDateEvents.length})
                                     </h3>
                                     <button
                                         onClick={() => setShowEventsModal(false)}
@@ -1872,7 +1877,7 @@ const Planning: React.FC = () => {
                                         type="text"
                                         value={eventSearchQuery}
                                         onChange={e => setEventSearchQuery(e.target.value)}
-                                        placeholder={t_planning('events.searchPlaceholder')}
+                                        placeholder={t_events('searchPlaceholder')}
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                                     />
                                 </div>
@@ -1889,7 +1894,7 @@ const Planning: React.FC = () => {
                                                 <div className="flex justify-between items-start mb-3">
                                                     <div className="flex items-center space-x-2">
                                                         <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 rounded-full">
-                                                            {t_planning('events.eventNumber').replace('{number}', (index + 1).toString())}
+                                                            {t_events('eventNumber').replace('{number}', (index + 1).toString())}
                                                         </span>
                                                         <EventStatusBadge event={event} />
                                                     </div>
@@ -1899,7 +1904,7 @@ const Planning: React.FC = () => {
                                                             <button
                                                                 onClick={e => { e.stopPropagation(); handleEditEvent(event); }}
                                                                 className={`p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded transition-colors`}
-                                                                title={t_planning('events.modifyEvent')}
+                                                                title={t_events('modifyEvent')}
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1908,7 +1913,7 @@ const Planning: React.FC = () => {
                                                             <button
                                                                 onClick={e => { e.stopPropagation(); handleDeleteEvent(event); }}
                                                                 className={`p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors`}
-                                                                title={t_planning('events.deleteEvent')}
+                                                                title={t_events('deleteEvent')}
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1932,7 +1937,7 @@ const Planning: React.FC = () => {
                                                     </div>
                                                     {event.description && (
                                                         <div className="text-sm text-gray-700 dark:text-gray-300">
-                                                            <span className="font-medium">{t_planning('events.description')}</span> {event.description}
+                                                            <span className="font-medium">{t_events('description')}</span> {event.description}
                                                         </div>
                                                     )}
                                                     {event.location && (
@@ -1946,7 +1951,7 @@ const Planning: React.FC = () => {
                                                     )}
                                                     {event.participantsIds && event.participantsIds.length > 0 && (
                                                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                            <span className="font-medium">{t_planning('events.participants')}</span> {
+                                                            <span className="font-medium">{t_events('participants')}</span> {
                                                                 event.participantsIds
                                                                     .map(pid => {
                                                                         const user = teamUsers.find(u => u.id === pid);
@@ -1974,8 +1979,8 @@ const Planning: React.FC = () => {
                         </div>
                         {/* Légende en bas du modal */}
                         <div className="mt-4 flex flex-wrap gap-4 text-sm justify-center">
-                            <div className="flex items-center"><div className="w-3 h-3 bg-blue-200 border border-blue-400 rounded mr-2"></div><span>{t_planning('events.upcomingEvent')}</span></div>
-                            <div className="flex items-center"><div className="w-3 h-3 bg-gray-300 border border-gray-400 rounded mr-2"></div><span>{t_planning('events.pastEventLegend')}</span></div>
+                            <div className="flex items-center"><div className="w-3 h-3 bg-blue-200 border border-blue-400 rounded mr-2"></div><span>{t_events('upcomingEvent')}</span></div>
+                            <div className="flex items-center"><div className="w-3 h-3 bg-gray-300 border border-gray-400 rounded mr-2"></div><span>{t_events('pastEventLegend')}</span></div>
                         </div>
                     </div>
                 )}

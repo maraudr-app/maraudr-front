@@ -116,19 +116,46 @@ const CreateAsso = () => {
       if (error.response?.data?.message) {
         const apiMessage = error.response.data.message;
         
-        // Traduire les messages d'erreur spécifiques
+        // Traduire les messages d'erreur spécifiques du backend
         if (apiMessage.includes("SIRET not found") || apiMessage.includes("statusCode: 404")) {
           errorMessage = t_createAssociation('siretNotFound');
-        } else if (apiMessage.includes("Association déclarée")) {
+        } else if (apiMessage.includes("Association déclarée") || apiMessage.includes("Le SIRET ne correspond pas à une association déclarée")) {
           errorMessage = t_createAssociation('notAssociation');
         } else if (apiMessage.includes("SIRET API error")) {
           errorMessage = t_createAssociation('siretApiError');
-        } else if (apiMessage.includes("Erreur de connexion à l'API SIRET")) {
+        } else if (apiMessage.includes("Erreur de connexion à l'API SIRET") || apiMessage.includes("Le service est temporairement indisponible")) {
           errorMessage = t_createAssociation('siretConnectionError');
-        } else if (apiMessage.includes("existe déjà")) {
+        } else if (apiMessage.includes("existe déjà") || apiMessage.includes("Une association avec ce SIRET existe déjà")) {
           errorMessage = t_createAssociation('siretAlreadyExists');
+        } else if (apiMessage.includes("Missing or invalid SIRET")) {
+          errorMessage = t_createAssociation('invalidSiretError');
+        } else if (apiMessage.includes("Failed to create association")) {
+          errorMessage = t_createAssociation('defaultError');
         } else {
+          // Si c'est un message en français du backend, essayer de le traduire
+          // Sinon, utiliser le message tel quel
           errorMessage = apiMessage;
+        }
+      } else if (error.message) {
+        // Gérer les erreurs qui ne viennent pas de response.data
+        const errorMsg = error.message;
+        
+        if (errorMsg.includes("SIRET not found") || errorMsg.includes("statusCode: 404")) {
+          errorMessage = t_createAssociation('siretNotFound');
+        } else if (errorMsg.includes("Association déclarée") || errorMsg.includes("Le SIRET ne correspond pas à une association déclarée")) {
+          errorMessage = t_createAssociation('notAssociation');
+        } else if (errorMsg.includes("SIRET API error")) {
+          errorMessage = t_createAssociation('siretApiError');
+        } else if (errorMsg.includes("Erreur de connexion à l'API SIRET") || errorMsg.includes("Le service est temporairement indisponible")) {
+          errorMessage = t_createAssociation('siretConnectionError');
+        } else if (errorMsg.includes("existe déjà") || errorMsg.includes("Une association avec ce SIRET existe déjà")) {
+          errorMessage = t_createAssociation('siretAlreadyExists');
+        } else if (errorMsg.includes("Missing or invalid SIRET")) {
+          errorMessage = t_createAssociation('invalidSiretError');
+        } else if (errorMsg.includes("Failed to create association")) {
+          errorMessage = t_createAssociation('defaultError');
+        } else {
+          errorMessage = t_createAssociation('defaultError');
         }
       }
       

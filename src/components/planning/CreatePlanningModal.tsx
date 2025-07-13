@@ -85,7 +85,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                 state: member.state || '',
                 postalCode: member.postalCode || '',
                 country: member.country || '',
-                languages: (member.languages || []).map(lang => lang as Language),
+                languages: member.languages || [],
                 managerId: null,
                 isManager: member.isManager,
                 createdAt: member.createdAt,

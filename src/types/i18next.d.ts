@@ -72,6 +72,159 @@ declare module 'i18next' {
           serverError: string;
           loginError: string;
         };
+        team: {
+          title: string;
+          loading: string;
+          error: {
+            loading: string;
+            retry: string;
+            reconnect: string;
+          };
+          noAssociation: string;
+          noAssociationMessage: string;
+          stats: {
+            totalMembers: string;
+            managers: string;
+            activeMembers: string;
+          };
+          actions: {
+            addMember: string;
+            refresh: string;
+            viewDisponibilities: string;
+            removeMember: string;
+            editMember: string;
+            viewDetails: string;
+          };
+          modal: {
+            addMember: {
+              title: string;
+              subtitle: string;
+              emailLabel: string;
+              emailPlaceholder: string;
+              sendInvitation: string;
+              sending: string;
+              success: string;
+              error: string;
+            };
+            removeMember: {
+              title: string;
+              message: string;
+              confirm: string;
+              cancel: string;
+              removing: string;
+              success: string;
+              error: string;
+              description: string;
+            };
+            disponibilities: {
+              title: string;
+              noDisponibilities: string;
+              noDisponibilitiesMessage: string;
+              close: string;
+              start: string;
+              end: string;
+              duration: string;
+              days: string;
+            };
+            userDetails: {
+              loading: string;
+              personalInfo: string;
+              additionalInfo: string;
+              languages: {
+                english: string;
+                french: string;
+                spanish: string;
+                german: string;
+                italian: string;
+                language: string;
+              };
+            };
+          };
+          member: {
+            role: {
+              manager: string;
+              member: string;
+            };
+            contact: {
+              email: string;
+              phone: string;
+              address: string;
+            };
+            languages: string;
+            joinedOn: string;
+            lastActive: string;
+            status: {
+              active: string;
+            };
+            joinedSince: string;
+            you: string;
+            notSpecified: string;
+          };
+          orgChart: {
+            title: string;
+            noMembers: string;
+            noMembersMessage: string;
+          };
+          search: {
+            label: string;
+            placeholder: string;
+          };
+          toast: {
+            memberAdded: string;
+            memberRemoved: string;
+            error: string;
+          };
+          addMemberModal: {
+            title: string;
+            invite: {
+              tabTitle: string;
+              emailPlaceholder: string;
+              emailDescription: string;
+              messagePlaceholder: string;
+              messageDescription: string;
+              sendInvitationButton: string;
+              defaultMessage: string;
+              emailError: string;
+              emailFormatError: string;
+              associationError: string;
+              invalidDataError: string;
+              unauthorizedError: string;
+              forbiddenError: string;
+              userExistsError: string;
+              serverError: string;
+              connectionError: string;
+              error: string;
+            };
+            create: {
+              tabTitle: string;
+              managerOnlyDescription: string;
+              firstnamePlaceholder: string;
+              lastnamePlaceholder: string;
+              emailPlaceholder: string;
+              phoneNumberPlaceholder: string;
+              streetPlaceholder: string;
+              cityPlaceholder: string;
+              statePlaceholder: string;
+              postalCodePlaceholder: string;
+              countryPlaceholder: string;
+              createUserButton: string;
+              requiredFieldsError: string;
+              emailFormatError: string;
+              firstnameLengthError: string;
+              lastnameLengthError: string;
+              managerOnlyError: string;
+              invalidDataError: string;
+              unauthorizedError: string;
+              forbiddenError: string;
+              userExistsError: string;
+              invalidDataFormatError: string;
+              serverError: string;
+              connectionError: string;
+              error: string;
+              success: string;
+            };
+          };
+        };
         theme: {
           light: string;
           dark: string;

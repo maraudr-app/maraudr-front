@@ -11,7 +11,7 @@ export interface User {
     state: string;
     postalCode: string;
     country: string;
-    languages: Language[];
+    languages: string[];
     managerId?: string | null;
     isManager: boolean;
     createdAt: string;

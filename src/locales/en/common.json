@@ -87,7 +87,7 @@
   "stock": {
     "title": "Stock",
     "addItem": "Add item",
-    "history": "History",
+  
     "createStock": "Create stock",
     "filters": {
       "category": "Category",
@@ -183,6 +183,63 @@
       "content": "The SIRET number allows us to verify the legal existence of your association. All your data remains confidential and secure."
     }
   },
+  
+  "events": {
+    "title": "Day events",
+    "searchPlaceholder": "Search by title, description or location...",
+    "eventNumber": "Event {number}",
+    "pastEvent": "Past event",
+    "modifyEvent": "Modify event",
+    "deleteEvent": "Delete event",
+    "deleteConfirmTitle": "Delete event",
+    "deleteConfirmMessage": "Are you sure you want to delete the event \"{title}\"? This action is irreversible.",
+    "delete": "Delete",
+    "eventCreated": "Event created successfully",
+    "eventUpdated": "Event updated successfully",
+    "eventDeleted": "Event deleted successfully",
+    "description": "Description:",
+    "participants": "Participants:",
+    "upcomingEvent": "Upcoming event",
+    "pastEventLegend": "Past event",
+    "status": {
+      "created": "Created",
+      "ongoing": "Ongoing",
+      "finished": "Finished",
+      "canceled": "Canceled"
+    },
+    "actions": {
+      "start": "Start",
+      "finish": "Finish",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "startConfirm": "Start the event?",
+      "finishConfirm": "Finish the event?",
+      "cancelConfirm": "Cancel the event?",
+      "startSuccess": "Event started successfully",
+      "finishSuccess": "Event finished successfully",
+      "cancelSuccess": "Event canceled successfully",
+      "startError": "Error starting event",
+      "finishError": "Error finishing event",
+      "cancelError": "Error canceling event"
+    },
+    "timing": {
+      "startsIn": "Starts in {time}",
+      "startsNow": "Starts now",
+      "ongoing": "Ongoing",
+      "endsIn": "Ends in {time}",
+      "ended": "Ended",
+      "minutes": "min",
+      "hours": "h",
+      "days": "d"
+    },
+    "summary": {
+      "title": "Events Summary",
+      "total": "total",
+      "active": "active",
+      "startingSoon": "Starting soon",
+      "noEvents": "No events"
+    }
+  },
   "planning": {
     "team": {
       "title": "Team",
@@ -237,61 +294,6 @@
       "availabilitiesOf": "Availabilities of",
       "availabilities": "availability",
       "thisMonth": "this month"
-    },
-    "events": {
-      "title": "Day events",
-      "searchPlaceholder": "Search by title, description or location...",
-      "eventNumber": "Event {number}",
-      "pastEvent": "Past event",
-      "modifyEvent": "Modify event",
-      "deleteEvent": "Delete event",
-      "deleteConfirmTitle": "Delete event",
-      "deleteConfirmMessage": "Are you sure you want to delete the event \"{title}\"? This action is irreversible.",
-      "delete": "Delete",
-      "eventCreated": "Event created successfully",
-      "eventUpdated": "Event updated successfully",
-      "eventDeleted": "Event deleted successfully",
-      "description": "Description:",
-      "participants": "Participants:",
-      "upcomingEvent": "Upcoming event",
-      "pastEventLegend": "Past event",
-      "status": {
-        "created": "Created",
-        "ongoing": "Ongoing",
-        "finished": "Finished",
-        "canceled": "Canceled"
-      },
-      "actions": {
-        "start": "Start",
-        "finish": "Finish",
-        "cancel": "Cancel",
-        "startConfirm": "Start the event?",
-        "finishConfirm": "Finish the event?",
-        "cancelConfirm": "Cancel the event?",
-        "startSuccess": "Event started successfully",
-        "finishSuccess": "Event finished successfully",
-        "cancelSuccess": "Event canceled successfully",
-        "startError": "Error starting event",
-        "finishError": "Error finishing event",
-        "cancelError": "Error canceling event"
-      },
-      "timing": {
-        "startsIn": "Starts in {time}",
-        "startsNow": "Starts now",
-        "ongoing": "Ongoing",
-        "endsIn": "Ends in {time}",
-        "ended": "Ended",
-        "minutes": "min",
-        "hours": "h",
-        "days": "d"
-      },
-      "summary": {
-        "title": "Events Summary",
-        "total": "total",
-        "active": "active",
-        "startingSoon": "Starting soon",
-        "noEvents": "No events"
-      }
     },
     "missions": {
       "title": "Missions of {date}",
@@ -376,6 +378,7 @@
       "participantsSelected": "{count} participant(s) selected",
       "noMembersFound": "No members found",
       "noMembersAvailable": "No members available",
+      "searchMembers": "Search members...",
       "availabilityWarning": "💡 These participants can still be added to the event, but make sure they are informed of the dates concerned.",
       "noAvailabilityRecorded": "No availability recorded",
       "unavailableDays": "Unavailable days:",
@@ -428,6 +431,181 @@
       "createAvailability": "Error creating availability",
       "loadTeamMembers": "Error loading team members",
       "loadAllAvailabilities": "Error loading all availabilities"
+    }
+  },
+  "team": {
+    "title": "Team Management",
+    "loading": "Loading team...",
+    "error": {
+      "loading": "Error loading data",
+      "retry": "Retry",
+      "reconnect": "Reconnect"
+    },
+    "noAssociation": "No association selected",
+    "noAssociationMessage": "Please select an association to view the team.",
+    "stats": {
+      "totalMembers": "Total Members",
+      "managers": "Managers",
+      "activeMembers": "Active Members"
+    },
+    "actions": {
+      "addMember": "Add member",
+      "refresh": "Refresh",
+      "viewDisponibilities": "View availabilities",
+      "removeMember": "Remove member",
+      "editMember": "Edit member",
+      "viewDetails": "View details"
+    },
+    "modal": {
+      "addMember": {
+        "title": "Add new member",
+        "subtitle": "Invite someone to join your team",
+        "emailLabel": "Email address",
+        "emailPlaceholder": "example@email.com",
+        "sendInvitation": "Send invitation",
+        "sending": "Sending...",
+        "success": "Invitation sent successfully!",
+        "error": "Error sending invitation"
+      },
+      "addMemberModal": {
+        "title": "Add team member",
+        "invite": {
+          "tabTitle": "Invite by email",
+          "emailPlaceholder": "Email address",
+          "emailDescription": "An invitation email will be sent to this address",
+          "messagePlaceholder": "Custom message (optional)",
+          "messageDescription": "If no message is specified, a default message will be used",
+          "sendInvitationButton": "Send invitation",
+          "defaultMessage": "You are invited to join the association",
+          "emailError": "Please enter an email address",
+          "emailFormatError": "Please enter a valid email address",
+          "associationError": "No association selected",
+          "invalidDataError": "Invalid data. Please check the email address.",
+          "unauthorizedError": "You are not authorized to send invitations.",
+          "forbiddenError": "Access denied. You don't have the necessary permissions.",
+          "userExistsError": "A user with this email address already exists.",
+          "serverError": "Server error. Please try again later.",
+          "connectionError": "Connection problem. Please check your internet connection.",
+          "error": "Error sending invitation"
+        },
+        "create": {
+          "tabTitle": "Create user",
+          "managerOnlyDescription": "Only managers can create users directly",
+          "firstnamePlaceholder": "First name *",
+          "lastnamePlaceholder": "Last name *",
+          "emailPlaceholder": "Email address *",
+          "phoneNumberPlaceholder": "Phone number",
+          "streetPlaceholder": "Address (street)",
+          "cityPlaceholder": "City",
+          "statePlaceholder": "State/Region",
+          "postalCodePlaceholder": "Postal code",
+          "countryPlaceholder": "Country",
+          "createUserButton": "Create user",
+          "requiredFieldsError": "Please fill in all required fields (first name, last name, email)",
+          "emailFormatError": "Please enter a valid email address",
+          "firstnameLengthError": "First name must contain at least 2 characters",
+          "lastnameLengthError": "Last name must contain at least 2 characters",
+          "managerOnlyError": "Only managers can create users",
+          "invalidDataError": "Invalid data. Please check the information entered.",
+          "unauthorizedError": "You are not authorized to create users.",
+          "forbiddenError": "Access denied. You don't have the necessary permissions.",
+          "userExistsError": "A user with this email address already exists.",
+          "invalidDataFormatError": "Invalid data format. Please check the information format.",
+          "serverError": "Server error. Please try again later.",
+          "connectionError": "Connection problem. Please check your internet connection.",
+          "error": "Error creating user",
+          "success": "User created successfully!"
+        }
+      },
+      "removeMember": {
+        "title": "Remove member",
+        "message": "Are you sure you want to remove {name} from the team?",
+        "confirm": "Remove",
+        "cancel": "Cancel",
+        "removing": "Removing...",
+        "success": "Member removed successfully",
+        "error": "Error removing member",
+        "description": "This action cannot be undone. The member will no longer be visible in your team."
+      },
+      "disponibilities": {
+        "title": "Availabilities of {name}",
+        "noDisponibilities": "No availabilities",
+        "noDisponibilitiesMessage": "{name} hasn't recorded any availabilities yet.",
+        "close": "Close",
+        "start": "Start",
+        "end": "End",
+        "duration": "Duration",
+        "days": "day(s)"
+      },
+      "userDetails": {
+        "loading": "Loading information...",
+        "personalInfo": "Personal information",
+        "additionalInfo": "Additional information",
+        "languages": {
+          "english": "English",
+          "french": "French",
+          "spanish": "Spanish",
+          "german": "German",
+          "italian": "Italian",
+          "language": "Language"
+        }
+      }
+    },
+    "member": {
+      "role": {
+        "manager": "Manager",
+        "member": "Member"
+      },
+      "contact": {
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Address"
+      },
+      "languages": "Languages",
+      "joinedOn": "Joined on {date}",
+      "lastActive": "Last active: {date}",
+      "status": {
+        "active": "Active"
+      },
+      "joinedSince": "Member since",
+      "you": "You",
+      "notSpecified": "Not specified"
+    },
+    "orgChart": {
+      "title": "Team organization chart",
+      "noMembers": "No members in team",
+      "noMembersMessage": "Start by adding members to your team.",
+      "integrationDate": "Integration on {date}"
+    },
+    "search": {
+      "label": "Search member",
+      "placeholder": "Name, email or phone..."
+    },
+    "toast": {
+      "memberAdded": "Member added successfully!",
+      "memberRemoved": "Member removed successfully!",
+      "error": "An error occurred",
+      "memberAddedToTeam": "Member added successfully to the team",
+      "memberRemovedFromTeam": "Member removed from the team successfully",
+      "loadDisponibilitiesError": "Error loading availabilities"
+    }
+  },
+  "addMemberModalViainviation": {
+    "title": "Add a member to the team",
+    "invite": {
+      "tabTitle": "Invite by email",
+      "emailPlaceholder": "Email address",
+      "emailDescription": "An invitation email will be sent to this address",
+      "messagePlaceholder": "Custom message (optional)",
+      "messageDescription": "If no message is specified, a default message will be used",
+      "sendInvitationButton": "Send invitation",
+       "invalidDataError": "Invalid data. Please check the email address.",
+      "unauthorizedError": "You are not authorized to send invitations.",
+      "forbiddenError": "Access denied. You do not have the necessary permissions.",
+      "userExistsError": "A user with this email address already exists.",
+      "serverError": "Server error. Please try again later.",
+      "error": "Error sending the invitation.",
+      "connectionError": "Connection problem. Please check your internet connection."
     }
   }
 } 
