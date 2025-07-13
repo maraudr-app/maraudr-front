@@ -5,12 +5,14 @@ import { Input } from '../common/input/input';
 import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
 import { planningService } from '../../services/planningService';
+import { assoService } from '../../services/assoService';
 import { userService } from '../../services/userService';
 import { User } from '../../types/user/user';
 import { Event, UpdateEventRequest } from '../../types/planning/event';
 import { Disponibility } from '../../types/disponibility/disponibility';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { Language } from '../../types/enums/Language';
 
 interface EditEventModalProps {
     isOpen: boolean;
@@ -106,8 +108,28 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         
         try {
             setLoadingMembers(true);
-            const members = await userService.getTeamUsers(user?.sub || '');
-            setTeamMembers(members);
+            const associationMembers = await assoService.getAssociationMembers(selectedAssociation.id);
+            
+            // Convertir AssociationMember en User pour la compatibilité
+            const convertedMembers = associationMembers.map(member => ({
+                id: member.id,
+                firstname: member.firstname,
+                lastname: member.lastname,
+                email: member.email,
+                phoneNumber: member.phoneNumber || '',
+                street: member.street || '',
+                city: member.city || '',
+                state: member.state || '',
+                postalCode: member.postalCode || '',
+                country: member.country || '',
+                languages: (member.languages || []).map(lang => lang as Language),
+                managerId: null,
+                isManager: member.isManager,
+                createdAt: member.createdAt,
+                updatedAt: member.updatedAt
+            }));
+            
+            setTeamMembers(convertedMembers);
         } catch (error) {
             console.error('Erreur lors du chargement des membres:', error);
         } finally {
@@ -260,7 +282,11 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         const startDate = new Date(eventForm.beginningDate);
         const endDate = new Date(eventForm.endDate);
 
-        if (startDate >= endDate) {
+        // Ajuster pour le fuseau horaire local
+        const localStartDate = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000));
+        const localEndDate = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000));
+
+        if (localStartDate >= localEndDate) {
             setError(t_planning('editEvent.endDateAfterStart'));
             return;
         }
@@ -270,7 +296,6 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
             setError(null);
 
             const updateData: UpdateEventRequest = {
-                id: event.id,
                 title: eventForm.title,
                 description: eventForm.description,
                 location: eventForm.location,
@@ -279,7 +304,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                 participantsIds: eventForm.participantsIds
             };
 
-            await planningService.updateEvent(updateData);
+            await planningService.updateEvent(event.id, updateData);
             
             toast.success(t_planning('editEvent.success'));
             onEventUpdated();
@@ -481,8 +506,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                         {/* Boutons d'action */}
                         <div className="flex justify-between space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                             <Button
-                                onClick={onClose}
-                         
+                                onClick={e => { e?.stopPropagation(); onClose(); }}
                                 disabled={loading}
                                 className="px-8 py-3 w-64 bg-gray-500 hover:bg-gray-600 text-white transition-colors"
                             >

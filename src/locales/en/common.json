@@ -254,7 +254,44 @@
       "description": "Description:",
       "participants": "Participants:",
       "upcomingEvent": "Upcoming event",
-      "pastEventLegend": "Past event"
+      "pastEventLegend": "Past event",
+      "status": {
+        "created": "Created",
+        "ongoing": "Ongoing",
+        "finished": "Finished",
+        "canceled": "Canceled"
+      },
+      "actions": {
+        "start": "Start",
+        "finish": "Finish",
+        "cancel": "Cancel",
+        "startConfirm": "Start the event?",
+        "finishConfirm": "Finish the event?",
+        "cancelConfirm": "Cancel the event?",
+        "startSuccess": "Event started successfully",
+        "finishSuccess": "Event finished successfully",
+        "cancelSuccess": "Event canceled successfully",
+        "startError": "Error starting event",
+        "finishError": "Error finishing event",
+        "cancelError": "Error canceling event"
+      },
+      "timing": {
+        "startsIn": "Starts in {time}",
+        "startsNow": "Starts now",
+        "ongoing": "Ongoing",
+        "endsIn": "Ends in {time}",
+        "ended": "Ended",
+        "minutes": "min",
+        "hours": "h",
+        "days": "d"
+      },
+      "summary": {
+        "title": "Events Summary",
+        "total": "total",
+        "active": "active",
+        "startingSoon": "Starting soon",
+        "noEvents": "No events"
+      }
     },
     "missions": {
       "title": "Missions of {date}",

@@ -256,7 +256,44 @@
       "description": "Description:",
       "participants": "Participants :",
       "upcomingEvent": "Événement à venir",
-      "pastEventLegend": "Événement passé"
+      "pastEventLegend": "Événement passé",
+      "status": {
+        "created": "Créé",
+        "ongoing": "En cours",
+        "finished": "Terminé",
+        "canceled": "Annulé"
+      },
+      "actions": {
+        "start": "Démarrer",
+        "finish": "Terminer",
+        "cancel": "Annuler",
+        "startConfirm": "Démarrer l'événement ?",
+        "finishConfirm": "Terminer l'événement ?",
+        "cancelConfirm": "Annuler l'événement ?",
+        "startSuccess": "Événement démarré avec succès",
+        "finishSuccess": "Événement terminé avec succès",
+        "cancelSuccess": "Événement annulé avec succès",
+        "startError": "Erreur lors du démarrage",
+        "finishError": "Erreur lors de la finalisation",
+        "cancelError": "Erreur lors de l'annulation"
+      },
+      "timing": {
+        "startsIn": "Démarre dans {time}",
+        "startsNow": "Démarre maintenant",
+        "ongoing": "En cours",
+        "endsIn": "Se termine dans {time}",
+        "ended": "Terminé",
+        "minutes": "min",
+        "hours": "h",
+        "days": "j"
+      },
+      "summary": {
+        "title": "Résumé des événements",
+        "total": "total",
+        "active": "actifs",
+        "startingSoon": "Démarrent bientôt",
+        "noEvents": "Aucun événement"
+      }
     },
     "missions": {
       "title": "Missions du {date}",

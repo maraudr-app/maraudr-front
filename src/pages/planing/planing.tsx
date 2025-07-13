@@ -10,8 +10,10 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
 import { userService } from '../../services/userService';
+import { assoService } from '../../services/assoService';
 import { Disponibility } from '../../types/disponibility/disponibility';
 import { User } from '../../types/user/user';
+import { Language } from '../../types/enums/Language';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/common/toast/Toast';
@@ -22,8 +24,13 @@ import type { Event } from '../../types/planning/event';
 import { Input } from '../../components/common/input/input';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { PlanningNavbar } from '../../components/planning/PlanningNavbar';
+import { EventActions } from '../../components/planning/EventActions';
+import { EventStatusBadge } from '../../components/planning/EventStatusBadge';
+import { EventNotifications } from '../../components/planning/EventNotifications';
+import { EventSummary } from '../../components/planning/EventSummary';
 import { Button } from '../../components/common/button/button';
 import { toast } from 'react-hot-toast';
+import { parseLocalDate, formatDisplayTimeRange } from '../../utils/dateUtils';
 
 // Fonction helper pour les toasts sécurisés
 const safeToast = {
@@ -553,6 +560,9 @@ const Planning: React.FC = () => {
     const [eventSearchQuery, setEventSearchQuery] = useState('');
     const [editSelectedParticipants, setEditSelectedParticipants] = useState<string[]>([]);
 
+    // États pour la recherche d'utilisateur dans la sidebar équipe
+    const [searchTeam, setSearchTeam] = useState('');
+
     // Charger toutes les disponibilités de l'association
     const loadAllDisponibilities = async () => {
         if (!selectedAssociation?.id) {
@@ -579,13 +589,33 @@ const Planning: React.FC = () => {
 
     // Charger les vrais utilisateurs de l'équipe
     const loadTeamUsers = async () => {
-        if (!user?.sub) return;
+        if (!selectedAssociation?.id) return;
         
         try {
             setLoadingUsers(true);
-            const users = await userService.getTeamUsers(user.sub);
-            console.log('Utilisateurs de l\'équipe chargés:', users);
-            setTeamUsers(users);
+            const associationMembers = await assoService.getAssociationMembers(selectedAssociation.id);
+            
+            // Convertir AssociationMember en User pour la compatibilité
+            const convertedMembers = associationMembers.map(member => ({
+                id: member.id,
+                firstname: member.firstname,
+                lastname: member.lastname,
+                email: member.email,
+                phoneNumber: member.phoneNumber || '',
+                street: member.street || '',
+                city: member.city || '',
+                state: member.state || '',
+                postalCode: member.postalCode || '',
+                country: member.country || '',
+                languages: (member.languages || []).map(lang => lang as Language),
+                managerId: null,
+                isManager: member.isManager,
+                createdAt: member.createdAt,
+                updatedAt: member.updatedAt
+            }));
+            
+            console.log('Utilisateurs de l\'équipe chargés:', convertedMembers);
+            setTeamUsers(convertedMembers);
         } catch (error) {
             console.error('Erreur lors du chargement des utilisateurs:', error);
         // @ts-ignore
@@ -639,6 +669,16 @@ const Planning: React.FC = () => {
             loadTeamUsers();
             loadAllEvents();
         }
+    }, []);
+
+    // Effet pour mettre à jour automatiquement les statuts des événements
+    useEffect(() => {
+        const interval = setInterval(() => {
+            // Forcer le re-render pour mettre à jour les statuts
+            setAllEvents(prev => [...prev]);
+        }, 60000); // Mise à jour toutes les minutes
+
+        return () => clearInterval(interval);
     }, []);
     
     // Fonction pour filtrer les disponibilités par utilisateur
@@ -732,19 +772,18 @@ const Planning: React.FC = () => {
 
     // Fonctions d'aide pour les événements
     const getEventsForDate = (date: Date): Event[] => {
-        const dateStr = formatDate(date);
+        const targetDate = new Date(date);
+        targetDate.setHours(0, 0, 0, 0);
+        
         return allEvents.filter(event => {
-            const eventStartDate = new Date(event.beginningDate);
-            const eventEndDate = new Date(event.endDate);
-            const currentDate = new Date(dateStr);
+            // Utiliser parseLocalDate pour éviter les problèmes de fuseau horaire
+            const eventStart = parseLocalDate(event.beginningDate);
+            const eventEnd = parseLocalDate(event.endDate);
             
-            // Normaliser les dates pour ne comparer que les jours (pas les heures)
-            const startDay = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate());
-            const endDay = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate());
-            const checkDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+            const eventStartDay = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
+            const eventEndDay = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate());
             
-            // Vérifier si la date courante est dans la plage de l'événement
-            return checkDay >= startDay && checkDay <= endDay;
+            return targetDate >= eventStartDay && targetDate <= eventEndDay;
         });
     };
 
@@ -786,7 +825,7 @@ const Planning: React.FC = () => {
     // Ajout d'une fonction utilitaire pour savoir si un événement est passé
     const isEventPast = (event: Event) => {
         const now = new Date();
-        const end = new Date(event.endDate);
+        const end = parseLocalDate(event.endDate);
         // Si la date de fin est avant aujourd'hui
         if (end < now && (end.toDateString() !== now.toDateString())) return true;
         // Si la date de fin est aujourd'hui, compare l'heure
@@ -806,29 +845,35 @@ const Planning: React.FC = () => {
     // Ajoute une fonction utilitaire pour savoir si un événement a commencé
     const isEventStarted = (event: Event) => {
         const now = new Date();
-        const start = new Date(event.beginningDate);
+        const start = parseLocalDate(event.beginningDate);
         return start < now;
     };
 
     // Ajoute une fonction utilitaire pour savoir si un événement est en cours
     const isEventOngoing = (event: Event) => {
         const now = new Date();
-        const start = new Date(event.beginningDate);
-        const end = new Date(event.endDate);
+        const start = parseLocalDate(event.beginningDate);
+        const end = parseLocalDate(event.endDate);
         return start < now && now < end;
     };
 
     // Ajoute des helpers pour désactiver individuellement les champs date/heure
     const isStartDatePast = (event: Event) => {
         const now = new Date();
-        const start = new Date(event.beginningDate);
+        const start = parseLocalDate(event.beginningDate);
         return start < now;
     };
     const isEndDatePast = (event: Event) => {
         const now = new Date();
-        const end = new Date(event.endDate);
+        const end = parseLocalDate(event.endDate);
         return end < now;
     };
+
+    // Filtrage des membres selon la recherche
+    const filteredTeamUsers = teamUsers.filter(user => {
+        const fullName = `${user.firstname} ${user.lastname}`.toLowerCase();
+        return fullName.includes(searchTeam.toLowerCase());
+    });
 
     // Vérifier l'authentification
     if (!isAuthenticated || !user) {
@@ -874,7 +919,12 @@ const Planning: React.FC = () => {
             return Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
         };
         const getMonthStartDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        const formatDate = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
         const daysOfWeek = [
             t_planning('days.sunday'),
             t_planning('days.monday'),
@@ -1466,6 +1516,9 @@ const Planning: React.FC = () => {
             {/* Main content scrolls under the navbar, with correct padding */}
             <div className="pt-20 sm:pt-8" />
             <main className="w-full px-2 sm:px-4 py-4 sm:py-8" style={{ paddingLeft: sidebarWidth }}>
+                {/* Résumé des événements */}
+                <EventSummary events={allEvents} className="mb-4" />
+                
                 <div className="w-full flex flex-col lg:flex-row gap-4">
                     {/* Sidebar équipe */}
                     <div className="w-full md:w-72 lg:w-80 xl:w-96">
@@ -1474,8 +1527,17 @@ const Planning: React.FC = () => {
                                 <UserGroupIcon className="w-5 h-5 mr-2" />
                                 {t_planning('team.title')} ({teamUsers.length})
                             </h2>
-                            
-
+                            {/* Champ de recherche utilisateur */}
+                            <div className="mb-4">
+                                <Input
+                                    type="text"
+                                    value={searchTeam}
+                                    onChange={e => setSearchTeam(e.target.value)}
+                                    label={t('common.team.searchLabel')}
+                                    placeholder={t('common.team.searchPlaceholder')}
+                                    className="w-full"
+                                />
+                            </div>
                             <div className="mb-6">
                                 <button
                                     onClick={() => setSelectedUser(null)}
@@ -1494,9 +1556,8 @@ const Planning: React.FC = () => {
                                     </div>
                                 </button>
                             </div>
-
                             <div className="space-y-1">
-                                {teamUsers.map(user => (
+                                {filteredTeamUsers.map(user => (
                                     <button
                                         key={user.id}
                                         onClick={() => setSelectedUser(user.id)}
@@ -1825,57 +1886,48 @@ const Planning: React.FC = () => {
                                                 className={`border rounded-lg p-4 transition cursor-pointer ${past ? 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600' : 'border-blue-200 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20'} hover:shadow-md`}
                                                 onClick={() => handleEditEvent(event)}
                                             >
-                                                {past ? (
-                                                    <>
-                                                        <div className="mb-1 text-base font-bold text-center text-violet-700 dark:text-violet-300 uppercase">{t_planning('events.pastEvent')}</div>
-                                                        <div className="mb-2 text-xs text-center text-gray-700 dark:text-gray-300 italic">{event.title}</div>
-                                                    </>
-                                                ) : (
-                                                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                                                        {event.title}
-                                                    </h4>
-                                                )}
                                                 <div className="flex justify-between items-start mb-3">
-                                                    {!past && (
-                                                        <div className="flex items-center space-x-2">
-                                                            <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 rounded-full">
-                                                                {t_planning('events.eventNumber').replace('{number}', (index + 1).toString())}
-                                                            </span>
-                                                            {/* Boutons d'action pour manager/organisateur */}
-                                                            {canEditEvent(event) && (
-                                                                <div className="flex space-x-1">
-                                                                    <button
-                                                                        onClick={e => { e.stopPropagation(); handleEditEvent(event); }}
-                                                                        className={`p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded transition-colors`}
-                                                                        title={t_planning('events.modifyEvent')}
-                                                                    >
-                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                                        </svg>
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={e => { e.stopPropagation(); handleDeleteEvent(event); }}
-                                                                        className={`p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors`}
-                                                                        title={t_planning('events.deleteEvent')}
-                                                                    >
-                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                        </svg>
-                                                                    </button>
-                                                                </div>
-                                                            )}
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 rounded-full">
+                                                            {t_planning('events.eventNumber').replace('{number}', (index + 1).toString())}
+                                                        </span>
+                                                        <EventStatusBadge event={event} />
+                                                    </div>
+                                                    {/* Boutons d'action pour manager/organisateur */}
+                                                    {canEditEvent(event) && (
+                                                        <div className="flex space-x-1">
+                                                            <button
+                                                                onClick={e => { e.stopPropagation(); handleEditEvent(event); }}
+                                                                className={`p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded transition-colors`}
+                                                                title={t_planning('events.modifyEvent')}
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                </svg>
+                                                            </button>
+                                                            <button
+                                                                onClick={e => { e.stopPropagation(); handleDeleteEvent(event); }}
+                                                                className={`p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors`}
+                                                                title={t_planning('events.deleteEvent')}
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>
+                                                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                                                    {event.title}
+                                                </h4>
                                                 <div className="space-y-2">
                                                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                                         <CalendarIcon className="h-4 w-4 mr-2" />
                                                         <span>
-                                                            {new Date(event.beginningDate).toLocaleDateString('fr-FR')} 
-                                                            {' de '}
-                                                            {new Date(event.beginningDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                                            {' à '}
-                                                            {new Date(event.endDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {formatDisplayTimeRange(
+                                                                parseLocalDate(event.beginningDate),
+                                                                parseLocalDate(event.endDate)
+                                                            )}
                                                         </span>
                                                     </div>
                                                     {event.description && (
@@ -1906,6 +1958,14 @@ const Planning: React.FC = () => {
                                                         </div>
                                                     )}
                                                 </div>
+                                                {/* Boutons d'action des événements */}
+                                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                                    <EventActions 
+                                                        event={event} 
+                                                        onActionSuccess={handleEventUpdated}
+                                                        className="justify-center"
+                                                    />
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -1920,6 +1980,9 @@ const Planning: React.FC = () => {
                     </div>
                 )}
             </main>
+
+            {/* Notifications des événements */}
+            <EventNotifications events={allEvents} />
 
             {/* Affichage des toasts */}
             {toasts.map((toastItem) => (

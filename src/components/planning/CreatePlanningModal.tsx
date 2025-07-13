@@ -5,11 +5,13 @@ import { Input } from '../common/input/input';
 import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
 import { planningService } from '../../services/planningService';
+import { assoService } from '../../services/assoService';
 import { userService } from '../../services/userService';
 import { CreateEventRequest, CreateEventDto } from '../../types/planning/event';
 import { User } from '../../types/user/user';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { Language } from '../../types/enums/Language';
 
 interface CreatePlanningModalProps {
     isOpen: boolean;
@@ -69,8 +71,28 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
         
         try {
             setLoadingMembers(true);
-            const members = await userService.getTeamUsers(user?.sub || '');
-            setTeamMembers(members);
+            const associationMembers = await assoService.getAssociationMembers(selectedAssociation.id);
+            
+            // Convertir AssociationMember en User pour la compatibilité
+            const convertedMembers = associationMembers.map(member => ({
+                id: member.id,
+                firstname: member.firstname,
+                lastname: member.lastname,
+                email: member.email,
+                phoneNumber: member.phoneNumber || '',
+                street: member.street || '',
+                city: member.city || '',
+                state: member.state || '',
+                postalCode: member.postalCode || '',
+                country: member.country || '',
+                languages: (member.languages || []).map(lang => lang as Language),
+                managerId: null,
+                isManager: member.isManager,
+                createdAt: member.createdAt,
+                updatedAt: member.updatedAt
+            }));
+            
+            setTeamMembers(convertedMembers);
         } catch (error) {
             console.error('Erreur lors du chargement des membres:', error);
         } finally {

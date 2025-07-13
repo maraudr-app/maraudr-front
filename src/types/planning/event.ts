@@ -8,6 +8,14 @@ export interface Event {
   title: string;
   description: string;
   location: string;
+  status?: EventStatus; // Optionnel pour la compatibilité avec les événements existants
+}
+
+export enum EventStatus {
+  CREATED = 'CREATED',
+  ONGOING = 'ONGOING',
+  FINISHED = 'FINISHED',
+  CANCELED = 'CANCELED'
 }
 
 export interface CreateEventRequest {
@@ -33,14 +41,11 @@ export interface CreateEventDto {
 }
 
 export interface UpdateEventRequest {
-  id: string;
-  planningId?: string;
-  organizerdId?: string;
   participantsIds?: string[];
-  title?: string;
-  description?: string;
   beginningDate?: string;
   endDate?: string;
+  title?: string;
+  description?: string;
   location?: string;
 }
 

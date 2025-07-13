@@ -5,10 +5,12 @@ import { Input } from '../common/input/input';
 import { useAuthStore } from '../../store/authStore';
 import { useAssoStore } from '../../store/assoStore';
 import { planningService } from '../../services/planningService';
+import { assoService } from '../../services/assoService';
 import { userService } from '../../services/userService';
-import { User } from '../../types/user/user';
 import { CreateEventDto } from '../../types/planning/event';
 import { Disponibility } from '../../types/disponibility/disponibility';
+import { User } from '../../types/user/user';
+import { Language } from '../../types/enums/Language';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -27,7 +29,6 @@ interface EventForm {
     participantsIds: string[];
 }
 
-// Interface pour les conflits de disponibilité
 interface AvailabilityConflict {
     userId: string;
     missingDates: string[];
@@ -80,8 +81,28 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         
         try {
             setLoadingMembers(true);
-            const members = await userService.getTeamUsers(user?.sub || '');
-            setTeamMembers(members);
+            const associationMembers = await assoService.getAssociationMembers(selectedAssociation.id);
+            
+            // Convertir AssociationMember en User pour la compatibilité
+            const convertedMembers = associationMembers.map(member => ({
+                id: member.id,
+                firstname: member.firstname,
+                lastname: member.lastname,
+                email: member.email,
+                phoneNumber: member.phoneNumber || '',
+                street: member.street || '',
+                city: member.city || '',
+                state: member.state || '',
+                postalCode: member.postalCode || '',
+                country: member.country || '',
+                languages: (member.languages || []).map(lang => lang as Language),
+                managerId: null,
+                isManager: member.isManager,
+                createdAt: member.createdAt,
+                updatedAt: member.updatedAt
+            }));
+            
+            setTeamMembers(convertedMembers);
         } catch (error) {
             console.error('Erreur lors du chargement des membres:', error);
         } finally {
@@ -245,13 +266,18 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         // Vérification des dates passées
         const now = new Date();
         const beginningDate = new Date(eventForm.beginningDate);
+        const endDate = new Date(eventForm.endDate);
         
-        if (beginningDate < now) {
+        // Ajuster pour le fuseau horaire local
+        const localBeginningDate = new Date(beginningDate.getTime() - (beginningDate.getTimezoneOffset() * 60000));
+        const localEndDate = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000));
+        
+        if (localBeginningDate < now) {
             setError(t_planning('createEvent.datePastError'));
             return;
         }
 
-        if (new Date(eventForm.beginningDate) >= new Date(eventForm.endDate)) {
+        if (localBeginningDate >= localEndDate) {
             setError(t_planning('createEvent.dateOrderError'));
             return;
         }
@@ -587,10 +613,10 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                     {/* Boutons d'action */}
                     <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                         <Button
-                            onClick={onClose}
+                            onClick={e => { e?.stopPropagation(); onClose(); }}
                             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2"
                         >
-                            Annuler
+                            {t_planning('createEvent.cancel')}
                         </Button>
                         <Button
                             onClick={createEvent}

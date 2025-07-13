@@ -143,10 +143,10 @@ export const planningService = {
         }
     },
 
-    // Mettre à jour un événement (si l'endpoint existe)
+    // Mettre à jour un événement
     updateEvent: async (eventId: string, eventData: UpdateEventRequest): Promise<Event> => {
         try {
-            const response = await planningApi.put(`/planning/${eventId}`, eventData);
+            const response = await planningApi.patch(`/planning/update-event/${eventId}`, eventData);
             return response.data;
         } catch (error: any) {
             console.error('Erreur lors de la mise à jour de l\'événement:', error);
@@ -173,6 +173,39 @@ export const planningService = {
         } catch (error: any) {
             console.error('Erreur lors de la suppression du participant:', error);
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la suppression du participant';
+            throw new Error(errorMessage);
+        }
+    },
+
+    // Démarrer un événement
+    startEvent: async (eventId: string): Promise<void> => {
+        try {
+            await planningApi.post(`/planning/start-event/${eventId}`);
+        } catch (error: any) {
+            console.error('Erreur lors du démarrage de l\'événement:', error);
+            const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors du démarrage de l\'événement';
+            throw new Error(errorMessage);
+        }
+    },
+
+    // Terminer un événement
+    finishEvent: async (eventId: string): Promise<void> => {
+        try {
+            await planningApi.post(`/planning/finish-event/${eventId}`);
+        } catch (error: any) {
+            console.error('Erreur lors de la finalisation de l\'événement:', error);
+            const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la finalisation de l\'événement';
+            throw new Error(errorMessage);
+        }
+    },
+
+    // Annuler un événement
+    cancelEvent: async (eventId: string): Promise<void> => {
+        try {
+            await planningApi.post(`/planning/cancel-event/${eventId}`);
+        } catch (error: any) {
+            console.error('Erreur lors de l\'annulation de l\'événement:', error);
+            const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de l\'annulation de l\'événement';
             throw new Error(errorMessage);
         }
     }
