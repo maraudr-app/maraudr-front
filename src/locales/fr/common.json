@@ -86,48 +86,7 @@
     "fr": "Français",
     "en": "Anglais"
   },
-  "stock": {
-    "title": "Stock",
-    "addItem": "Ajouter un item",
-    "history": "Historique",
-    "createStock": "Créer un stock",
-    "filters": {
-      "category": "Catégorie",
-      "name": "Nom",
-      "search": "Rechercher par nom...",
-      "allCategories": "Toutes les catégories",
-      "apply": "Filtrer"
-    },
-    "item": {
-      "name": "Nom",
-      "description": "Description",
-      "barcode": "Code-barres",
-      "category": "Catégorie",
-      "quantity": "Quantité",
-      "entryDate": "Date d'entrée",
-      "delete": "Supprimer",
-      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet item ?"
-    },
-    "history": {
-      "title": "Historique du stock",
-      "noHistory": "Aucun historique disponible",
-      "date": "Date",
-      "item": "Item",
-      "category": "Catégorie",
-      "quantity": "Quantité"
-    },
-    "errors": {
-      "loadItems": "Erreur lors du chargement des items",
-      "deleteItem": "Erreur lors de la suppression de l'item",
-      "createStock": "Erreur lors de la création du stock",
-      "checkStock": "Erreur lors de la vérification du stock",
-      "noAssociation": "Aucune association sélectionnée"
-    },
-    "success": {
-      "itemAdded": "Item ajouté avec succès !",
-      "itemDeleted": "Item supprimé avec succès"
-    }
-  },
+ 
   "error": {
     "401": {
       "title": "Accès non autorisé",
@@ -697,5 +656,46 @@
   "errorUpload": "Erreur lors de l'upload",
   "errorDownload": "Erreur lors du téléchargement",
   "errorDelete": "Erreur lors de la suppression"
+},
+"stock": {
+  "addItem": "Ajouter un item",
+  "addItemTitle": "Ajouter un item",
+  "barcodeMode": "Mode code-barres",
+  "manualMode": "Saisie manuelle",
+  "switchToManual": "Passer à la saisie manuelle",
+  "switchToBarcode": "Passer au code-barres",
+  "barcodePlaceholder": "Entrez le code-barres",
+  "scanBarcode": "Scanner le code-barres",
+  "scanQRCode": "Scanner le QR code",
+  "scanSuccess": "Code scanné avec succès !",
+  "scanError": "Erreur lors du scan",
+  "itemName": "Nom de l'item",
+  "itemNamePlaceholder": "Entrez le nom de l'item",
+  "description": "Description",
+  "descriptionPlaceholder": "Entrez une description (optionnel)",
+  "category": "Catégorie",
+  "quantity": "Quantité",
+  "quantityPlaceholder": "Entrez la quantité",
+  "barcodeOptional": "Code-barres (optionnel)",
+  "barcodeOptionalPlaceholder": "Entrez le code-barres (optionnel)",
+  "qrScanHelp": "Cliquez sur l'icône QR pour scanner avec votre caméra",
+  "cancel": "Annuler",
+  "add": "Ajouter",
+  "adding": "Ajout...",
+  "noAssociation": "Aucune association sélectionnée",
+  "itemAddedSuccess": "Item ajouté avec succès !",
+  "itemAddError": "Erreur lors de l'ajout de l'item",
+  "unknownError": "Erreur inconnue",
+  "barcodeNotFound": "Code-barres non trouvé dans la base de données",
+  "barcodeInvalid": "Code-barres invalide",
+  "barcodeRequired": "Le code-barres est requis",
+  "nameRequired": "Le nom est requis",
+  "categoryRequired": "La catégorie est requise",
+  "quantityRequired": "La quantité est requise",
+  "quantityInvalid": "La quantité doit être un nombre positif",
+  "loadingBarcode": "Recherche du produit...",
+  "productFound": "Produit trouvé !",
+  "productNotFound": "Produit non trouvé"
 }
+
 } 

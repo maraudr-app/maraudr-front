@@ -84,48 +84,7 @@
     "fr": "French",
     "en": "English"
   },
-  "stock": {
-    "title": "Stock",
-    "addItem": "Add item",
-  
-    "createStock": "Create stock",
-    "filters": {
-      "category": "Category",
-      "name": "Name",
-      "search": "Search by name...",
-      "allCategories": "All categories",
-      "apply": "Filter"
-    },
-    "item": {
-      "name": "Name",
-      "description": "Description",
-      "barcode": "Barcode",
-      "category": "Category",
-      "quantity": "Quantity",
-      "entryDate": "Entry date",
-      "delete": "Delete",
-      "deleteConfirm": "Are you sure you want to delete this item?"
-    },
-    "history": {
-      "title": "Stock History",
-      "noHistory": "No history available",
-      "date": "Date",
-      "item": "Item",
-      "category": "Category",
-      "quantity": "Quantity"
-    },
-    "errors": {
-      "loadItems": "Error loading items",
-      "deleteItem": "Error deleting item",
-      "createStock": "Error creating stock",
-      "checkStock": "Error checking stock",
-      "noAssociation": "No association selected"
-    },
-    "success": {
-      "itemAdded": "Item added successfully!",
-      "itemDeleted": "Item deleted successfully"
-    }
-  },
+
   "error": {
     "401": {
       "title": "Unauthorized Access",
@@ -654,5 +613,46 @@
   "errorUpload": "Error uploading",
   "errorDownload": "Error downloading",
   "errorDelete": "Error deleting"
+},
+"stock": {
+  "addItem": "Add Item",
+  "addItemTitle": "Add Item",
+  "barcodeMode": "Barcode Mode",
+  "manualMode": "Manual Entry",
+  "switchToManual": "Switch to manual entry",
+  "switchToBarcode": "Switch to barcode",
+  "barcodePlaceholder": "Enter barcode",
+  "scanBarcode": "Scan barcode",
+  "scanQRCode": "Scan QR code",
+  "scanSuccess": "Code scanned successfully!",
+  "scanError": "Error scanning code",
+  "itemName": "Item name",
+  "itemNamePlaceholder": "Enter item name",
+  "description": "Description",
+  "descriptionPlaceholder": "Enter description (optional)",
+  "category": "Category",
+  "quantity": "Quantity",
+  "quantityPlaceholder": "Enter quantity",
+  "barcodeOptional": "Barcode (optional)",
+  "barcodeOptionalPlaceholder": "Enter barcode (optional)",
+  "qrScanHelp": "Click on QR icon to scan with your camera",
+  "cancel": "Cancel",
+  "add": "Add",
+  "adding": "Adding...",
+  "noAssociation": "No association selected",
+  "itemAddedSuccess": "Item added successfully!",
+  "itemAddError": "Error adding item",
+  "unknownError": "Unknown error",
+  "barcodeNotFound": "Barcode not found in database",
+  "barcodeInvalid": "Invalid barcode",
+  "barcodeRequired": "Barcode is required",
+  "nameRequired": "Name is required",
+  "categoryRequired": "Category is required",
+  "quantityRequired": "Quantity is required",
+  "quantityInvalid": "Quantity must be a positive number",
+  "loadingBarcode": "Searching for product...",
+  "productFound": "Product found!",
+  "productNotFound": "Product not found"
 }
+
 } 
