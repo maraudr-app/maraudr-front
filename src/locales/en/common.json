@@ -246,12 +246,12 @@
       "associationPlanning": "Association planning",
       "allPlannings": "All plannings",
       "manager": "Manager",
-      "member": "Member",
-      "available": "Available",
-      "unavailable": "Unavailable",
-      "addEvent": "Add event",
-      "addAvailability": "Add availability"
-    },
+      "member": "Member"
+    }
+  },
+  
+  "disponibility": {
+    "available": "Available",
     "calendar": {
       "associationPlanning": "Association planning",
       "eventsThisMonth": "event(s) this month",
@@ -607,5 +607,52 @@
       "error": "Error sending the invitation.",
       "connectionError": "Connection problem. Please check your internet connection."
     }
-  }
+  },
+  "media": {
+  "noAssociation": "No association selected",
+  "noAssociationMessage": "Please select an association to access media.",
+  "noAssociationDocuments": "Please select an association to manage its documents.",
+  "noAssociationPhotos": "Please select an association to manage its photos.",
+  "title": "Media",
+  "photos": "Photos",
+  "documents": "Documents",
+  "uploadInProgress": "Upload in progress...",
+  "dragDropOrClick": "Drag and drop a document here or click to select",
+  "dragDropOrClickPhoto": "Drag and drop a photo here or click to select",
+  "fileTypesDocuments": "PDF, DOC, XLS, TXT (max 10MB)",
+  "fileTypesPhotos": "JPG, PNG, GIF, WEBP (max 10MB)",
+  "searchDocument": "Search for a document...",
+  "associationDocuments": "Association documents",
+  "associationPhotos": "Association photos",
+  "loading": "Loading...",
+  "loadingPhotos": "Loading photos...",
+  "noDocuments": "No documents",
+  "noDocumentsFound": "No documents found",
+  "noDocumentsMessage": "Start by uploading a document.",
+  "noDocumentsSearchMessage": "No documents match your search.",
+  "noPhotos": "No photos found",
+  "noPhotosMessage": "No photos have been shared in this association yet.",
+  "uploadedOn": "Uploaded on",
+  "uploadedBy": "Uploaded by",
+  "download": "Download",
+  "downloadStarted": "Download started",
+  "delete": "Delete",
+  "preview": "Preview",
+  "addPhoto": "Add a photo",
+  "close": "Close",
+  "fileTypeNotAllowed": "File type not allowed",
+  "fileTypeNotAllowedPhotos": "File type not allowed. Only images are accepted.",
+  "fileTooLarge": "File too large (max 10MB)",
+  "uploadSuccess": "Document uploaded successfully!",
+  "uploadSuccessPhoto": "Photo uploaded successfully!",
+  "deleteSuccess": "Document deleted successfully",
+  "deleteSuccessPhoto": "Photo deleted successfully",
+  "confirmDelete": "Are you sure you want to delete",
+  "errorLoading": "Error loading",
+  "errorLoadingDocuments": "Error loading documents",
+  "errorLoadingPhotos": "Error loading photos",
+  "errorUpload": "Error uploading",
+  "errorDownload": "Error downloading",
+  "errorDelete": "Error deleting"
+}
 } 

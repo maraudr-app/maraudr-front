@@ -27,7 +27,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedAssociationRoute from './components/common/ProtectedAssociationRoute';
 import Error401 from './pages/Error401';
 import Error404 from './pages/Error404';
-import Media from './pages/GalleryAndDocuments';
+import Media from './pages/Media/Media';
 import McpServer from './pages/McpServer';
 
 function App() {
