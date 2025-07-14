@@ -366,7 +366,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                     {/* Messages d'erreur */}
                     {error && (
                         <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-md">
-                            {error}##
+                            {error}
                         </div>
                     )}
 
