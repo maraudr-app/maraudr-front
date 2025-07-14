@@ -39,8 +39,8 @@ export const EventNotifications: React.FC<EventNotificationsProps> = ({
       const timing = calculateEventTiming(event);
       const eventStatus = event.status || EventStatus.CREATED;
       
-      // Événement qui démarre dans 15 minutes
-      if (timing.timeUntilStart <= 15 && timing.timeUntilStart > 0) {
+      // Événement qui démarre dans 1 minute exactement
+      if (timing.timeUntilStart === 1) {
         newNotifications.push({
           id: `start-${event.id}`,
           event,
@@ -50,24 +50,13 @@ export const EventNotifications: React.FC<EventNotificationsProps> = ({
         });
       }
       
-      // Événement qui démarre maintenant
-      if (timing.timeUntilStart <= 0 && timing.timeUntilStart > -5) {
+      // Événement qui démarre maintenant (dans les 30 secondes après le début)
+      if (timing.timeUntilStart <= 0 && timing.timeUntilStart > -0.5) {
         newNotifications.push({
           id: `start-now-${event.id}`,
           event,
           message: t_planning('events_timing_startsNow'),
           type: 'info',
-          timestamp: now
-        });
-      }
-      
-      // Événement en cours
-      if (timing.isOngoing && timing.timeUntilEnd <= 30) {
-        newNotifications.push({
-          id: `ongoing-${event.id}`,
-          event,
-          message: t_planning('status_ongoing'),
-          type: 'success',
           timestamp: now
         });
       }
@@ -88,7 +77,7 @@ export const EventNotifications: React.FC<EventNotificationsProps> = ({
       setNotifications(prev => 
         prev.filter(n => now.getTime() - n.timestamp.getTime() < 30000)
       );
-    }, 5000);
+    }, 1000); // Vérifier toutes les secondes pour une suppression plus précise
 
     return () => clearInterval(interval);
   }, []);

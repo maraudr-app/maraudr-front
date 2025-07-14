@@ -50,9 +50,9 @@ export const useEventBusinessRules = () => {
 
     const formatTime = (minutes: number): string => {
       if (minutes < 0) return '';
-      if (minutes < 60) return `${minutes}${t_planning('events.timing.minutes')}`;
-      if (minutes < 1440) return `${Math.floor(minutes / 60)}${t_planning('events.timing.hours')}`;
-      return `${Math.floor(minutes / 1440)}${t_planning('events.timing.days')}`;
+      if (minutes < 60) return `${minutes}${t_planning('timing.minutes')}`;
+      if (minutes < 1440) return `${Math.floor(minutes / 60)}${t_planning('timing.hours')}`;
+      return `${Math.floor(minutes / 1440)}${t_planning('timing.days')}`;
     };
 
     return {
@@ -175,11 +175,11 @@ export const useEventBusinessRules = () => {
     }
     
     if (timing.timeUntilStart <= 15 && timing.timeUntilStart > 0) {
-      return t_planning('events.timing.startsIn').replace('{time}', timing.startsIn);
+      return t_planning('events_timing_startsIn').replace('{time}', timing.startsIn);
     }
     
     if (timing.timeUntilStart <= 0) {
-      return t_planning('events.timing.startsNow');
+      return t_planning('events_timing_startsNow');
     }
     
     return t_planning('status_created');

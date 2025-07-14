@@ -1,8 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { CalendarDaysIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { useAssoStore } from '../../store/assoStore';
 import Button from '../common/button/button';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface PlanningNavbarProps {
   onAddEvent?: () => void;
@@ -17,6 +18,8 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
 }) => {
   const { t } = useTranslation();
   const { sidebarCollapsed } = useAssoStore();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const t_planning = (key: string): string => {
     return t(`planning.${key}` as any);
@@ -24,6 +27,9 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
 
   // Définir la largeur de la sidebar en pixels (comme StockNavbar)
   const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
+
+  // Vérifier si on est sur la page d'historique
+  const isOnHistoryPage = location.pathname === '/maraudApp/planing/history';
 
   return (
     <nav
@@ -38,7 +44,21 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
           </div>
         </div>
         
-        <div className="flex-shrink-0 w-full md:w-auto flex justify-center md:justify-end">
+        <div className="flex-shrink-0 w-full md:w-auto flex justify-center md:justify-end gap-2">
+          {(
+            <Button
+              onClick={() => isOnHistoryPage ? navigate('/maraudApp/planing') : navigate('/maraudApp/planing/history')}
+              className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap w-full md:w-auto flex items-center gap-2 ${
+                isOnHistoryPage 
+                  ? 'text-white bg-maraudr-orange hover:bg-maraudr-blue' 
+                  : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <ClockIcon className="w-4 h-4" />
+              {isOnHistoryPage ? t_planning('team_associationPlanning') : t_planning('history_title')}
+            </Button>
+          )}
+          
           {userRole === 'manager' && onAddEvent && (
             <Button
               onClick={onAddEvent}

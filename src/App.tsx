@@ -29,6 +29,7 @@ import Error401 from './pages/Error401';
 import Error404 from './pages/Error404';
 import Media from './pages/Media/Media';
 import McpServer from './pages/McpServer';
+import EventHistoryPage from './pages/planing/EventHistoryPage';
 
 function App() {
   const { i18n } = useTranslation();
@@ -143,6 +144,11 @@ function App() {
                         message=""
                       >
                         <Planning/>
+                      </ProtectedAssociationRoute>
+                    } />
+                    <Route path="planing/history" element={
+                      <ProtectedAssociationRoute title="Historique des événements" message="">
+                        <EventHistoryPage />
                       </ProtectedAssociationRoute>
                     } />
                     <Route path="profile" element={

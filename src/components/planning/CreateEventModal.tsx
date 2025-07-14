@@ -33,6 +33,7 @@ interface AvailabilityConflict {
     userId: string;
     missingDates: string[];
     hasPartialAvailability: boolean;
+    availableDates: string[];
 }
 
 const CreateEventModal: React.FC<CreateEventModalProps> = ({
@@ -141,11 +142,13 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             return {
                 userId,
                 missingDates: [`Du ${eventStartDate.toLocaleDateString('fr-FR')} au ${eventEndDate.toLocaleDateString('fr-FR')}`],
-                hasPartialAvailability: false
+                hasPartialAvailability: false,
+                availableDates: []
             };
         }
 
         // Vérifier si l'événement est entièrement couvert par les disponibilités
+        const availableDates: string[] = [];
         const missingDates: string[] = [];
         let hasPartialAvailability = false;
 
@@ -173,10 +176,11 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                 return availStart <= dayEnd && availEnd >= dayStart;
             });
 
-            if (!isAvailable) {
-                missingDates.push(day.toLocaleDateString('fr-FR'));
-            } else {
+            if (isAvailable) {
+                availableDates.push(day.toLocaleDateString('fr-FR'));
                 hasPartialAvailability = true;
+            } else {
+                missingDates.push(day.toLocaleDateString('fr-FR'));
             }
         }
 
@@ -184,7 +188,8 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             return {
                 userId,
                 missingDates,
-                hasPartialAvailability
+                hasPartialAvailability,
+                availableDates
             };
         }
 
@@ -482,7 +487,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                                             </span>
                                                             {member.isManager && (
                                                                 <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-                                                                    {t('team_manager')}
+                                                                    {t_planning('team_manager')}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -526,7 +531,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                     <ExclamationTriangleIcon className="w-5 h-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
                                     <div className="flex-1">
                                         <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2">
-                                            ⚠️ Conflits de disponibilité détectés
+                                            {t_planning('createEvent_availabilityConflictsDetected')}
                                         </h4>
                                         <div className="space-y-3">
                                             {availabilityConflicts.map((conflict) => {
@@ -555,6 +560,25 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                                             <p className="text-sm text-orange-700 dark:text-orange-300">
                                                                 <span className="font-medium">{t_planning('createEvent_noAvailabilityRecorded')}</span> {t_planning('createEvent_forPeriod').replace('{period}', conflict.missingDates[0].toLowerCase())}
                                                             </p>
+                                                        ) : conflict.availableDates.length > 0 ? (
+                                                            <div className="text-sm text-green-700 dark:text-green-300">
+                                                                <span className="font-medium">{t_planning('createEvent_availableDays')}</span>
+                                                                <div className="mt-1 flex flex-wrap gap-1">
+                                                                    {conflict.availableDates.slice(0, 5).map((date, index) => (
+                                                                        <span 
+                                                                            key={index}
+                                                                            className="inline-block bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 px-2 py-1 text-xs rounded"
+                                                                        >
+                                                                            {date}
+                                                                        </span>
+                                                                    ))}
+                                                                    {conflict.availableDates.length > 5 && (
+                                                                        <span className="text-xs text-green-600 dark:text-green-400 px-2 py-1">
+                                                                            {t_planning('createEvent_otherAvailableDays').replace('{count}', (conflict.availableDates.length - 5).toString())}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         ) : (
                                                             <div className="text-sm text-orange-700 dark:text-orange-300">
                                                                 <span className="font-medium">{t_planning('createEvent_unavailableDays')}</span>

@@ -562,6 +562,8 @@ const Planning: React.FC = () => {
     // États pour le modal de création d'événement
     const [showCreateEventModal, setShowCreateEventModal] = useState(false);
 
+
+
     // États pour la recherche et la gestion des participants
     const [eventSearchQuery, setEventSearchQuery] = useState('');
     const [editSelectedParticipants, setEditSelectedParticipants] = useState<string[]>([]);
@@ -691,6 +693,8 @@ const Planning: React.FC = () => {
     const getDisponibilitiesByUser = (userId: string) => {
         return allDisponibilities.filter(dispo => dispo.userId === userId);
     };
+
+
 
     // Fonction appelée après création d'un événement
     const handleEventCreated = () => {
@@ -1168,7 +1172,10 @@ const Planning: React.FC = () => {
         return (
              /* Calendrier des disponibilités (flat, sans encadrement) cas user simple et non manager */
             <>
-                <PlanningNavbar onAddAvailability={handleAddDisponibility} userRole="member" />
+                <PlanningNavbar 
+                    onAddAvailability={handleAddDisponibility} 
+                    userRole="member" 
+                />
                 <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pt-16 ${sidebarWidth}`}>
                     {/* Container pour les deux calendriers côte à côte */}
                     <div className="flex flex-row gap-6 justify-start items-start ">
@@ -2029,6 +2036,8 @@ const Planning: React.FC = () => {
                     </div>
                 )}
             </main>
+
+
 
             {/* Notifications des événements */}
             <EventNotifications events={allEvents} />

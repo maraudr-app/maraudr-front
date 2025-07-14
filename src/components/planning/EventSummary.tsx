@@ -68,7 +68,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
 
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-row items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           {t_planning('summary_title')}
         </h3>
@@ -77,10 +77,10 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="flex flex-row justify-between">
         {/* Événements à venir */}
         {stats.upcoming > 0 && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <CalendarIcon className="w-4 h-4 text-blue-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.upcoming}</div>
@@ -91,7 +91,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
 
         {/* Événements qui démarrent bientôt */}
         {stats.startingSoon > 0 && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.startingSoon}</div>
@@ -102,7 +102,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
 
         {/* Événements qui démarrent maintenant */}
         {stats.startingNow > 0 && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <ClockIcon className="w-4 h-4 text-blue-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.startingNow}</div>
@@ -113,7 +113,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
 
         {/* Événements en cours */}
         {stats.ongoing > 0 && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.ongoing}</div>
@@ -124,7 +124,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
 
         {/* Événements terminés */}
         {stats.finished > 0 && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <CheckCircleIcon className="w-4 h-4 text-gray-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.finished}</div>
@@ -135,7 +135,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
 
         {/* Événements annulés */}
         {stats.canceled > 0 && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.canceled}</div>
