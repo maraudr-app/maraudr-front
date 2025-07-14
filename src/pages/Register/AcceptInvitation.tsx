@@ -68,6 +68,17 @@ const AcceptInvitation = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // État pour les notifications flottantes
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error';
+    message: string;
+    isVisible: boolean;
+  }>({
+    type: 'success',
+    message: '',
+    isVisible: false
+  });
+
   // Récupérer et valider le token d'invitation depuis l'URL
   useEffect(() => {
     const token = searchParams.get('token');
@@ -148,25 +159,44 @@ const AcceptInvitation = () => {
     }
   };
 
+  // Fonctions pour gérer les notifications flottantes
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message, isVisible: true });
+    
+    // Auto-dismiss après 3 secondes
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  const hideNotification = () => {
+    setNotification(prev => ({ ...prev, isVisible: false }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
     setIsLoading(true);
 
+    console.log('🚀 Début de la soumission du formulaire d\'invitation');
+
     try {
       if (form.password !== form.confirmPassword) {
+        console.log('❌ Erreur: Les mots de passe ne correspondent pas');
         // @ts-ignore
         setFormError(t('register.passwordMatchError'));
         return;
       }
 
       if (passwordError || confirmPasswordError) {
+        console.log('❌ Erreur: Erreurs de validation du mot de passe');
         // @ts-ignore
         setFormError(t('register.formError'));
         return;
       }
 
       if (!invitationToken || !associationName) {
+        console.log('❌ Erreur: Données d\'invitation manquantes', { invitationToken, associationName });
         setFormError('Données d\'invitation manquantes');
         return;
       }
@@ -180,49 +210,43 @@ const AcceptInvitation = () => {
       };
 
       console.log('📡 Données formatées pour l\'API d\'invitation:', userData);
+      console.log('🔑 Token d\'invitation utilisé:', invitationToken);
       
       const response = await userService.createAccount(userData);
       
+      console.log('✅ Réponse de l\'API - Succès:', response);
+      
       if (response) {
-        // @ts-ignore
-        toast.success('Compte créé avec succès ! Vous pouvez maintenant vous connecter.', {
-          duration: 3000,
-          position: 'top-center',
-          style: {
-            background: '#10b981',
-            color: '#fff',
-            padding: '16px',
-            borderRadius: '8px',
-          },
-        });
+        console.log('🎉 Compte créé avec succès, redirection vers login dans 3 secondes');
+        showNotification('success', 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
         
-        // Naviguer vers login après 3 secondes
+        // Naviguer vers login après 3 secondes (même délai que l'auto-dismiss de la notification)
         setTimeout(() => {
           navigate('/login');
         }, 3000);
       }
     } catch (error: any) {
-        // @ts-ignore
-      let errorMessage = t('register.error.default' as string);
+      console.log('❌ Erreur lors de la création du compte:', error);
+      console.log('📋 Détails de l\'erreur:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+      
+      // @ts-ignore
+      let errorMessage: string = t('register.error.default' as string);
       
       if (error.response?.data) {
-        errorMessage = error.response.data;
+        errorMessage = String(error.response.data);
       } else if (error.message) {
-        errorMessage = error.message;
+        errorMessage = String(error.message);
       }
       
-        // @ts-ignore
-      toast.error(errorMessage, {
-        duration: 4000,
-        position: 'top-center',
-        style: {
-          background: '#f44336',
-          color: '#fff',
-          padding: '16px',
-          borderRadius: '8px',
-        },
-      });
+      console.log('💬 Message d\'erreur affiché à l\'utilisateur:', errorMessage);
+      showNotification('error', errorMessage);
     } finally {
+      console.log('🏁 Fin de la soumission du formulaire');
       setIsLoading(false);
     }
   };
@@ -514,15 +538,47 @@ const AcceptInvitation = () => {
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Vous avez déjà un compte ?{" "}
-                  <Link to="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
-                    Se connecter
-                  </Link>
+                 
                 </p>
               </div>
             </form>
           </div>
         </div>
       </div>
+
+      {/* Notification flottante */}
+      {notification.isVisible && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+          <div className={`flex items-center p-4 rounded-lg shadow-lg max-w-sm ${
+            notification.type === 'success' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex-shrink-0 mr-3">
+              {notification.type === 'success' ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{notification.message}</p>
+            </div>
+            <button
+              onClick={hideNotification}
+              className="flex-shrink-0 ml-3 text-white hover:text-gray-200"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

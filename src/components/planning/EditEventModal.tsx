@@ -270,12 +270,12 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
 
         // Validation
         if (!eventForm.title.trim()) {
-            setError(t_planning('editEvent.titleRequired'));
+            setError(t_planning('editEvent_titleRequired'));
             return;
         }
 
         if (!eventForm.beginningDate || !eventForm.endDate) {
-            setError(t_planning('editEvent.dateRequired'));
+            setError(t_planning('editEvent_dateRequired'));
             return;
         }
 
@@ -287,7 +287,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         const localEndDate = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000));
 
         if (localStartDate >= localEndDate) {
-            setError(t_planning('editEvent.endDateAfterStart'));
+            setError(t_planning('editEvent_endDateAfterStart'));
             return;
         }
 
@@ -306,12 +306,12 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
 
             await planningService.updateEvent(event.id, updateData);
             
-            toast.success(t_planning('editEvent.success'));
+            toast.success(t_planning('editEvent_success'));
             onEventUpdated();
             onClose();
         } catch (error) {
             console.error('Erreur lors de la modification de l\'événement:', error);
-            setError(t_planning('editEvent.error'));
+            setError(t_planning('editEvent_error'));
         } finally {
             setLoading(false);
         }
@@ -354,7 +354,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                     {/* Header */}
                     <div className="flex justify-between items-center mb-6">
                                                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                            {t_planning('editEvent.modalTitle')}
+                            {t_planning('editEvent_modalTitle')}
                         </h3>
                         <button
                             onClick={onClose}
@@ -372,7 +372,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                 type="text"
                                 value={eventForm.title}
                                 onChange={(e) => handleFormChange('title', e.target.value)}
-                                placeholder={t_planning('editEvent.eventTitle') + ' *'}
+                                placeholder={t_planning('editEvent_eventTitle') + ' *'}
                                 className="w-full text-lg font-medium"
                             />
                         </div>
@@ -382,7 +382,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                             <textarea
                                 value={eventForm.description}
                                 onChange={(e) => handleFormChange('description', e.target.value)}
-                                placeholder={t_planning('editEvent.description')}
+                                placeholder={t_planning('editEvent_description')}
                                 className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none transition-colors"
                                 rows={3}
                             />
@@ -394,7 +394,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                 type="text"
                                 value={eventForm.location}
                                 onChange={(e) => handleFormChange('location', e.target.value)}
-                                placeholder={t_planning('editEvent.location')}
+                                placeholder={t_planning('editEvent_location')}
                                 className="w-full"
                             />
                         </div>
@@ -406,7 +406,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                     type="datetime-local"
                                     value={eventForm.beginningDate}
                                     onChange={(e) => handleFormChange('beginningDate', e.target.value)}
-                                    placeholder={t_planning('editEvent.startDate') + ' *'}
+                                    placeholder={t_planning('editEvent_startDate') + ' *'}
                                     className="w-full"
                                 />
                             </div>
@@ -415,7 +415,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                     type="datetime-local"
                                     value={eventForm.endDate}
                                     onChange={(e) => handleFormChange('endDate', e.target.value)}
-                                    placeholder={t_planning('editEvent.endDate') + ' *'}
+                                    placeholder={t_planning('editEvent_endDate') + ' *'}
                                     className="w-full"
                                 />
                             </div>
@@ -429,7 +429,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 >
                                     <span className={eventForm.participantsIds.length > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}>
-                                        {eventForm.participantsIds.length > 0 ? getSelectedParticipantsNames() : t_planning('editEvent.selectParticipants')}
+                                        {eventForm.participantsIds.length > 0 ? getSelectedParticipantsNames() : t_planning('editEvent_selectParticipants')}
                                     </span>
                                     <ChevronDownIcon className={`h-5 w-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                                 </div>
@@ -439,7 +439,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                         <div className="p-3 border-b border-gray-100 dark:border-gray-600">
                                             <input
                                                 type="text"
-                                                placeholder={t_planning('createEvent.searchMembers')}
+                                                placeholder={t_planning('createEvent_searchMembers')}
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-600 dark:text-white"
@@ -476,14 +476,14 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                     <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 mr-3 flex-shrink-0" />
                                     <div>
                                         <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">
-                                            {t_planning('editEvent.availabilityConflicts')}
+                                            {t_planning('editEvent_availabilityConflicts')}
                                         </h4>
                                         <div className="space-y-1">
                                             {availabilityConflicts.map((conflict, index) => {
                                                 const member = teamMembers.find(m => m.id === conflict.userId);
                                                 return (
                                                     <div key={index} className="text-sm text-amber-700 dark:text-amber-300">
-                                                        <span className="font-medium">{member ? `${member.firstname} ${member.lastname}` : t_planning('editEvent.unknownMember')}</span>: {conflict.missingDates.join(', ')}
+                                                        <span className="font-medium">{member ? `${member.firstname} ${member.lastname}` : t_planning('editEvent_unknownMember')}</span>: {conflict.missingDates.join(', ')}
                                                     </div>
                                                 );
                                             })}
@@ -510,14 +510,14 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                 disabled={loading}
                                 className="px-8 py-3 w-64 bg-gray-500 hover:bg-gray-600 text-white transition-colors"
                             >
-                                {t_planning('editEvent.cancel')}
+                                {t_planning('editEvent_cancel')}
                             </Button>
                             <Button
                                 onClick={updateEvent}
                                 disabled={loading}
                                 className="px-8 py-3 w-64 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                             >
-                                {loading ? t_planning('editEvent.updating') : t_planning('editEvent.update')}
+                                {loading ? t_planning('editEvent_updating') : t_planning('editEvent_update')}
                             </Button>
                         </div>
                     </div>

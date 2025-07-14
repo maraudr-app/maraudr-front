@@ -123,7 +123,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
     // Créer le planning initial
     const createPlanning = async () => {
         if (!selectedAssociation?.id) {
-            setError(t_planning('createPlanning.associationNotSelected'));
+            setError(t_planning('createPlanning_associationNotSelected'));
             return;
         }
 
@@ -137,12 +137,12 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
 
             const planning = await planningService.createPlanning(planningData);
             setCurrentPlanningId(planning.id);
-            setSuccess(t_planning('createPlanning.success'));
+            setSuccess(t_planning('createPlanning_success'));
             setShowAddEvent(true);
             
         } catch (err: any) {
             console.error('Erreur lors de la création du planning:', err);
-            setError(err.message || t_planning('createPlanning.error'));
+            setError(err.message || t_planning('createPlanning_error'));
         } finally {
             setLoading(false);
         }
@@ -151,18 +151,18 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
     // Ajouter un événement au planning
     const addEventToPlanning = async () => {
         if (!currentPlanningId || !user?.sub) {
-            setError(t_planning('createPlanning.planningNotCreated'));
+            setError(t_planning('createPlanning_planningNotCreated'));
             return;
         }
 
         // Validation
         if (!newEvent.title.trim() || !newEvent.beginningDate || !newEvent.endDate) {
-            setError(t_planning('createPlanning.eventFormError'));
+            setError(t_planning('createPlanning_eventFormError'));
             return;
         }
 
         if (new Date(newEvent.beginningDate) >= new Date(newEvent.endDate)) {
-            setError(t_planning('createPlanning.eventDateError'));
+            setError(t_planning('createPlanning_eventDateError'));
             return;
         }
 
@@ -195,11 +195,11 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                 participantsIds: []
             });
 
-            toast.success(t_planning('createPlanning.eventAdded'));
+            toast.success(t_planning('createPlanning_eventAdded'));
             
         } catch (err: any) {
             console.error('Erreur lors de la création de l\'événement:', err);
-            setError(err.message || t_planning('createPlanning.eventError'));
+            setError(err.message || t_planning('createPlanning_eventError'));
         } finally {
             setLoading(false);
         }
@@ -207,7 +207,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
 
     // Finaliser et fermer
     const finalizePlanning = () => {
-        toast.success(t_planning('createPlanning.finalSuccess'));
+        toast.success(t_planning('createPlanning_finalSuccess'));
         onPlanningCreated();
         onClose();
     };
@@ -236,7 +236,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        {t_planning('createPlanning.modalTitle')}
+                        {t_planning('createPlanning_modalTitle')}
                     </h2>
                     <button
                         onClick={onClose}
@@ -265,11 +265,11 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                         <div className="text-center py-8">
                             <CalendarIcon className="w-16 h-16 text-blue-500 mx-auto mb-4" />
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                {t_planning('createPlanning.modalSubtitle')}
+                                {t_planning('createPlanning_modalSubtitle')}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400 mb-6" 
                                dangerouslySetInnerHTML={{ 
-                                   __html: t_planning('createPlanning.modalDescription').replace('{name}', selectedAssociation?.name || '') 
+                                   __html: t_planning('createPlanning_modalDescription').replace('{name}', selectedAssociation?.name || '') 
                                }} 
                             />
                             <Button
@@ -278,7 +278,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                 disabled={loading}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
                             >
-                                {t_planning('createPlanning.createButton')}
+                                {t_planning('createPlanning_createButton')}
                             </Button>
                         </div>
                     )}
@@ -290,7 +290,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                             {events.length > 0 && (
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                        {t_planning('createPlanning.eventsAdded').replace('{count}', events.length.toString())}
+                                        {t_planning('createPlanning_eventsAdded').replace('{count}', events.length.toString())}
                                     </h3>
                                     <div className="space-y-3">
                                         {events.map((event, index) => (
@@ -314,7 +314,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                                             )}
                                                                                                                     <span className="flex items-center">
                                                             <UserGroupIcon className="w-4 h-4 mr-1" />
-                                                            {t_planning('createPlanning.participantsCount').replace('{count}', event.participantsIds.length.toString())}
+                                                            {t_planning('createPlanning_participantsCount').replace('{count}', event.participantsIds.length.toString())}
                                                         </span>
                                                         </div>
                                                     </div>
@@ -333,7 +333,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
                                     >
                                         <PlusIcon className="w-4 h-4 mr-2" />
-                                        {t_planning('createPlanning.addEvent')}
+                                        {t_planning('createPlanning_addEvent')}
                                     </Button>
                                 </div>
                             )}
@@ -342,20 +342,20 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                             {showAddEvent && (
                                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                        {t_planning('createPlanning.newEvent')}
+                                        {t_planning('createPlanning_newEvent')}
                                     </h3>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <Input
                                             type="text"
-                                            placeholder={`${t_planning('createPlanning.eventTitle')} *`}
+                                            placeholder={`${t_planning('createPlanning_eventTitle')} *`}
                                             value={newEvent.title}
                                             onChange={(e) => handleEventFormChange('title', e.target.value)}
                                             className="w-full"
                                         />
                                         <Input
                                             type="text"
-                                            placeholder={t_planning('createPlanning.location')}
+                                            placeholder={t_planning('createPlanning_location')}
                                             value={newEvent.location}
                                             onChange={(e) => handleEventFormChange('location', e.target.value)}
                                             className="w-full"
@@ -365,7 +365,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                     <div className="mb-4">
                                         <Input
                                             type="text"
-                                            placeholder={t_planning('createPlanning.description')}
+                                            placeholder={t_planning('createPlanning_description')}
                                             value={newEvent.description}
                                             onChange={(e) => handleEventFormChange('description', e.target.value)}
                                             className="w-full"
@@ -375,7 +375,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                {t_planning('createPlanning.startDate')} *
+                                                {t_planning('createPlanning_startDate')} *
                                             </label>
                                             <Input
                                                 type="datetime-local"
@@ -386,7 +386,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                {t_planning('createPlanning.endDate')} *
+                                                {t_planning('createPlanning_endDate')} *
                                             </label>
                                             <Input
                                                 type="datetime-local"
@@ -400,7 +400,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                     {/* Sélection des participants */}
                                     <div className="mb-6">
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t_planning('createPlanning.participants')}
+                                            {t_planning('createPlanning_participants')}
                                         </label>
                                         {loadingMembers ? (
                                             <div className="text-center py-4">
@@ -410,7 +410,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                             <div className="max-h-32 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-2">
                                                 {teamMembers.length === 0 ? (
                                                     <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
-                                                        {t_planning('createPlanning.noMembersAvailable')}
+                                                        {t_planning('createPlanning_noMembersAvailable')}
                                                     </p>
                                                 ) : (
                                                     <div className="space-y-2">
@@ -438,7 +438,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                             onClick={() => setShowAddEvent(false)}
                                             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2"
                                         >
-                                            {t_planning('availability.cancel')}
+                                            {t_planning('availability_cancel')}
                                         </Button>
                                         <Button
                                             onClick={addEventToPlanning}
@@ -446,7 +446,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                             disabled={loading}
                                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
                                         >
-                                            {t_planning('createPlanning.eventAdded')}
+                                            {t_planning('createPlanning_eventAdded')}
                                         </Button>
                                     </div>
                                 </div>
@@ -460,7 +460,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                     disabled={showAddEvent}
                                 >
                                     <PlusIcon className="w-4 h-4 mr-2" />
-                                    {t_planning('createPlanning.addAnotherEvent')}
+                                    {t_planning('createPlanning_addAnotherEvent')}
                                 </Button>
                                 
                                 <Button
@@ -468,7 +468,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
                                     disabled={events.length === 0}
                                 >
-                                    {t_planning('createPlanning.finalizePlanning')}
+                                    {t_planning('createPlanning_finalizePlanning')}
                                 </Button>
                             </div>
                         </div>

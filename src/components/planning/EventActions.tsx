@@ -74,20 +74,20 @@ export const EventActions: React.FC<EventActionsProps> = ({
   let color = '';
   let bgIcon = '';
   if (pendingAction === 'start') {
-    confirmTitle = t_planning('events.actions.start');
-    confirmMessage = t_planning('events.actions.startConfirm');
+    confirmTitle = t_planning('events_actions_start');
+    confirmMessage = t_planning('events_actions_startConfirm');
     icon = <PlayIcon className="h-6 w-6 text-green-600 dark:text-green-400" />;
     color = 'bg-green-600 hover:bg-green-700';
     bgIcon = 'bg-green-100 dark:bg-green-900/20';
   } else if (pendingAction === 'finish') {
-    confirmTitle = t_planning('events.actions.finish');
-    confirmMessage = t_planning('events.actions.finishConfirm');
+    confirmTitle = t_planning('events_actions_finish');
+    confirmMessage = t_planning('events_actions_finishConfirm');
     icon = <StopIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />;
     color = 'bg-blue-600 hover:bg-blue-700';
     bgIcon = 'bg-blue-100 dark:bg-blue-900/20';
   } else if (pendingAction === 'cancel') {
-    confirmTitle = t_planning('events.actions.cancel');
-    confirmMessage = t_planning('events.actions.cancelConfirm');
+    confirmTitle = t_planning('events_actions_cancel');
+    confirmMessage = t_planning('events_actions_cancelConfirm');
     icon = <XMarkIcon className="h-6 w-6 text-red-600 dark:text-red-400" />;
     color = 'bg-red-600 hover:bg-red-700';
     bgIcon = 'bg-red-100 dark:bg-red-900/20';
@@ -103,7 +103,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
             className="flex items-center gap-1 px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
           >
             <PlayIcon className="w-4 h-4" />
-            {t_planning('events.actions.start')}
+            {t_planning('events_actions_start')}
           </Button>
         )}
 
@@ -114,7 +114,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
             className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
           >
             <StopIcon className="w-4 h-4" />
-            {t_planning('events.actions.finish')}
+            {t_planning('events_actions_finish')}
           </Button>
         )}
 
@@ -125,7 +125,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
             className="flex items-center gap-1 px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
           >
             <XMarkIcon className="w-4 h-4" />
-            {t_planning('events.actions.cancel')}
+            {t_planning('events_actions_cancel')}
           </Button>
         )}
       </div>
@@ -149,13 +149,13 @@ export const EventActions: React.FC<EventActionsProps> = ({
                   onClick={e => { e.stopPropagation(); handleCloseModal(); }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
-                  {t_planning('availability.cancel')}
+                  {t_planning('availability_cancel')}
                 </button>
                 <button
                   onClick={e => { e.stopPropagation(); handleConfirm(); }}
                   className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${color}`}
                 >
-                  {t_planning('events.actions.confirm')}
+                  {t_planning('events_actions_confirm')}
                 </button>
               </div>
             </div>

@@ -18,7 +18,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
   const { calculateEventTiming } = useEventBusinessRules();
 
   const t_planning = useCallback((key: string): string => {
-    return t(`events.${key}` as any);
+    return t(`planning.${key}` as any);
   }, [t]);
 
   // Calculer les statistiques des événements avec useMemo
@@ -57,23 +57,23 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
 
   if (totalEvents === 0) {
     return (
-      <div className={`bg-gray-50 dark:bg-gray-800 rounded-lg p-4 ${className}`}>
+      <div className={`bg-gray-50 dark:bg-gray-800 rounded-lg px-4 py-2 ${className}`}>
         <div className="flex items-center justify-center text-gray-500 dark:text-gray-400">
           <CalendarIcon className="w-5 h-5 mr-2" />
-          <span className="text-sm">{t_planning('summary.noEvents')}</span>
+          <span className="text-sm">{t_planning('summary_noEvents')}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {t_planning('summary.title')}
+          {t_planning('summary_title')}
         </h3>
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          {totalEvents} {t_planning('summary.total')}
+          {totalEvents} {t_planning('summary_total')}
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
             <CalendarIcon className="w-4 h-4 text-blue-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.upcoming}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status.created')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status_created')}</div>
             </div>
           </div>
         )}
@@ -95,7 +95,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
             <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.startingSoon}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('summary.startingSoon')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('summary_startingSoon')}</div>
             </div>
           </div>
         )}
@@ -106,7 +106,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
             <ClockIcon className="w-4 h-4 text-blue-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.startingNow}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('timing.startsNow')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('timing_startsNow')}</div>
             </div>
           </div>
         )}
@@ -117,7 +117,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
             <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.ongoing}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status.ongoing')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status_ongoing')}</div>
             </div>
           </div>
         )}
@@ -128,7 +128,7 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
             <CheckCircleIcon className="w-4 h-4 text-gray-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.finished}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status.finished')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status_finished')}</div>
             </div>
           </div>
         )}
@@ -139,23 +139,13 @@ export const EventSummary: React.FC<EventSummaryProps> = ({
             <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">{stats.canceled}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status.canceled')}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t_planning('status_canceled')}</div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Indicateur d'activité */}
-      {activeEvents > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-              {activeEvents} {t_planning('summary.active')}
-            </span>
-          </div>
-        </div>
-      )}
+     
     </div>
   );
 }; 

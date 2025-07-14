@@ -44,7 +44,7 @@ export const EventNotifications: React.FC<EventNotificationsProps> = ({
         newNotifications.push({
           id: `start-${event.id}`,
           event,
-          message: t_planning('events.timing.startsIn').replace('{time}', timing.startsIn),
+          message: t_planning('events_timing_startsIn').replace('{time}', timing.startsIn),
           type: 'warning',
           timestamp: now
         });
@@ -55,7 +55,7 @@ export const EventNotifications: React.FC<EventNotificationsProps> = ({
         newNotifications.push({
           id: `start-now-${event.id}`,
           event,
-          message: t_planning('events.timing.startsNow'),
+          message: t_planning('events_timing_startsNow'),
           type: 'info',
           timestamp: now
         });
@@ -66,7 +66,7 @@ export const EventNotifications: React.FC<EventNotificationsProps> = ({
         newNotifications.push({
           id: `ongoing-${event.id}`,
           event,
-          message: t_planning('events.timing.ongoing'),
+          message: t_planning('events_timing_ongoing'),
           type: 'success',
           timestamp: now
         });

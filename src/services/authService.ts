@@ -188,6 +188,30 @@ export const authService = {
     }
   },
 
+  // Fonction pour récupérer les informations de l'utilisateur connecté
+  getMe: async (): Promise<User> => {
+    const token = authService.getToken();
+    
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        withCredentials: true
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching current user data:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch current user data');
+    }
+  },
+
   // Nouvelle fonction pour mettre à jour le profil
   updateProfile: async (userData: Partial<User>): Promise<User> => {
     try {

@@ -89,15 +89,15 @@ export const stockService = {
     },
 
     // Créer un article à partir d'un code-barres
-    createItemFromBarcode: async (barcode: string): Promise<string> => {
+    createItemFromBarcode: async (barcode: string, associationId: string): Promise<string> => {
         const token = await tokenManager.ensureValidToken();
         if (!token) {
             throw new Error('No authentication token available');
         }
 
         const response = await axios.post<{ id: string }>(
-            `${API_URL}/item`,
-            { barcode },
+            `${API_URL}/item/${barcode}`,
+            { associationId },
             { 
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -109,7 +109,7 @@ export const stockService = {
         return response.data.id;
     },
 
-    // Ajouter un article à une association
+    // Ajouter un article à une association (ancienne méthode, gardée pour compatibilité)
     addItemToAssociation: async (barcode: string, associationId: string): Promise<void> => {
         const token = await tokenManager.ensureValidToken();
         if (!token) {
@@ -129,7 +129,7 @@ export const stockService = {
         );
     },
 
-    // Créer un nouvel item (garde l'ancienne fonction pour compatibilité)
+    // Créer un nouvel item manuellement
     createItem: async (item: CreateStockItemRequest, associationId: string): Promise<string> => {
         const token = await tokenManager.ensureValidToken();
         if (!token) {
@@ -139,13 +139,13 @@ export const stockService = {
         try {
             // D'abord, récupérer le stockId de l'association
             const stockId = await stockService.getStockId(associationId);
-        if (!stockId) {
+            if (!stockId) {
                 throw new Error('Stock non trouvé pour cette association');
-        }
+            }
 
-        const requestData = { 
+            const requestData = { 
                 stockId: stockId,
-            name: item.name,
+                name: item.name,
                 description: item.description || "",
                 barCode: item.barCode || "",
                 itemType: item.category

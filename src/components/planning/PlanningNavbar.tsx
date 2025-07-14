@@ -34,7 +34,7 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
         <div className="flex items-center gap-3">
           <CalendarDaysIcon className="w-6 h-6 text-maraudr-blue dark:text-maraudr-orange flex-shrink-0" />
           <div className="text-gray-900 dark:text-white text-base sm:text-lg font-bold truncate">
-            {t_planning('team.associationPlanning')}
+            {t_planning('team_associationPlanning')}
           </div>
         </div>
         
@@ -44,7 +44,7 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
               onClick={onAddEvent}
               className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
             >
-              {t_planning('team.addEvent')}
+              {t_planning('team_addEvent')}
             </Button>
           )}
           
@@ -53,7 +53,7 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
               onClick={onAddAvailability}
               className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
             >
-              {t_planning('team.addAvailability')}
+              {t_planning('team_addAvailability')}
             </Button>
           )}
         </div>

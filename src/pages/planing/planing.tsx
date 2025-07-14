@@ -142,7 +142,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             setUserAvailabilities(availabilitiesMap);
         } catch (error) {
             // @ts-ignore
-            toast.error(t_planning('errors.loadAvailabilities'));
+            toast.error(t_planning('errors_loadAvailabilities'));
         } finally {
             setLoading(false);
         }
@@ -181,7 +181,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
         clickedDate.setHours(0, 0, 0, 0);
         
         if (clickedDate < today) {
-            toast?.error(t_planning('availability.pastDateError'));
+            toast?.error(t_planning('availability_pastDateError'));
             return;
         }
 
@@ -213,12 +213,12 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
     // Valider la disponibilité
     const validateAvailability = async () => {
         if (!startDate || !endDate || !startTime || !endTime) {
-            toast?.error(t_planning('availability.fillAllFields'));
+            toast?.error(t_planning('availability_fillAllFields'));
             return;
         }
 
         if (!selectedAssociation?.id || !user?.sub) {
-            toast?.error(t_planning('errors.associationNotFound'));
+            toast?.error(t_planning('errors_associationNotFound'));
             return;
         }
 
@@ -236,7 +236,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
 
             // Vérifier que la date de fin est après la date de début
             if (endDateTime <= startDateTime) {
-                toast?.error(t_planning('availability.endDateAfterStart'));
+                toast?.error(t_planning('availability_endDateAfterStart'));
                 return;
             }
 
@@ -258,7 +258,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
 
             if (hasConflict) {
         // @ts-ignore
-                toast.error(t_planning('availability.conflictError'));
+                toast.error(t_planning('availability_conflictError'));
                 return;
             }
 
@@ -274,16 +274,16 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             await userService.createDisponibility(disponibilityData);
             
         // @ts-ignore
-            toast.success(t_planning('availability.success'));
+            toast.success(t_planning('availability_success'));
             
             // Réinitialiser et recharger
             cancelSelection();
             await loadUserAvailabilities();
             
         } catch (error: any) {
-            console.error(t_planning('errors.createAvailability') + ':', error);
+            console.error(t_planning('errors_createAvailability') + ':', error);
         // @ts-ignore
-            toast.error(error.message || t_planning('availability.createError'));
+            toast.error(error.message || t_planning('availability_createError'));
         } finally {
             setLoading(false);
         }
@@ -292,27 +292,27 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
     const days = getDaysInMonth(currentDate);
     const startDay = getMonthStartDay(currentDate);
     const daysOfWeek = [
-        t_planning('days.sunday'),
-        t_planning('days.monday'),
-        t_planning('days.tuesday'),
-        t_planning('days.wednesday'),
-        t_planning('days.thursday'),
-        t_planning('days.friday'),
-        t_planning('days.saturday')
+        t_planning('days_sunday'),
+        t_planning('days_monday'),
+        t_planning('days_tuesday'),
+        t_planning('days_wednesday'),
+        t_planning('days_thursday'),
+        t_planning('days_friday'),
+        t_planning('days_saturday')
     ];
     const months = [
-        t_planning('months.january'),
-        t_planning('months.february'),
-        t_planning('months.march'),
-        t_planning('months.april'),
-        t_planning('months.may'),
-        t_planning('months.june'),
-        t_planning('months.july'),
-        t_planning('months.august'),
-        t_planning('months.september'),
-        t_planning('months.october'),
-        t_planning('months.november'),
-        t_planning('months.december')
+        t_planning('months_january'),
+        t_planning('months_february'),
+        t_planning('months_march'),
+        t_planning('months_april'),
+        t_planning('months_may'),
+        t_planning('months_june'),
+        t_planning('months_july'),
+        t_planning('months_august'),
+        t_planning('months_september'),
+        t_planning('months_october'),
+        t_planning('months_november'),
+        t_planning('months_december')
     ];
     return (
         <div>
@@ -323,7 +323,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
                         id={externalAddButtonId || 'add-dispo-btn'}
                     >
-                        {t_planning('availability.addAvailability')}
+                        {t_planning('availability_addAvailability')}
                     </button>
                 </div>
             )}
@@ -416,12 +416,12 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                     <div className="relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 border w-11/12 md:w-96 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                         <div className="text-center">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                                {t_planning('availability.defineHours')}
+                                {t_planning('availability_defineHours')}
                             </h3>
                             
                             <div className="mb-4">
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                    {t_planning('availability.fromTo').replace('{start}', startDate?.toLocaleDateString('fr-FR') || '').replace('{end}', endDate?.toLocaleDateString('fr-FR') || '')}
+                                    {t_planning('availability_fromTo').replace('{start}', startDate?.toLocaleDateString('fr-FR') || '').replace('{end}', endDate?.toLocaleDateString('fr-FR') || '')}
                                 </p>
                                 
                                 {/* Champs de dates */}
@@ -439,7 +439,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t_planning('availability.endDay')}
+                                            {t_planning('availability_endDay')}
                                         </label>
                                         <input
                                             type="date"
@@ -465,7 +465,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t_planning('availability.endTime')}
+                                            {t_planning('availability_endTime')}
                                         </label>
                                         <input
                                             type="time"
@@ -482,14 +482,14 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                                     onClick={cancelSelection}
                                     className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-1 mr-2"
                                 >
-                                    {t_planning('availability.cancel')}
+                                    {t_planning('availability_cancel')}
                                 </button>
                                 <button
                                     onClick={validateAvailability}
                                     disabled={loading}
                                     className="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 ml-2"
                                 >
-                                    {loading ? t_planning('availability.saving') : t_planning('availability.save')}
+                                    {loading ? t_planning('availability.saving') : t_planning('availability_save')}
                                 </button>
                             </div>
                         </div>
@@ -585,7 +585,7 @@ const Planning: React.FC = () => {
         } catch (error) {
             console.error('Erreur lors du chargement des disponibilités:', error);
         // @ts-ignore
-            toast.error(t_planning('errors.loadAvailabilities'));
+            toast.error(t_planning('errors_loadAvailabilities'));
             setAllDisponibilities([]);
         } finally {
             setLoadingDisponibilities(false);
@@ -624,7 +624,7 @@ const Planning: React.FC = () => {
         } catch (error) {
             console.error('Erreur lors du chargement des utilisateurs:', error);
         // @ts-ignore
-            toast.error(t_planning('errors.loadUsers'));
+            toast.error(t_planning('errors_loadUsers'));
         } finally {
             setLoadingUsers(false);
         }
@@ -647,7 +647,7 @@ const Planning: React.FC = () => {
         } catch (error) {
             console.error('Erreur lors du chargement des événements:', error);
         // @ts-ignore
-            toast.error(t_planning('errors.loadEvents'));
+            toast.error(t_planning('errors_loadEvents'));
             setAllEvents([]);
         } finally {
             setLoadingEvents(false);
@@ -698,7 +698,7 @@ const Planning: React.FC = () => {
         loadTeamUsers();
         loadAllEvents();
         // @ts-ignore
-        toast.success(t_planning('events.eventCreated'));
+        toast.success(t_planning('events_eventCreated'));
     };
 
     // Fonctions de gestion des événements
@@ -758,11 +758,11 @@ const Planning: React.FC = () => {
             setEventToDelete(null);
             
                 // @ts-ignore
-        toast.success(t_planning('events.eventDeleted'));
+        toast.success(t_planning('events_eventDeleted'));
         } catch (error) {
             console.error('Erreur lors de la suppression de l\'événement:', error);
                 // @ts-ignore
-        toast.error(t_planning('errors.deleteEvent'));
+        toast.error(t_planning('errors_deleteEvent'));
         }
     };
 
@@ -772,7 +772,7 @@ const Planning: React.FC = () => {
         setShowEditEventModal(false);
         setEditingEvent(null);
         // @ts-ignore
-        toast.success(t_planning('events.eventUpdated'));
+        toast.success(t_planning('events_eventUpdated'));
     };
 
     // Fonctions d'aide pour les événements
@@ -877,6 +877,7 @@ const Planning: React.FC = () => {
     // Filtrage des membres selon la recherche
     const filteredTeamUsers = teamUsers.filter(user => {
         const fullName = `${user.firstname} ${user.lastname}`.toLowerCase();
+        console.log(user);
         return fullName.includes(searchTeam.toLowerCase());
     });
 
@@ -931,27 +932,27 @@ const Planning: React.FC = () => {
             return `${year}-${month}-${day}`;
         };
         const daysOfWeek = [
-            t_planning('days.sunday'),
-            t_planning('days.monday'),
-            t_planning('days.tuesday'),
-            t_planning('days.wednesday'),
-            t_planning('days.thursday'),
-            t_planning('days.friday'),
-            t_planning('days.saturday')
+            t_planning('days_sunday'),
+            t_planning('days_monday'),
+            t_planning('days_tuesday'),
+            t_planning('days_wednesday'),
+            t_planning('days_thursday'),
+            t_planning('days_friday'),
+            t_planning('days_saturday')
         ];
         const months = [
-            t_planning('months.january'),
-            t_planning('months.february'),
-            t_planning('months.march'),
-            t_planning('months.april'),
-            t_planning('months.may'),
-            t_planning('months.june'),
-            t_planning('months.july'),
-            t_planning('months.august'),
-            t_planning('months.september'),
-            t_planning('months.october'),
-            t_planning('months.november'),
-            t_planning('months.december')
+            t_planning('months_january'),
+            t_planning('months_february'),
+            t_planning('months_march'),
+            t_planning('months_april'),
+            t_planning('months_may'),
+            t_planning('months_june'),
+            t_planning('months_july'),
+            t_planning('months_august'),
+            t_planning('months_september'),
+            t_planning('months_october'),
+            t_planning('months_november'),
+            t_planning('months_december')
         ];
 
         // 5. Rendu double calendrier
@@ -987,7 +988,7 @@ const Planning: React.FC = () => {
 
             if (clickedDate < today) {
         // @ts-ignore
-                toast.error(t_planning('availability.pastDateError'));
+                toast.error(t_planning('availability_pastDateError'));
                 return;
             }
 
@@ -1003,7 +1004,7 @@ const Planning: React.FC = () => {
             });
             if (hasConflict) {
         // @ts-ignore
-                toast.error(t_planning('availability.conflictError'));
+                toast.error(t_planning('availability_conflictError'));
                 return;
             }
 
@@ -1029,13 +1030,13 @@ const Planning: React.FC = () => {
         const validateMemberAvailability = async () => {
             if (!startDate || !endDate || !startTime || !endTime) {
         // @ts-ignore
-                toast.error(t_planning('availability.fillAllFields'));
+                toast.error(t_planning('availability_fillAllFields'));
                 return;
             }
 
             if (!selectedAssociation?.id || !user?.sub) {
         // @ts-ignore
-                toast.error(t_planning('errors.associationNotFound'));
+                toast.error(t_planning('errors_associationNotFound'));
                 return;
             }
 
@@ -1054,7 +1055,7 @@ const Planning: React.FC = () => {
                 // Vérifier que la date de fin est après la date de début
                 if (endDateTime <= startDateTime) {
                 // @ts-ignore
-                toast.error(t_planning('availability.endDateAfterStart'));
+                toast.error(t_planning('availability_endDateAfterStart'));
                     return;
                 }
 
@@ -1076,7 +1077,7 @@ const Planning: React.FC = () => {
 
                 if (hasConflict) {
                 // @ts-ignore
-                toast.error(t_planning('availability.conflictError'));
+                toast.error(t_planning('availability_conflictError'));
                     return;
                 }
 
@@ -1092,7 +1093,7 @@ const Planning: React.FC = () => {
                 await userService.createDisponibility(disponibilityData);
                 
                 // @ts-ignore
-        toast.success(t_planning('availability.success'));
+        toast.success(t_planning('availability_success'));
                 
                 // Réinitialiser et recharger
                 cancelSelection();
@@ -1104,7 +1105,7 @@ const Planning: React.FC = () => {
             } catch (error: any) {
                 console.error('Erreur lors de la création de la disponibilité:', error);
         // @ts-ignore
-                toast.error(error.message || t_planning('availability.createError'));
+                toast.error(error.message || t_planning('availability_createError'));
             } finally {
                 setLoading(false);
             }
@@ -1131,6 +1132,7 @@ const Planning: React.FC = () => {
         };
 
         return (
+             /* Calendrier des disponibilités (flat, sans encadrement) cas user simple et non manager */
             <>
                 <PlanningNavbar onAddAvailability={handleAddDisponibility} userRole="member" />
                 <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 p-4 pt-16 ${sidebarWidth}`}>
@@ -1138,7 +1140,7 @@ const Planning: React.FC = () => {
                     <div className="flex flex-row gap-6 justify-start items-start ">
                         {/* Calendrier des disponibilités (flat, sans encadrement) */}
                         <div className="flex-1 min-w-[400px] max-w-[600px] h-full flex flex-col items-center justify-start">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">{t_planning('availability.title')}</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">{t_planning('availability_title')}</h2>
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
                               <UserAvailabilityView 
                                 hideAddButton 
@@ -1154,7 +1156,7 @@ const Planning: React.FC = () => {
                         </div>
                         {/* {t_planning('missions.myEvents')} */}
                         <div className="flex-1 min-w-[400px] max-w-[600px] h-full flex flex-col items-center justify-start">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">{t_planning('availability.missions')}</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">{t_planning('availability_missions')}</h2>
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full h-full flex-1 flex flex-col">
                                 {/* Navigation mois */}
                                 <div className="flex justify-between items-center mb-4">
@@ -1237,10 +1239,10 @@ const Planning: React.FC = () => {
                     </div>
                     {/* Légende code couleur sous les deux calendriers */}
                     <div className="mt-6 flex flex-wrap gap-x-3 gap-y-2 text-xs justify-center items-center w-full">
-                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded mr-1.5"></div><span>{t_planning('legend.oneEvent')}</span></div>
-                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-orange-500 border border-orange-600 rounded mr-1.5"></div><span>{t_planning('legend.twoEvents')}</span></div>
-                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded mr-1.5"></div><span>{t_planning('legend.threePlusEvents')}</span></div>
-                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-violet-500 border border-violet-600 rounded mr-1.5"></div><span>{t_planning('legend.pastEvents')}</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded mr-1.5"></div><span>{t_planning('legend_oneEvent')}</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-orange-500 border border-orange-600 rounded mr-1.5"></div><span>{t_planning('legend_twoEvents')}</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded mr-1.5"></div><span>{t_planning('legend_threePlusEvents')}</span></div>
+                        <div className="flex items-center"><div className="w-2.5 h-2.5 bg-violet-500 border border-violet-600 rounded mr-1.5"></div><span>{t_planning('legend_pastEvents')}</span></div>
                     </div>
                 </div>
 
@@ -1250,7 +1252,7 @@ const Planning: React.FC = () => {
                         <div className="relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 border w-11/12 md:w-[500px] shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                             <div className="text-center">
                                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                                    {t_planning('availability.defineAvailability')}
+                                    {t_planning('availability_defineAvailability')}
                                 </h3>
                                 
                                 <div className="mb-6">
@@ -1258,7 +1260,7 @@ const Planning: React.FC = () => {
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
                                                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t_planning('availability.startDay')}
+                                            {t_planning('availability_startDay')}
                                         </label>
                                             <input
                                                 type="date"
@@ -1269,7 +1271,7 @@ const Planning: React.FC = () => {
                                         </div>
                                         <div>
                                                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t_planning('availability.endDay')}
+                                            {t_planning('availability_endDay')}
                                         </label>
                                             <input
                                                 type="date"
@@ -1284,7 +1286,7 @@ const Planning: React.FC = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t_planning('availability.startTime')}
+                                            {t_planning('availability_startTime')}
                                         </label>
                                             <input
                                                 type="time"
@@ -1295,7 +1297,7 @@ const Planning: React.FC = () => {
                                         </div>
                                         <div>
                                                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t_planning('availability.endTime')}
+                                            {t_planning('availability_endTime')}
                                         </label>
                                             <input
                                                 type="time"
@@ -1312,14 +1314,14 @@ const Planning: React.FC = () => {
                                         onClick={cancelSelection}
                                         className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-1 mr-2"
                                     >
-                                        {t_planning('availability.cancel')}
+                                        {t_planning('availability_cancel')}
                                     </button>
                                     <button
                                         onClick={validateMemberAvailability}
                                         disabled={loading}
                                         className="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 ml-2"
                                     >
-                                        {loading ? t_planning('availability.saving') : t_planning('availability.save')}
+                                        {loading ? t_planning('availability_saving') : t_planning('availability_save')}
                                     </button>
                                 </div>
                             </div>
@@ -1334,7 +1336,7 @@ const Planning: React.FC = () => {
                             <div className="mt-3">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                        {t_planning('missions.title').replace('{date}', selectedDayLabel)} {t_planning('missions.missionsCount').replace('{count}', selectedDayMissions.length.toString())}
+                                        {t_planning('missions_title').replace('{date}', selectedDayLabel)} {t_planning('missions_missionsCount').replace('{count}', selectedDayMissions.length.toString())}
                                     </h3>
                                     <button
                                         onClick={() => setShowMissionsModal(false)}
@@ -1451,7 +1453,7 @@ const Planning: React.FC = () => {
         const data = getEventsPerMonth(events);
         return (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full mb-6">
-                                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">{t_planning('stats.evolutionTitle')}</h2>
+                                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">{t_planning('stats_evolutionTitle')}</h2>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -1480,33 +1482,33 @@ const Planning: React.FC = () => {
         });
     };
 
-    // Rendu pour les managers
+    //**** */ Rendu pour les managers les Manager
     const daysAsso = getDaysInMonth(currentDateAsso);
     const startDayAsso = getMonthStartDay(currentDateAsso);
     const daysUser = getDaysInMonth(currentDateUser);
     const startDayUser = getMonthStartDay(currentDateUser);
     const daysOfWeek = [
-        t_planning('days.sunday'),
-        t_planning('days.monday'),
-        t_planning('days.tuesday'),
-        t_planning('days.wednesday'),
-        t_planning('days.thursday'),
-        t_planning('days.friday'),
-        t_planning('days.saturday')
+        t_planning('days_sunday'),
+        t_planning('days_monday'),
+        t_planning('days_tuesday'),
+        t_planning('days_wednesday'),
+        t_planning('days_thursday'),
+        t_planning('days_friday'),
+        t_planning('days_saturday')
     ];
     const months = [
-        t_planning('months.january'),
-        t_planning('months.february'),
-        t_planning('months.march'),
-        t_planning('months.april'),
-        t_planning('months.may'),
-        t_planning('months.june'),
-        t_planning('months.july'),
-        t_planning('months.august'),
-        t_planning('months.september'),
-        t_planning('months.october'),
-        t_planning('months.november'),
-        t_planning('months.december')
+        t_planning('months_january'),
+        t_planning('months_february'),
+        t_planning('months_march'),
+        t_planning('months_april'),
+        t_planning('months_may'),
+        t_planning('months_june'),
+        t_planning('months_july'),
+        t_planning('months_august'),
+        t_planning('months_september'),
+        t_planning('months_october'),
+        t_planning('months_november'),
+        t_planning('months_december')
     ];
 
     return (
@@ -1533,16 +1535,7 @@ const Planning: React.FC = () => {
                                 {t_team('title')} ({teamUsers.length})
                             </h2>
                             {/* Champ de recherche utilisateur */}
-                            <div className="mb-4">
-                                <Input
-                                    type="text"
-                                    value={searchTeam}
-                                    onChange={e => setSearchTeam(e.target.value)}
-                                    label={t_team('search.label')}
-                                    placeholder={t_team('search.placeholder')}
-                                    className="w-full"
-                                />
-                            </div>
+                            
                             <div className="mb-6">
                                 <button
                                     onClick={() => setSelectedUser(null)}
@@ -1556,10 +1549,20 @@ const Planning: React.FC = () => {
                                         A
                                     </div>
                                     <div className="ml-3">
-                                        <div className="font-medium">{t_team('associationPlanning')}</div>
-                                        <div className="text-sm text-gray-500 dark:text-gray-400">{t_team('allPlannings')}</div>
+                                        <div className="font-medium">{t_planning('associationPlanning')}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">{t_planning('allPlannings')}</div>
                                     </div>
                                 </button>
+                            </div>
+                            <div className="mb-4">
+                                <Input
+                                    type="text"
+                                    value={searchTeam}
+                                    onChange={e => setSearchTeam(e.target.value)}
+                                    label={t_team('search.label')}
+                                    placeholder={t_team('search.placeholder')}
+                                    className="w-full"
+                                />
                             </div>
                             <div className="space-y-1">
                                 {filteredTeamUsers.map(user => (
@@ -1580,7 +1583,7 @@ const Planning: React.FC = () => {
                                         <div className="ml-3 flex-1 min-w-0">
                                             <div className="font-medium truncate">{user.firstname} {user.lastname}</div>
                                             <div className="text-sm text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                                                <span className="flex-shrink-0">{user.isManager ? t_team('manager') : t_team('member')}</span>
+                                                <span className="flex-shrink-0">{user.isManager ? t_team('manager') : t_team('members')}</span>
                                                 {isUserAvailableToday(user.id) ? (
                                                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap w-fit">
                                                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></div>
@@ -1600,7 +1603,7 @@ const Planning: React.FC = () => {
 
                             {loadingUsers && (
                                 <div className="text-center py-4">
-                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600 mx-auto"></div>
                                 </div>
                             )}
                         </div>
@@ -1609,10 +1612,10 @@ const Planning: React.FC = () => {
                     <div className={`w-full ${selectedUser ? 'lg:w-5/12' : 'lg:w-1/2'}`}>
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 text-center">
-                                {t_planning('calendar.associationPlanning')}
+                                {t_planning('calendar_associationPlanning')}
                             </h2>
                             <div className="text-sm text-gray-500 dark:text-gray-400 mb-3 text-center">
-                                {getMonthEventsCount(currentDateAsso)} {t_planning('calendar.eventsThisMonth')}
+                                {getMonthEventsCount(currentDateAsso)} {t_planning('calendar_eventsThisMonth')}
                             </div>
                             <div className="flex justify-between items-center mb-4">
                                 <button onClick={() => setCurrentDateAsso(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
@@ -1691,10 +1694,10 @@ const Planning: React.FC = () => {
                             </div>
                             {/* Légende asso */}
                             <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2 text-xs justify-center items-center">
-                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded mr-1.5"></div><span>{t_planning('legend.oneEvent')}</span></div>
-                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-orange-500 border border-orange-600 rounded mr-1.5"></div><span>{t_planning('legend.twoEvents')}</span></div>
-                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded mr-1.5"></div><span>{t_planning('legend.threePlusEvents')}</span></div>
-                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-violet-500 border border-violet-600 rounded mr-1.5"></div><span>{t_planning('legend.pastEvents')}</span></div>
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded mr-1.5"></div><span>{t_planning('legend_oneEvent')}</span></div>
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-orange-500 border border-orange-600 rounded mr-1.5"></div><span>{t_planning('legend_twoEvents')}</span></div>
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded mr-1.5"></div><span>{t_planning('legend_threePlusEvents')}</span></div>
+                                <div className="flex items-center"><div className="w-2.5 h-2.5 bg-violet-500 border border-violet-600 rounded mr-1.5"></div><span>{t_planning('legend_pastEvents')}</span></div>
                             </div>
                         </div>
                     </div>
@@ -1703,10 +1706,10 @@ const Planning: React.FC = () => {
                         <div className="w-full lg:w-5/12">
                             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
                                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 text-center">
-                                    {t_planning('availability.availabilitiesOf')} {teamUsers.find(u => u.id === selectedUser)?.firstname} {teamUsers.find(u => u.id === selectedUser)?.lastname}
+                                    {t_planning('availability_availabilitiesOf')} {teamUsers.find(u => u.id === selectedUser)?.firstname} {teamUsers.find(u => u.id === selectedUser)?.lastname}
                                 </h2>
                                 <div className="text-sm text-gray-500 dark:text-gray-400 mb-3 text-center">
-                                    {getMonthDisponibilitiesCount(selectedUser, currentDateUser)} {t_planning('availability.availabilities')} {getMonthDisponibilitiesCount(selectedUser, currentDateUser) > 1 ? 's' : ''} {t_planning('availability.thisMonth')}
+                                    {getMonthDisponibilitiesCount(selectedUser, currentDateUser)} {t_planning('availability_availabilities')} {getMonthDisponibilitiesCount(selectedUser, currentDateUser) > 1 ? 's' : ''} {t_planning('availability_thisMonth')}
                                 </div>
                                 <div className="flex justify-between items-center mb-4">
                                     <button onClick={() => setCurrentDateUser(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
@@ -1784,9 +1787,9 @@ const Planning: React.FC = () => {
                                 </div>
                                 {/* Légende user */}
                                 <div className="mt-4 flex flex-wrap gap-4 text-sm justify-center">
-                                    <div className="flex items-center"><div className="w-3 h-3 bg-green-500 border border-green-600 rounded mr-2"></div><span>{t_planning('legend.availableFuture')}</span></div>
-                                    <div className="flex items-center"><div className="w-3 h-3 bg-purple-500 border border-purple-600 rounded mr-2"></div><span>{t_planning('legend.availablePast')}</span></div>
-                                    <div className="flex items-center"><div className="w-3 h-3 bg-red-500 border border-red-600 rounded mr-2"></div><span>{t_planning('legend.unavailable')}</span></div>
+                                    <div className="flex items-center"><div className="w-3 h-3 bg-green-500 border border-green-600 rounded mr-2"></div><span>{t_planning('legend_availableFuture')}</span></div>
+                                    <div className="flex items-center"><div className="w-3 h-3 bg-purple-500 border border-purple-600 rounded mr-2"></div><span>{t_planning('legend_availablePast')}</span></div>
+                                    <div className="flex items-center"><div className="w-3 h-3 bg-red-500 border border-red-600 rounded mr-2"></div><span>{t_planning('legend_unavailable')}</span></div>
                                 </div>
                             </div>
                         </div>

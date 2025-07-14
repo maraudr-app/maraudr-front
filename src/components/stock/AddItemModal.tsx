@@ -226,19 +226,27 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
 
                         {/* Notifications */}
                         {error && (
-                            <div className="p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
+                            <div className="fixed top-20 right-4 z-50 p-3 sm:p-4 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg shadow-lg max-w-xs sm:max-w-sm animate-in slide-in-from-right duration-300">
                                 <div className="flex items-center">
-                                    <XMarkIcon className="h-4 w-4 mr-2" />
-                                    <p className="text-sm">{error}</p>
+                                    <div className="flex-shrink-0">
+                                        <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
+                                    </div>
+                                    <div className="ml-2 sm:ml-3">
+                                        <p className="text-xs sm:text-sm font-medium">{error}</p>
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {success && (
-                            <div className="p-3 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg">
+                            <div className="fixed top-20 right-4 z-50 p-3 sm:p-4 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg shadow-lg max-w-xs sm:max-w-sm animate-in slide-in-from-right duration-300">
                                 <div className="flex items-center">
-                                    <CheckIcon className="h-4 w-4 mr-2" />
-                                    <p className="text-sm">{success}</p>
+                                    <div className="flex-shrink-0">
+                                        <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
+                                    </div>
+                                    <div className="ml-2 sm:ml-3">
+                                        <p className="text-xs sm:text-sm font-medium">{success}</p>
+                                    </div>
                                 </div>
                             </div>
                         )}
