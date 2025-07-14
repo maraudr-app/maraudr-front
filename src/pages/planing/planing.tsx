@@ -1876,12 +1876,12 @@ const Planning: React.FC = () => {
                                 </div>
                                 {/* Champ de recherche */}
                                 <div className="mb-4">
-                                    <input
+                                    <Input
                                         type="text"
                                         value={eventSearchQuery}
                                         onChange={e => setEventSearchQuery(e.target.value)}
                                         placeholder={t_events('searchPlaceholder')}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                        className="w-full  rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                                     />
                                 </div>
                                 {/* Content */}
@@ -1892,7 +1892,7 @@ const Planning: React.FC = () => {
                                             <div
                                                 key={event.id}
                                                 className={`border rounded-lg p-4 transition cursor-pointer ${past ? 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600' : 'border-blue-200 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20'} hover:shadow-md`}
-                                                onClick={() => handleEditEvent(event)}
+                                           
                                             >
                                                 <div className="flex justify-between items-start mb-3">
                                                     <div className="flex items-center space-x-2">

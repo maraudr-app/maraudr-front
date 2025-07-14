@@ -163,15 +163,15 @@ export const useEventBusinessRules = () => {
     const eventStatus = event.status || EventStatus.CREATED;
     
     if (eventStatus === EventStatus.CANCELED) {
-      return t_planning('events.status.canceled');
+      return t_planning('status_canceled');
     }
     
     if (eventStatus === EventStatus.FINISHED || timing.isFinished) {
-      return t_planning('events.status.finished');
+      return t_planning('status_finished');
     }
     
     if (eventStatus === EventStatus.ONGOING || timing.isOngoing) {
-      return t_planning('events.status.ongoing');
+      return t_planning('status_ongoing');
     }
     
     if (timing.timeUntilStart <= 15 && timing.timeUntilStart > 0) {
@@ -182,7 +182,7 @@ export const useEventBusinessRules = () => {
       return t_planning('events.timing.startsNow');
     }
     
-    return t_planning('events.status.created');
+    return t_planning('status_created');
   }, [calculateEventTiming, t_planning]);
 
   // Obtenir la couleur du statut

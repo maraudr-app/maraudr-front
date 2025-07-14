@@ -66,7 +66,7 @@ export const EventNotifications: React.FC<EventNotificationsProps> = ({
         newNotifications.push({
           id: `ongoing-${event.id}`,
           event,
-          message: t_planning('events_timing_ongoing'),
+          message: t_planning('status_ongoing'),
           type: 'success',
           timestamp: now
         });
