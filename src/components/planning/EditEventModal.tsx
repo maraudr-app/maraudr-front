@@ -13,6 +13,7 @@ import { Disponibility } from '../../types/disponibility/disponibility';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Language } from '../../types/enums/Language';
+import { useEventBusinessRules } from '../../hooks/useEventBusinessRules';
 
 interface EditEventModalProps {
     isOpen: boolean;
@@ -56,6 +57,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
     const { user } = useAuthStore();
     const { selectedAssociation } = useAssoStore();
     const { t } = useTranslation();
+    const { shouldDisableFormFields } = useEventBusinessRules();
 
     const t_planning = (key: string): string => {
         return t(`planning.${key}` as any);
@@ -345,6 +347,9 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         `${member.firstname} ${member.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Vérifier si les champs doivent être désactivés
+    const isFormDisabled = event ? shouldDisableFormFields(event) : false;
+
     if (!isOpen) return null;
 
     return (
@@ -374,6 +379,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                 onChange={(e) => handleFormChange('title', e.target.value)}
                                 placeholder={t_planning('editEvent_eventTitle') + ' *'}
                                 className="w-full text-lg font-medium"
+                                disabled={isFormDisabled}
                             />
                         </div>
 
@@ -383,8 +389,9 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                 value={eventForm.description}
                                 onChange={(e) => handleFormChange('description', e.target.value)}
                                 placeholder={t_planning('editEvent_description')}
-                                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none transition-colors"
+                                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 rows={3}
+                                disabled={isFormDisabled}
                             />
                         </div>
 
@@ -396,6 +403,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                 onChange={(e) => handleFormChange('location', e.target.value)}
                                 placeholder={t_planning('editEvent_location')}
                                 className="w-full"
+                                disabled={isFormDisabled}
                             />
                         </div>
 
@@ -408,6 +416,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                     onChange={(e) => handleFormChange('beginningDate', e.target.value)}
                                     placeholder={t_planning('editEvent_startDate') + ' *'}
                                     className="w-full"
+                                    disabled={isFormDisabled}
                                 />
                             </div>
                             <div>
@@ -417,6 +426,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                     onChange={(e) => handleFormChange('endDate', e.target.value)}
                                     placeholder={t_planning('editEvent_endDate') + ' *'}
                                     className="w-full"
+                                    disabled={isFormDisabled}
                                 />
                             </div>
                         </div>
@@ -425,8 +435,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                         <div>
                             <div className="relative">
                                 <div
-                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent dark:bg-gray-700 dark:text-white cursor-pointer flex justify-between items-center transition-colors"
-                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                    className={`w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent dark:bg-gray-700 dark:text-white flex justify-between items-center transition-colors ${isFormDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    onClick={() => !isFormDisabled && setIsDropdownOpen(!isDropdownOpen)}
                                 >
                                     <span className={eventForm.participantsIds.length > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}>
                                         {eventForm.participantsIds.length > 0 ? getSelectedParticipantsNames() : t_planning('editEvent_selectParticipants')}
@@ -434,7 +444,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                     <ChevronDownIcon className={`h-5 w-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                                 </div>
 
-                                {isDropdownOpen && (
+                                {isDropdownOpen && !isFormDisabled && (
                                     <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-auto">
                                         <div className="p-3 border-b border-gray-100 dark:border-gray-600">
                                             <input
@@ -514,8 +524,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                             </Button>
                             <Button
                                 onClick={updateEvent}
-                                disabled={loading}
-                                className="px-8 py-3 w-64 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                                disabled={loading || isFormDisabled}
+                                className={`px-8 py-3 w-64 transition-colors ${isFormDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
                             >
                                 {loading ? t_planning('editEvent_updating') : t_planning('editEvent_update')}
                             </Button>

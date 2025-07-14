@@ -31,6 +31,7 @@ import { EventSummary } from '../../components/planning/EventSummary';
 import { Button } from '../../components/common/button/button';
 import { toast } from 'react-hot-toast';
 import { parseLocalDate, formatDisplayTimeRange } from '../../utils/dateUtils';
+import { useEventBusinessRules } from '../../hooks/useEventBusinessRules';
 
 // Fonction helper pour les toasts sécurisés
 const safeToast = {
@@ -707,24 +708,24 @@ const Planning: React.FC = () => {
     };
 
     // Fonctions de gestion des événements
+    const { calculateEventPermissions } = useEventBusinessRules();
+
     const canEditEvent = (event: Event): boolean => {        
         if (!user) return false;
         
-        console.log('🔍 canEditEvent debug:', {
-            userType: user.userType,
-            userSub: user.sub,
-            eventOrganizerId: event.organizerdId,
-            isManager: user.userType === 'Manager',
-            isOrganizer: event.organizerdId === user.sub
-        });
+        // Utiliser les permissions du hook useEventBusinessRules
+        const permissions = calculateEventPermissions(event);
         
-        // Manager peut modifier tous les événements (avec M majuscule)
-        if (user.userType === 'Manager') return true;
+        return permissions.canEdit;
+    };
+
+    const canDeleteEvent = (event: Event): boolean => {        
+        if (!user) return false;
         
-        // Organisateur peut modifier ses propres événements
-        if (event.organizerdId === user.sub) return true;
+        // Utiliser les permissions du hook useEventBusinessRules
+        const permissions = calculateEventPermissions(event);
         
-        return false;
+        return permissions.canDelete;
     };
 
     const handleEditEvent = (event: Event) => {
@@ -1950,8 +1951,8 @@ const Planning: React.FC = () => {
                                                         )}
                                                     </div>
                                                     {/* Boutons d'action pour manager/organisateur */}
-                                                    {canEditEvent(event) && (
-                                                        <div className="flex space-x-1">
+                                                    <div className="flex space-x-1">
+                                                        {canEditEvent(event) && (
                                                             <button
                                                                 onClick={e => { e.stopPropagation(); handleEditEvent(event); }}
                                                                 className={`p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded transition-colors`}
@@ -1961,6 +1962,8 @@ const Planning: React.FC = () => {
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                                 </svg>
                                                             </button>
+                                                        )}
+                                                        {canDeleteEvent(event) && (
                                                             <button
                                                                 onClick={e => { e.stopPropagation(); handleDeleteEvent(event); }}
                                                                 className={`p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors`}
@@ -1970,8 +1973,8 @@ const Planning: React.FC = () => {
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                 </svg>
                                                             </button>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
                                                     {event.title}

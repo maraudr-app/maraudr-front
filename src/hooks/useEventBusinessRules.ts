@@ -88,20 +88,23 @@ export const useEventBusinessRules = () => {
     const eventStatus = event.status || EventStatus.CREATED;
 
     // Règles métier selon le backend
-    const canStart = (isManager || isOrganizer || isParticipant) && 
-                    eventStatus === EventStatus.CREATED && 
-                    timing.timeUntilStart <= 15; // Peut démarrer 15min avant
+    const canStart = false; // Désactivé - on ne garde que le bouton Annuler
 
     const canFinish = (isManager || isOrganizer || isParticipant) && 
                      eventStatus === EventStatus.ONGOING;
 
     const canCancel = (isManager || isOrganizer) && 
                      eventStatus !== EventStatus.FINISHED && 
-                     eventStatus !== EventStatus.CANCELED;
+                     eventStatus !== EventStatus.CANCELED &&
+                     !timing.isPast; // Ne peut pas annuler un événement passé
 
-    const canEdit = isManager || isOrganizer;
+    const canEdit = (isManager || isOrganizer) && 
+                   !timing.isPast && 
+                   eventStatus !== EventStatus.FINISHED && 
+                   eventStatus !== EventStatus.CANCELED;
 
-    const canDelete = isManager || isOrganizer;
+    const canDelete = (isManager || isOrganizer) && 
+                     !timing.isPast; // Ne peut pas supprimer un événement passé
 
     return {
       canStart,
@@ -213,6 +216,16 @@ export const useEventBusinessRules = () => {
     return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
   }, [calculateEventTiming]);
 
+  // Déterminer si les champs de formulaire doivent être désactivés
+  const shouldDisableFormFields = useCallback((event: Event): boolean => {
+    const timing = calculateEventTiming(event);
+    const eventStatus = event.status || EventStatus.CREATED;
+    
+    return timing.isPast || 
+           eventStatus === EventStatus.FINISHED || 
+           eventStatus === EventStatus.CANCELED;
+  }, [calculateEventTiming]);
+
   return {
     calculateEventTiming,
     calculateEventPermissions,
@@ -221,6 +234,7 @@ export const useEventBusinessRules = () => {
     cancelEvent,
     getEventDisplayStatus,
     getEventStatusColor,
+    shouldDisableFormFields,
     loading
   };
 }; 
