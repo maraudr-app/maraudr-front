@@ -136,8 +136,6 @@ const EventHistoryPage: React.FC = () => {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Navbar fixe */}
             <PlanningNavbar 
-                onAddEvent={() => navigate('/maraudApp/planing')}
-                onAddAvailability={() => navigate('/maraudApp/planing')}
                 userRole="manager"
             />
 

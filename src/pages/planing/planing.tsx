@@ -213,13 +213,20 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
     };
     // Valider la disponibilité
     const validateAvailability = async () => {
+        // Validation des champs requis
         if (!startDate || !endDate || !startTime || !endTime) {
             toast?.error(t_planning('availability_fillAllFields'));
             return;
         }
 
-        if (!selectedAssociation?.id || !user?.sub) {
-            toast?.error(t_planning('errors_associationNotFound'));
+        // Validation de l'authentification et de l'association
+        if (!user?.sub) {
+            toast?.error(t_planning('availability_userNotAuthenticated'));
+            return;
+        }
+
+        if (!selectedAssociation?.id) {
+            toast?.error(t_planning('availability_noAssociationSelected'));
             return;
         }
 
@@ -241,6 +248,13 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                 return;
             }
 
+            // Vérifier que la date de début n'est pas dans le passé
+            const now = new Date();
+            if (startDateTime < now) {
+                toast?.error(t_planning('availability_pastDateError'));
+                return;
+            }
+
             // Vérifier les conflits avec les disponibilités existantes
             const existingDispos = await userService.getDisponibilities(selectedAssociation.id);
             const userDispos = existingDispos.filter((dispo: Disponibility) => dispo.userId === user.sub);
@@ -258,8 +272,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             });
 
             if (hasConflict) {
-        // @ts-ignore
-                toast.error(t_planning('availability_conflictError'));
+                toast?.error(t_planning('availability_conflictError'));
                 return;
             }
 
@@ -274,8 +287,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             // Appeler le service pour créer la disponibilité
             await userService.createDisponibility(disponibilityData);
             
-        // @ts-ignore
-            toast.success(t_planning('availability_success'));
+            toast?.success(t_planning('availability_success'));
             
             // Réinitialiser et recharger
             cancelSelection();
@@ -283,8 +295,25 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             
         } catch (error: any) {
             console.error(t_planning('errors_createAvailability') + ':', error);
-        // @ts-ignore
-            toast.error(error.message || t_planning('availability_createError'));
+            
+            // Gestion des erreurs spécifiques
+            let errorMessage = t_planning('availability_unknownError');
+            
+            if (error.response?.status === 400) {
+                errorMessage = t_planning('availability_validationError');
+            } else if (error.response?.status === 401) {
+                errorMessage = t_planning('availability_userNotAuthenticated');
+            } else if (error.response?.status === 404) {
+                errorMessage = t_planning('availability_noAssociationSelected');
+            } else if (error.response?.status >= 500) {
+                errorMessage = t_planning('availability_serverError');
+            } else if (error.message?.includes('Network') || error.code === 'NETWORK_ERROR') {
+                errorMessage = t_planning('availability_networkError');
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            toast?.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -1003,9 +1032,30 @@ const Planning: React.FC = () => {
         const [endTime, setEndTime] = useState('');
         const [showTimeModal, setShowTimeModal] = useState(false);
         const [loading, setLoading] = useState(false);
+        const [modalError, setModalError] = useState<string>('');
 
         const handleAddDisponibility = () => {
-            setTriggerAddDisponibility(true);
+            console.log('handleAddDisponibility appelé');
+            console.log('user?.userType:', user?.userType);
+            
+            // Réinitialiser l'erreur du modal
+            setModalError('');
+            
+            // Pour les utilisateurs simples (non-managers), ouvrir directement le modal
+            if (user?.userType !== 'Manager') {
+                console.log('Ouverture du modal pour utilisateur simple');
+                // Initialiser avec aujourd'hui
+                const today = new Date();
+                setStartDate(today);
+                setEndDate(today);
+                setStartTime('09:00');
+                setEndTime('18:00');
+                setShowTimeModal(true);
+            } else {
+                console.log('Utilisation du trigger pour manager');
+                // Pour les managers, utiliser le trigger
+                setTriggerAddDisponibility(true);
+            }
         };
 
         // Fonction spécifique pour les membres : clic sur un jour ouvre le formulaire de disponibilité
@@ -1022,38 +1072,70 @@ const Planning: React.FC = () => {
                 setEndDate(null);
                 setStartTime('');
                 setEndTime('');
+                setModalError('');
                 return;
             }
 
             if (clickedDate < today) {
-        // @ts-ignore
                 toast.error(t_planning('availability_pastDateError'));
                 return;
             }
 
-            // Vérifier les conflits de disponibilité avant d'ouvrir le formulaire
-            if (!selectedAssociation?.id || !user?.sub) return;
-            const existingDispos = await userService.getDisponibilities(selectedAssociation.id);
-            const userDispos = existingDispos.filter((dispo: Disponibility) => dispo.userId === user.sub);
-            const hasConflict = userDispos.some((dispo: Disponibility) => {
-                const existingStart = new Date(dispo.start);
-                const existingEnd = new Date(dispo.end);
-                // On vérifie si le jour cliqué est inclus dans une dispo existante
-                return clickedDate >= existingStart && clickedDate <= existingEnd;
-            });
-            if (hasConflict) {
-        // @ts-ignore
-                toast.error(t_planning('availability_conflictError'));
+            // Vérifier l'authentification et l'association
+            if (!user?.sub) {
+                toast.error(t_planning('availability_userNotAuthenticated'));
                 return;
             }
 
-            // Ouvrir le formulaire avec ce jour
-            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-            setStartDate(localDate);
-            setEndDate(localDate);
-            setStartTime('09:00');
-            setEndTime('18:00');
-            setShowTimeModal(true);
+            if (!selectedAssociation?.id) {
+                toast.error(t_planning('availability_noAssociationSelected'));
+                return;
+            }
+
+            try {
+                // Vérifier les conflits de disponibilité avant d'ouvrir le formulaire
+                const existingDispos = await userService.getDisponibilities(selectedAssociation.id);
+                const userDispos = existingDispos.filter((dispo: Disponibility) => dispo.userId === user.sub);
+                const hasConflict = userDispos.some((dispo: Disponibility) => {
+                    const existingStart = new Date(dispo.start);
+                    const existingEnd = new Date(dispo.end);
+                    // On vérifie si le jour cliqué est inclus dans une dispo existante
+                    return clickedDate >= existingStart && clickedDate <= existingEnd;
+                });
+                
+                if (hasConflict) {
+                    toast.error(t_planning('availability_conflictError'));
+                    return;
+                }
+
+                // Ouvrir le formulaire avec ce jour
+                const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                setStartDate(localDate);
+                setEndDate(localDate);
+                setStartTime('09:00');
+                setEndTime('18:00');
+                setModalError('');
+                setShowTimeModal(true);
+            } catch (error: any) {
+                console.error('Erreur lors de la vérification des conflits:', error);
+                
+                // Gestion des erreurs spécifiques
+                let errorMessage = t_planning('availability_unknownError');
+                
+                if (error.response?.status === 401) {
+                    errorMessage = t_planning('availability_userNotAuthenticated');
+                } else if (error.response?.status === 404) {
+                    errorMessage = t_planning('availability_noAssociationSelected');
+                } else if (error.response?.status >= 500) {
+                    errorMessage = t_planning('availability_serverError');
+                } else if (error.message?.includes('Network') || error.code === 'NETWORK_ERROR') {
+                    errorMessage = t_planning('availability_networkError');
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                toast.error(errorMessage);
+            }
         };
 
         // Annuler la sélection
@@ -1063,19 +1145,34 @@ const Planning: React.FC = () => {
             setStartTime('');
             setEndTime('');
             setShowTimeModal(false);
+            setModalError('');
         };
 
         // Valider la disponibilité pour les membres
         const validateMemberAvailability = async () => {
+            // Réinitialiser l'erreur du modal
+            setModalError('');
+            
+            // Validation des champs requis
             if (!startDate || !endDate || !startTime || !endTime) {
-        // @ts-ignore
-                toast.error(t_planning('availability_fillAllFields'));
+                const errorMsg = t_planning('availability_fillAllFields');
+                setModalError(errorMsg);
+                toast.error(errorMsg);
                 return;
             }
 
-            if (!selectedAssociation?.id || !user?.sub) {
-        // @ts-ignore
-                toast.error(t_planning('errors_associationNotFound'));
+            // Validation de l'authentification et de l'association
+            if (!user?.sub) {
+                const errorMsg = t_planning('availability_userNotAuthenticated');
+                setModalError(errorMsg);
+                toast.error(errorMsg);
+                return;
+            }
+
+            if (!selectedAssociation?.id) {
+                const errorMsg = t_planning('availability_noAssociationSelected');
+                setModalError(errorMsg);
+                toast.error(errorMsg);
                 return;
             }
 
@@ -1093,8 +1190,18 @@ const Planning: React.FC = () => {
 
                 // Vérifier que la date de fin est après la date de début
                 if (endDateTime <= startDateTime) {
-                // @ts-ignore
-                toast.error(t_planning('availability_endDateAfterStart'));
+                    const errorMsg = t_planning('availability_endDateAfterStart');
+                    setModalError(errorMsg);
+                    toast.error(errorMsg);
+                    return;
+                }
+
+                // Vérifier que la date de début n'est pas dans le passé
+                const now = new Date();
+                if (startDateTime < now) {
+                    const errorMsg = t_planning('availability_pastDateError');
+                    setModalError(errorMsg);
+                    toast.error(errorMsg);
                     return;
                 }
 
@@ -1115,8 +1222,9 @@ const Planning: React.FC = () => {
                 });
 
                 if (hasConflict) {
-                // @ts-ignore
-                toast.error(t_planning('availability_conflictError'));
+                    const errorMsg = t_planning('availability_conflictError');
+                    setModalError(errorMsg);
+                    toast.error(errorMsg);
                     return;
                 }
 
@@ -1131,8 +1239,7 @@ const Planning: React.FC = () => {
                 // Appeler le service pour créer la disponibilité
                 await userService.createDisponibility(disponibilityData);
                 
-                // @ts-ignore
-        toast.success(t_planning('availability_success'));
+                toast.success(t_planning('availability_success'));
                 
                 // Réinitialiser et recharger
                 cancelSelection();
@@ -1143,8 +1250,26 @@ const Planning: React.FC = () => {
                 
             } catch (error: any) {
                 console.error('Erreur lors de la création de la disponibilité:', error);
-        // @ts-ignore
-                toast.error(error.message || t_planning('availability_createError'));
+                
+                // Gestion des erreurs spécifiques
+                let errorMessage = t_planning('availability_unknownError');
+                
+                if (error.response?.status === 400) {
+                    errorMessage = t_planning('availability_validationError');
+                } else if (error.response?.status === 401) {
+                    errorMessage = t_planning('availability_userNotAuthenticated');
+                } else if (error.response?.status === 404) {
+                    errorMessage = t_planning('availability_noAssociationSelected');
+                } else if (error.response?.status >= 500) {
+                    errorMessage = t_planning('availability_serverError');
+                } else if (error.message?.includes('Network') || error.code === 'NETWORK_ERROR') {
+                    errorMessage = t_planning('availability_networkError');
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                setModalError(errorMessage);
+                toast.error(errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -1298,6 +1423,18 @@ const Planning: React.FC = () => {
                                 </h3>
                                 
                                 <div className="mb-6">
+                                    {/* Affichage des erreurs */}
+                                    {modalError && (
+                                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                                            <div className="flex items-center">
+                                                <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className="text-red-700 dark:text-red-300 text-sm font-medium">{modalError}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
                                     {/* Champs de dates */}
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
