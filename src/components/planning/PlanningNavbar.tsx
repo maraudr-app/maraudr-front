@@ -30,19 +30,19 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
       className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300 w-full border-b border-gray-200 dark:border-gray-800"
       style={{ left: sidebarWidth }}
     >
-      <div className="flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 gap-3 sm:gap-2 px-4 py-3 sm:py-0 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 px-4 py-3 max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 w-full justify-center md:justify-start">
           <CalendarDaysIcon className="w-6 h-6 text-maraudr-blue dark:text-maraudr-orange flex-shrink-0" />
-          <div className="text-gray-900 dark:text-white text-base sm:text-lg font-bold truncate">
+          <div className="text-gray-900 dark:text-white text-base sm:text-lg font-bold truncate text-center md:text-left">
             {t_planning('team_associationPlanning')}
           </div>
         </div>
         
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 w-full md:w-auto flex justify-center md:justify-end">
           {userRole === 'manager' && onAddEvent && (
             <Button
               onClick={onAddEvent}
-              className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
+              className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap w-full md:w-auto"
             >
               {t_planning('team_addEvent')}
             </Button>
@@ -51,7 +51,7 @@ const PlanningNavbar: React.FC<PlanningNavbarProps> = ({
           {userRole === 'member' && onAddAvailability && (
             <Button
               onClick={onAddAvailability}
-              className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
+              className="text-white bg-maraudr-blue hover:bg-maraudr-orange px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap w-full md:w-auto"
             >
               {t_planning('team_addAvailability')}
             </Button>
