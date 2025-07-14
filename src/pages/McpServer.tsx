@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
 import { useAssoStore } from '../store/assoStore';
+import { useTranslation } from 'react-i18next';
 
 const McpServer: React.FC = () => {
     const [message, setMessage] = useState('');
@@ -18,8 +19,12 @@ const McpServer: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { sidebarCollapsed } = useAssoStore();
+    const { sidebarCollapsed, selectedAssociation } = useAssoStore();
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
+    const { t } = useTranslation();
+
+    // Fonction de traduction pour MCP
+    const t_mcp = (key: string): string => t(`mcp.${key}` as any);
 
     // Auto-scroll vers le bas quand de nouveaux messages arrivent
     const scrollToBottom = () => {
@@ -70,13 +75,13 @@ const McpServer: React.FC = () => {
                         setLoading(false);
                     },
                     (error: string) => {
-                        toast.error(`Erreur: ${error}`);
+                        toast.error(`${t_mcp('error')}: ${error}`);
                         setIsStreaming(false);
                         setLoading(false);
                     }
                 );
         } catch (error: any) {
-            toast.error(error.message || 'Erreur lors de l\'envoi du message');
+            toast.error(error.message || t_mcp('sendError'));
             setLoading(false);
             setIsStreaming(false);
         }
@@ -85,19 +90,35 @@ const McpServer: React.FC = () => {
     const clearHistory = () => {
         setConversationHistory([]);
         setStreamingResponse('');
-        toast.success('Historique effacé');
+        toast.success(t_mcp('clearHistorySuccess'));
     };
 
     const handleQuickAction = (action: string) => {
         setMessage(action);
     };
 
-    // Actions rapides dynamiques basées sur les capacités de l'API
+    // Actions rapides dynamiques basées sur les capacités de l'API avec le nom de l'association courante
     const quickActions = [
-        { label: 'Voir le stock', value: 'Peux-tu me dire ce qu\'il y a dans le stock de mon association ?' },
-        { label: 'Voir le planning', value: 'Quels sont les événements prévus cette semaine ?' },
-        { label: 'Afficher la map', value: 'Peux-tu me montrer les points d\'intérêt sur la carte ?' },
-        { label: 'Voir les disponibilités', value: 'Qui est disponible pour les maraudes ce weekend ?' },
+        { 
+            label: t_mcp('actions.recentActivities'), 
+            value: t_mcp('prompts.recentActivities').replace('{associationName}', selectedAssociation?.name || 'mon association')
+        },
+        { 
+            label: t_mcp('actions.weeklyAnalysis'), 
+            value: t_mcp('prompts.weeklyAnalysis').replace('{associationName}', selectedAssociation?.name || 'mon association')
+        },
+        { 
+            label: t_mcp('actions.geographicTargeting'), 
+            value: t_mcp('prompts.geographicTargeting').replace('{associationName}', selectedAssociation?.name || 'mon association')
+        },
+        { 
+            label: t_mcp('actions.emergencyManagement'), 
+            value: t_mcp('prompts.emergencyManagement').replace('{associationName}', selectedAssociation?.name || 'mon association')
+        },
+        { 
+            label: t_mcp('actions.completeAnalysis'), 
+            value: t_mcp('prompts.completeAnalysis').replace('{associationName}', selectedAssociation?.name || 'mon association')
+        },
     ];
 
     return (
@@ -110,13 +131,13 @@ const McpServer: React.FC = () => {
                 <div className="flex items-center justify-between h-16 px-7">
                     <div className="flex items-center gap-3">
                         <ChatBubbleLeftRightIcon className="w-6 h-6 text-maraudr-blue dark:text-maraudr-orange" />
-                        <span className="text-gray-900 dark:text-white text-lg font-bold">Assistance IA</span>
+                        <span className="text-gray-900 dark:text-white text-lg font-bold">{t_mcp('title')}</span>
                             </div>
                     <div className="flex items-center space-x-4">
                             <button
                                 onClick={clearHistory}
                                 className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                                title="Effacer l'historique"
+                                title={t_mcp('clearHistory')}
                             >
                                 <XMarkIcon className="w-5 h-5" />
                             </button>
@@ -130,7 +151,7 @@ const McpServer: React.FC = () => {
                 {/* Quick Actions */}
                 <div className="mb-6">
                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Actions rapides
+                        {t_mcp('quickActions')}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                         {quickActions.map(action => (
@@ -153,8 +174,7 @@ const McpServer: React.FC = () => {
                             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
                                 <ChatBubbleLeftRightIcon className="w-12 h-12 mb-4" />
                                 <p className="text-center">
-                                    Bonjour ! Je suis Dog, votre assistant spécialisé dans la gestion d'association.<br />
-                                    Posez-moi vos questions sur les stocks, le planning, ou la géolocalisation.
+                                    {t_mcp('welcomeMessage')}
                                 </p>
                             </div>
                         ) : (
@@ -176,13 +196,13 @@ const McpServer: React.FC = () => {
                                     </div>
                                 ))}
                                 
-                                {/* Streaming response */}
-                                {isStreaming && streamingResponse && (
+                                {/* Streaming response avec effet de frappe */}
+                                {isStreaming && (
                                     <div className="flex justify-start">
                                         <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
                                             <p className="text-sm whitespace-pre-wrap">
                                                 {streamingResponse}
-                                                <span className="animate-pulse">▋</span>
+                                                <span className="inline-block w-2 h-4 bg-gray-900 dark:bg-white ml-1 animate-pulse">|</span>
                                             </p>
                                         </div>
                                     </div>
@@ -195,7 +215,7 @@ const McpServer: React.FC = () => {
                                             <div className="flex items-center space-x-2">
                                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-maraudr-blue"></div>
                                                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                    Dog réfléchit...
+                                                    {t_mcp('thinking')}
                                                 </span>
                                             </div>
                                         </div>
@@ -215,7 +235,7 @@ const McpServer: React.FC = () => {
                             type="text"
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Posez votre question à Dog..."
+                            placeholder={t_mcp('inputPlaceholder')}
                             className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-maraudr-blue dark:focus:ring-maraudr-orange focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                             disabled={loading}
                         />
@@ -228,12 +248,12 @@ const McpServer: React.FC = () => {
                         {loading ? (
                             <>
                                 <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                                <span>Envoi...</span>
+                                <span>{t_mcp('sending')}</span>
                             </>
                         ) : (
                             <>
                                 <PaperAirplaneIcon className="w-5 h-5" />
-                                <span>Envoyer</span>
+                                <span>{t_mcp('sendButton')}</span>
                             </>
                         )}
                     </button>
@@ -245,13 +265,13 @@ const McpServer: React.FC = () => {
                         <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
                         <span>
                             {loading 
-                                ? 'Streaming en cours...'
-                                : 'Prêt'
+                                ? t_mcp('streaming')
+                                : t_mcp('ready')
                             }
                         </span>
                     </div>
-                    </div>
                 </div>
+            </div>
             </div>
         </div>
     );

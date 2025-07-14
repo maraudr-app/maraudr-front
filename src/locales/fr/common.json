@@ -200,6 +200,35 @@
       "noEvents": "Aucun événement"
     }
   },
+  "mcp": {
+    "title": "Assistance IA",
+    "quickActions": "Actions rapides",
+    "clearHistory": "Effacer l'historique",
+    "clearHistorySuccess": "Historique effacé",
+    "inputPlaceholder": "Posez votre question à Dog...",
+    "sendButton": "Envoyer",
+    "sending": "Envoi...",
+    "ready": "Prêt",
+    "streaming": "Streaming en cours...",
+    "thinking": "Dog réfléchit...",
+    "welcomeMessage": "Bonjour ! Je suis Dog, votre assistant spécialisé dans la gestion d'association. Posez-moi vos questions sur les stocks, le planning, ou la géolocalisation.",
+    "error": "Erreur",
+    "sendError": "Erreur lors de l'envoi du message",
+    "actions": {
+      "recentActivities": "Suivi des activités récentes",
+      "weeklyAnalysis": "Analyse hebdomadaire",
+      "geographicTargeting": "Ciblage géographique",
+      "emergencyManagement": "Gestion des urgences et des stocks",
+      "completeAnalysis": "Analyse complète par arrondissement"
+    },
+    "prompts": {
+      "recentActivities": "Quels ont été les points d'intérêt ou événements notables des deux derniers jours au sein de l'association {associationName} ?",
+      "weeklyAnalysis": "Quels sont les points d'intérêt de la semaine en cours pour {associationName} ? Peux-tu identifier ceux qui te semblent les plus critiques ?",
+      "geographicTargeting": "Quelles sont les adresses à traiter dans le 15ᵉ arrondissement de Paris pour l'association {associationName} ?",
+      "emergencyManagement": "Quels sont les points urgents à traiter actuellement pour l'association {associationName} ? De quels articles ai-je besoin pour y répondre, et sont-ils disponibles dans mon stock ?",
+      "completeAnalysis": "Quels sont les points urgents à traiter pour l'association {associationName} ? Classe-les par arrondissement et précise dans lesquels une intervention te paraît la plus urgente. Quels articles sont requis pour ces interventions, et sont-ils présents dans mon stock ? Peux-tu également me donner la liste des membres disponibles la semaine prochaine ?"
+        }
+  },
   "dashboard": {
     "welcome": "Bonjour",
     "managerWelcome": "Voici un aperçu de votre association et de votre équipe.",

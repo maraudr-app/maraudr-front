@@ -876,6 +876,35 @@
   "timing_startsNow": "Starts now",
   "associationPlanning": "Association planning",
   "allPlannings": "All plannings"
+},
+"mcp": {
+  "title": "AI Assistant",
+  "quickActions": "Quick Actions",
+  "clearHistory": "Clear History",
+  "clearHistorySuccess": "History cleared",
+  "inputPlaceholder": "Ask your question to Dog...",
+  "sendButton": "Send",
+  "sending": "Sending...",
+  "ready": "Ready",
+  "streaming": "Streaming...",
+  "thinking": "Dog is thinking...",
+  "welcomeMessage": "Hello! I'm Dog, your assistant specialized in association management. Ask me your questions about stocks, planning, or geolocation.",
+  "error": "Error",
+  "sendError": "Error sending message",
+  "actions": {
+    "recentActivities": "Recent Activities Tracking",
+    "weeklyAnalysis": "Weekly Analysis",
+    "geographicTargeting": "Geographic Targeting",
+    "emergencyManagement": "Emergency and Stock Management",
+    "completeAnalysis": "Complete Analysis by District"
+  },
+  "prompts": {
+    "recentActivities": "What have been the points of interest or notable events of the last two days within the association {associationName}?",
+    "weeklyAnalysis": "What are the points of interest for the current week for {associationName}? Can you identify those that seem most critical to you?",
+    "geographicTargeting": "What are the addresses to be processed in the 15th arrondissement of Paris for the association {associationName}?",
+    "emergencyManagement": "What are the urgent points to be addressed currently for the association {associationName}? What items do I need to respond to them, and are they available in my stock?",
+    "completeAnalysis": "What are the urgent points to be addressed for the association {associationName}? Classify them by arrondissement and specify in which ones an intervention seems most urgent to you. What items are required for these interventions, and are they present in my stock? Can you also give me the list of members available next week?"
+  }
 }
 
 } 
