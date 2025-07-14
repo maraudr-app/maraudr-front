@@ -179,30 +179,10 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
         setOpenMenuId(null);
     };
 
-    // Fonction pour générer une URL d'image de profil basée sur le nom
-    const getProfileImageUrl = (member: TeamMember, isTopLevel: boolean = false) => {
-        // Utiliser l'API randomuser.me avec un seed basé sur le nom pour avoir une image consistante
-        const seed = `${member.firstname}${member.lastname}`.toLowerCase().replace(/\s/g, '');
-        const hash = Math.abs(hashCode(seed));
-        const gender = hash % 2 === 0 ? 'men' : 'women';
-        const imageNumber = hash % 100;
-        return `https://randomuser.me/api/portraits/${gender}/${imageNumber}.jpg`;
-    };
 
-    // Fonction de hachage simple pour générer un nombre consistant
-    const hashCode = (str: string): number => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convertir en 32bit integer
-        }
-        return hash;
-    };
 
     // Composant pour une carte de membre rectangulaire avec photo sur la bordure
     const MemberCard: React.FC<{ member: TeamMember; isTopLevel?: boolean }> = ({ member, isTopLevel = false }) => {
-        const profileImageUrl = getProfileImageUrl(member, isTopLevel);
         const photoSize = isTopLevel ? 'w-20 h-20' : 'w-16 h-16';
         const isCurrentUserCard = isCurrentUser(member.id);
         
@@ -214,31 +194,17 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                         isCurrentUserCard 
                             ? 'border-orange-500 shadow-lg shadow-orange-200 dark:shadow-orange-900/50' 
                             : 'border-white dark:border-gray-800'
-                    } shadow-lg overflow-hidden bg-gray-200 ${
+                    } shadow-lg overflow-hidden bg-white dark:bg-gray-700 ${
                         isCurrentUserManager() ? 'cursor-pointer hover:scale-105' : 'cursor-default'
-                    } transition-transform z-30`}
+                    } transition-transform z-30 flex items-center justify-center`}
                     onClick={isCurrentUserManager() ? () => {
                         handleShowUserDetails(member);
                     } : undefined}
                     title={isCurrentUserManager() ? t_team('actions.viewDetails') : ""}
                     >
-                        <img 
-                            src={profileImageUrl}
-                            alt={`${member.firstname} ${member.lastname}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                // Fallback en cas d'erreur de chargement de l'image
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                target.nextElementSibling?.classList.remove('hidden');
-                            }}
-                        />
-                        {/* Fallback avec initiales */}
-                        <div className={`hidden w-full h-full bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center`}>
-                            <span className={`text-white font-bold ${isTopLevel ? 'text-xl' : 'text-lg'}`}>
-                                {member.firstname.charAt(0).toUpperCase()}{member.lastname.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
+                        <span className={`text-gray-700 dark:text-gray-300 font-bold ${isTopLevel ? 'text-xl' : 'text-lg'}`}>
+                            {member.firstname.charAt(0).toUpperCase()}{member.lastname.charAt(0).toUpperCase()}
+                        </span>
                     </div>
                     
                     {/* Rôle sous la photo */}
@@ -452,22 +418,10 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                     <div className="relative top-10 mx-auto p-6 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-orange-200/50 dark:border-gray-700 mb-10">
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center">
-                                <div className="w-16 h-16 rounded-full border-4 border-orange-500 shadow-lg overflow-hidden bg-gray-200 mr-4">
-                                    <img 
-                                        src={getProfileImageUrl(selectedMemberDetails)}
-                                        alt={`${selectedMemberDetails.firstname} ${selectedMemberDetails.lastname}`}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.style.display = 'none';
-                                            target.nextElementSibling?.classList.remove('hidden');
-                                        }}
-                                    />
-                                    <div className="hidden w-full h-full bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center">
-                                        <span className="text-white font-bold text-lg">
-                                            {selectedMemberDetails.firstname.charAt(0).toUpperCase()}{selectedMemberDetails.lastname.charAt(0).toUpperCase()}
-                                        </span>
-                                    </div>
+                                <div className="w-16 h-16 rounded-full border-4 border-orange-500 shadow-lg overflow-hidden bg-white dark:bg-gray-700 mr-4 flex items-center justify-center">
+                                    <span className="text-gray-700 dark:text-gray-300 font-bold text-lg">
+                                        {selectedMemberDetails.firstname.charAt(0).toUpperCase()}{selectedMemberDetails.lastname.charAt(0).toUpperCase()}
+                                    </span>
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">

@@ -19,13 +19,11 @@ const UserCard: React.FC<UserCardProps> = ({ user, handleViewDisponibilities }) 
 
   return (
     <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center text-center">
-      <img
-        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-          user.firstname + " " + user.lastname
-        )}&background=random`}
-        alt={`${user.firstname} ${user.lastname}`}
-        className="w-16 h-16 rounded-full mb-3 object-cover"
-      />
+      <div className="w-16 h-16 rounded-full mb-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center">
+        <span className="text-gray-700 dark:text-gray-300 font-bold text-xl">
+          {user.firstname.charAt(0).toUpperCase()}{user.lastname.charAt(0).toUpperCase()}
+        </span>
+      </div>
       <h3 className="font-bold text-lg">{user.firstname} {user.lastname}</h3>
       <div className="text-gray-500 text-sm mb-1">{user.isManager ? t_team('member.role.manager') : t_team('member.role.member')}</div>
       {(user.city || user.country) && (
