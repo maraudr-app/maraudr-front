@@ -48,6 +48,8 @@ export const Stock = () => {
     const [reduceQuantity, setReduceQuantity] = useState('');
     const [loadingReduce, setLoadingReduce] = useState(false);
 
+    const t_stock = (key: string): string => t(`stock.${key}` as any);
+
     useEffect(() => {
         if (!selectedAssociation) {
             if (associations.length > 0) {
@@ -152,10 +154,10 @@ export const Stock = () => {
 
         try {
             await stockService.deleteItem(selectedAssociation.id, itemToDelete);
-            toast.success('Item supprimé avec succès');
+            toast.success(t_stock('toast_deleted'));
             await fetchItems();
         } catch (error) {
-            toast.error('Erreur lors de la suppression de l\'item');
+            toast.error(t_stock('error_delete_item'));
         } finally {
             setShowDeleteConfirm(false);
             setItemToDelete(null);
@@ -182,7 +184,7 @@ export const Stock = () => {
                 setItems(newItems);
             }
             
-            toast.success('Item modifié avec succès');
+            toast.success(t_stock('toast_item_updated'));
             
             // Déclencher l'effet de highlight pour l'item modifié
             setHighlightedItemId(updatedItem.id);
@@ -193,7 +195,7 @@ export const Stock = () => {
             setShowEditModal(false);
             setEditingItem(null);
         } catch (error) {
-            toast.error('Erreur lors de la modification de l\'item');
+            toast.error(t_stock('error_update_item'));
         }
     };
 
@@ -262,7 +264,7 @@ export const Stock = () => {
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
                                 <ExclamationTriangleIcon className="w-6 h-6 text-orange-500 mr-3" />
-                                Stock Critique
+                                {t_stock('critical')}
                             </h2>
                             
                             {(() => {
@@ -278,7 +280,7 @@ export const Stock = () => {
                                             <div>
                                                 <h3 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center">
                                                     <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-                                                    Stock critique (≤ 10 unités) - {lowestCritical.length} article{lowestCritical.length > 1 ? 's' : ''}
+                                                    {t_stock('critical_10')} - {lowestCritical.length} {lowestCritical.length > 1 ? t_stock('article_plural') : t_stock('article')}
                                                 </h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {lowestCritical.map(item => (
@@ -286,21 +288,21 @@ export const Stock = () => {
                                                             <div className="flex items-center justify-between mb-2">
                                                                 <h4 className="font-medium text-red-900 dark:text-red-200">{item.name}</h4>
                                                                 <span className="text-sm font-bold text-red-700 dark:text-red-400">
-                                                                    {item.quantity} restant{item.quantity > 1 ? 's' : ''}
+                                                                    {item.quantity} {item.quantity > 1 ? t_stock('remaining_plural') : t_stock('remaining')}
                                                                 </span>
                                                             </div>
                                                             <p className="text-sm text-red-600 dark:text-red-300 mb-2">
-                                                                Catégorie: {getCategoryName(item.category)}
+                                                                {t_stock('category')}: {getCategoryName(item.category)}
                                                             </p>
                                                             <div className="flex items-center justify-between">
                                                                 <span className="text-xs text-red-500 dark:text-red-400">
-                                                                    Réapprovisionnement urgent
+                                                                    {t_stock('restock_urgent')}
                                                                 </span>
                                                                 <Button
                                                                     onClick={() => handleEditClick(item)}
                                                                     className="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
                                                                 >
-                                                                    Réapprovisionner
+                                                                    {t_stock('restock')}
                                                                 </Button>
                                                             </div>
                                                         </div>
@@ -314,7 +316,7 @@ export const Stock = () => {
                                             <div>
                                                 <h3 className="text-lg font-semibold text-orange-700 dark:text-orange-400 mb-3 flex items-center">
                                                     <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-                                                    Stock faible (11-20 unités) - {lowStockItems.length} articles
+                                                    {t_stock('low_11_20')} - {lowStockItems.length} {lowStockItems.length > 1 ? t_stock('article_plural') : t_stock('article')}
                                                 </h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {lowStockItems.map(item => (
@@ -322,21 +324,21 @@ export const Stock = () => {
                                                             <div className="flex items-center justify-between mb-2">
                                                                 <h4 className="font-medium text-orange-900 dark:text-orange-200">{item.name}</h4>
                                                                 <span className="text-sm font-bold text-orange-700 dark:text-orange-400">
-                                                                    {item.quantity} restant{item.quantity > 1 ? 's' : ''}
+                                                                    {item.quantity} {item.quantity > 1 ? t_stock('remaining_plural') : t_stock('remaining')}
                                                                 </span>
                                                             </div>
                                                             <p className="text-sm text-orange-600 dark:text-orange-300 mb-2">
-                                                                Catégorie: {getCategoryName(item.category)}
+                                                                {t_stock('category')}: {getCategoryName(item.category)}
                                                             </p>
                                                             <div className="flex items-center justify-between">
                                                                 <span className="text-xs text-orange-500 dark:text-orange-400">
-                                                                    Surveillance recommandée
+                                                                    {t_stock('monitoring_recommended')}
                                                                 </span>
                                                                 <Button
                                                                     onClick={() => handleEditClick(item)}
                                                                     className="text-xs px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
                                                                 >
-                                                                    Gérer
+                                                                    {t_stock('manage')}
                                                                 </Button>
                                                             </div>
                                                         </div>
@@ -350,10 +352,10 @@ export const Stock = () => {
                                             <div className="text-center py-8">
                                                 <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
                                                 <h3 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-2">
-                                                    Excellent ! Tous les stocks sont suffisants
+                                                    {t_stock('all_good')}
                                                 </h3>
                                                 <p className="text-green-600 dark:text-green-300">
-                                                    Aucun article ne nécessite de réapprovisionnement immédiat
+                                                    {t_stock('no_restock_needed')}
                                                 </p>
                                             </div>
                                         )}
@@ -363,15 +365,15 @@ export const Stock = () => {
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                                 <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                                     <div className="text-2xl font-bold text-gray-900 dark:text-white">{items.length}</div>
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400">Articles total</div>
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400">{t_stock('total_items')}</div>
                                                 </div>
                                                 <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                                                     <div className="text-2xl font-bold text-red-600 dark:text-red-400">{lowestCritical.length}</div>
-                                                    <div className="text-sm text-red-600 dark:text-red-400">Stock critique</div>
+                                                    <div className="text-sm text-red-600 dark:text-red-400">{t_stock('critical')}</div>
                                                 </div>
                                                 <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                                                     <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{lowStockItems.length}</div>
-                                                    <div className="text-sm text-orange-600 dark:text-orange-400">Stock faible</div>
+                                                    <div className="text-sm text-orange-600 dark:text-orange-400">{t_stock('low')}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -393,7 +395,7 @@ export const Stock = () => {
                 {!isLoading && items.length === 0 && (
                     <div className="text-center p-8">
                         <p className="text-gray-500 dark:text-gray-400">
-                            Aucun item trouvé dans le stock
+                            {t_stock('empty')}
                         </p>
                     </div>
                 )}
@@ -409,17 +411,17 @@ export const Stock = () => {
                                     name="name"
                                     value={filter.name}
                                     onChange={handleFilterChange}
-                                    placeholder="Rechercher un item"
+                                    placeholder={t_stock('search_item')}
                                 />
                                 <div className="w-full">
                                     <Select
                                         name="category"
                                         value={filter.category}
                                         onChange={handleFilterChange}
-                                        placeholder="Toutes les catégories"
+                                        placeholder={t_stock('all_categories')}
                                         className="w-full"
                                     >
-                                        <option value="">Toutes les catégories</option>
+                                        <option value="">{t_stock('all_categories')}</option>
                                         {getAllCategories().map(category => (
                                             <option key={category.value} value={category.value}>
                                                 {category.label}
@@ -432,14 +434,14 @@ export const Stock = () => {
                                     name="maxQuantity"
                                     value={filter.maxQuantity}
                                     onChange={handleFilterChange}
-                                    placeholder="Quantité maximum"
+                                    placeholder={t_stock('max_quantity')}
                                 />
                                 <Input
                                     type="number"
                                     name="minQuantity"
                                     value={filter.minQuantity}
                                     onChange={handleFilterChange}
-                                    placeholder="Quantité minimum"
+                                    placeholder={t_stock('min_quantity')}
                                 />
                             </div>
                             <div className="mt-4 flex justify-end space-x-2">
@@ -448,13 +450,13 @@ export const Stock = () => {
                                     onClick={handleResetFilters}
                                     className="text-black bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                                 >
-                                    Réinitialiser
+                                    {t_stock('reset')}
                                 </Button>
                                 <Button
                                     type="submit"
                                     className="text-black bg-maraudr-blue hover:bg-maraudr-orange"
                                 >
-                                    Filtrer
+                                    {t_stock('filter')}
                                 </Button>
                             </div>
                         </form>
@@ -466,10 +468,10 @@ export const Stock = () => {
                                     <div className="text-center">
                                         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
                                         <p className="text-gray-600 dark:text-gray-400 text-lg">
-                                            Chargement de votre stock...
+                                            {t_stock('loading_stock')}
                                         </p>
                                         <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
-                                            Récupération des articles en cours
+                                            {t_stock('fetching_items')}
                                         </p>
                                     </div>
                                 </div>
@@ -479,25 +481,25 @@ export const Stock = () => {
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Nom
+                                                {t_stock('name')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Description
+                                                {t_stock('description')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Catégorie
+                                                {t_stock('category')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Quantité
+                                                {t_stock('quantity')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Date d'entrée
+                                                {t_stock('entry_date')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Code-barres
+                                                {t_stock('barcode')}
                                             </th>
                                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Actions
+                                                {t_stock('actions')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -599,24 +601,20 @@ export const Stock = () => {
                                                 disabled={currentPage === 1}
                                                 className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Précédent
+                                                {t_stock('previous')}
                                             </Button>
                                             <Button
                                                 onClick={() => handlePageChange(currentPage + 1)}
                                                 disabled={currentPage === totalPages}
                                                 className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Suivant
+                                                {t_stock('next')}
                                             </Button>
               </div>
                                         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                             <div>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                    Affichage de <span className="font-medium">{indexOfFirstItem + 1}</span> à{' '}
-                                                    <span className="font-medium">
-                                                        {Math.min(indexOfLastItem, items.length)}
-                                                    </span>{' '}
-                                                    sur <span className="font-medium">{items.length}</span> résultats
+                                                    {`${indexOfFirstItem + 1} - ${Math.min(indexOfLastItem, items.length)} / ${items.length} ${t_stock('total_items')}`}
                                                 </p>
             </div>
                                             <div>
@@ -684,10 +682,10 @@ export const Stock = () => {
                                 <div className="text-center">
                                     <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
                                     <p className="text-gray-600 dark:text-gray-400 text-lg">
-                                        Chargement de votre stock...
+                                        {t_stock('loading_stock')}
                                     </p>
                                     <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
-                                        Récupération des articles en cours
+                                        {t_stock('fetching_items')}
                                     </p>
                                 </div>
                             </div>
@@ -719,7 +717,7 @@ export const Stock = () => {
                     <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-auto p-6 space-y-6">
                         <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
                             <Dialog.Title className="text-xl font-semibold text-maraudr-darkText dark:text-maraudr-lightText">
-                                Confirmer la suppression
+                                {t_stock('confirm_delete_title')}
                             </Dialog.Title>
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
@@ -730,7 +728,7 @@ export const Stock = () => {
         </div>
 
                         <p className="text-gray-500 dark:text-gray-400">
-                            Êtes-vous sûr de vouloir supprimer cet item ? Cette action est irréversible.
+                            {t_stock('confirm_delete_message')}
                         </p>
 
                         <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -738,13 +736,13 @@ export const Stock = () => {
                                 onClick={() => setShowDeleteConfirm(false)}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
                             >
-                                Annuler
+                                {t_stock('cancel')}
                             </Button>
                             <Button
                                 onClick={handleDeleteConfirm}
                                 className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
                             >
-                                Supprimer
+                                {t_stock('delete')}
                             </Button>
             </div>
           </div>
@@ -754,13 +752,13 @@ export const Stock = () => {
             {showReduceModal && itemToReduce && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
-                        <h2 className="text-xl font-bold mb-4">Réduire le stock</h2>
+                        <h2 className="text-xl font-bold mb-4">{t_stock('reduce_stock')}</h2>
                         <div className="mb-4">
                             <div className="mb-2 text-gray-700 dark:text-gray-200">
-                                <strong>Article :</strong> {itemToReduce.name}
+                                <strong>{t_stock('item')}:</strong> {itemToReduce.name}
                             </div>
                             <div className="mb-2 text-gray-700 dark:text-gray-200">
-                                <strong>Quantité actuelle :</strong> {itemToReduce.quantity}
+                                <strong>{t_stock('current_quantity')}:</strong> {itemToReduce.quantity}
                             </div>
                             <Input
                                 type="number"
@@ -768,12 +766,12 @@ export const Stock = () => {
                                 max={itemToReduce.quantity}
                                 value={reduceQuantity}
                                 onChange={e => setReduceQuantity(e.target.value)}
-                                placeholder="Quantité à retirer"
+                                placeholder={t_stock('reduce_quantity')}
                                 className="w-full"
                             />
                             {reduceQuantity && Number(reduceQuantity) > itemToReduce.quantity && (
                                 <div className="text-red-500 text-sm mt-2">
-                                    La quantité à retirer ne peut pas dépasser la quantité actuelle.
+                                    {t_stock('reduce_quantity_error')}
                                 </div>
                             )}
                         </div>
@@ -786,7 +784,7 @@ export const Stock = () => {
                                 }}
                                 className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                             >
-                                Annuler
+                                {t_stock('cancel')}
                             </Button>
                             <Button
                                 disabled={
@@ -802,20 +800,20 @@ export const Stock = () => {
                                             associationId: selectedAssociation.id,
                                             quantity: Number(reduceQuantity),
                                         });
-                                        toast.success('Stock réduit avec succès');
+                                        toast.success(t_stock('toast_stock_reduced'));
                                         setShowReduceModal(false);
                                         setReduceQuantity('');
                                         setItemToReduce(null);
                                         await fetchItems();
                                     } catch (err) {
-                                        toast.error('Erreur lors de la réduction du stock');
+                                        toast.error(t_stock('error_reduce_stock'));
                                     } finally {
                                         setLoadingReduce(false);
                                     }
                                 }}
                                 className="px-4 py-2 rounded bg-orange-600 text-white font-semibold hover:bg-orange-700 disabled:opacity-50"
                             >
-                                {loadingReduce ? 'Traitement...' : 'Valider'}
+                                {loadingReduce ? t_stock('processing') : t_stock('validate')}
                             </Button>
                         </div>
                     </div>
