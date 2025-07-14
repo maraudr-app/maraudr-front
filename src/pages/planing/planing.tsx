@@ -542,6 +542,7 @@ const Planning: React.FC = () => {
     const [allEvents, setAllEvents] = useState<Event[]>([]);
     const [loadingEvents, setLoadingEvents] = useState(false);
     const [selectedDateEvents, setSelectedDateEvents] = useState<Event[]>([]);
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showEventsModal, setShowEventsModal] = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
     const [showEditEventModal, setShowEditEventModal] = useState(false);
@@ -808,6 +809,7 @@ const Planning: React.FC = () => {
         const eventsForDate = getEventsForDate(date);
         if (eventsForDate.length > 0) {
             setSelectedDateEvents(eventsForDate);
+            setSelectedDate(date);
             setEventSearchQuery(''); // Réinitialiser la recherche
             setShowEventsModal(true);
         }
@@ -831,6 +833,38 @@ const Planning: React.FC = () => {
     const isEventPast = (event: Event) => {
         const now = new Date();
         const end = parseLocalDate(event.endDate);
+        
+        // Si on a une date sélectionnée, comparer avec cette date
+        if (selectedDate) {
+            const selectedDateStart = new Date(selectedDate);
+            selectedDateStart.setHours(0, 0, 0, 0);
+            const selectedDateEnd = new Date(selectedDate);
+            selectedDateEnd.setHours(23, 59, 59, 999);
+            
+            const eventEnd = new Date(end);
+            eventEnd.setHours(0, 0, 0, 0);
+            
+            // Si l'événement se termine avant le jour sélectionné
+            if (eventEnd < selectedDateStart) return true;
+            
+            // Si l'événement se termine le jour sélectionné, comparer l'heure
+            if (eventEnd.getTime() === selectedDateStart.getTime()) {
+                const now = new Date();
+                const currentDate = new Date(now);
+                currentDate.setHours(0, 0, 0, 0);
+                
+                // Si c'est aujourd'hui, comparer l'heure actuelle
+                if (currentDate.getTime() === selectedDateStart.getTime()) {
+                    return end.getTime() < now.getTime();
+                }
+                // Si c'est un autre jour, l'événement est passé
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Fallback : comparaison avec la date actuelle (logique originale)
         // Si la date de fin est avant aujourd'hui
         if (end < now && (end.toDateString() !== now.toDateString())) return true;
         // Si la date de fin est aujourd'hui, compare l'heure
@@ -1866,7 +1900,10 @@ const Planning: React.FC = () => {
                                         {t_events('title')} ({selectedDateEvents.length})
                                     </h3>
                                     <button
-                                        onClick={() => setShowEventsModal(false)}
+                                        onClick={() => {
+                                            setShowEventsModal(false);
+                                            setSelectedDate(null);
+                                        }}
                                         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                                     >
                                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1900,6 +1937,11 @@ const Planning: React.FC = () => {
                                                             {t_events('eventNumber').replace('{number}', (index + 1).toString())}
                                                         </span>
                                                         <EventStatusBadge event={event} />
+                                                        {past && (
+                                                            <span className="px-2 py-1 text-xs font-medium bg-gray-500 text-white dark:bg-gray-600 rounded-full">
+                                                                {t_events('pastEvent')}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     {/* Boutons d'action pour manager/organisateur */}
                                                     {canEditEvent(event) && (
