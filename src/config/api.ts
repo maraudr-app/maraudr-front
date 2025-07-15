@@ -28,33 +28,47 @@ const PORTS: Record<string, string> = {
   document: import.meta.env.VITE_MODULE_DOCUMENT_PORT || '8087',
 };
 
-// Modules qui utilisent /api dans leurs routes
+// Modules qui utilisent /api dans leurs routes (Controllers)
 const MODULES_WITH_API_PREFIX = ['planning', 'user', 'mcp'];
+
+// Mapping des noms de modules pour les URLs
+const MODULE_URL_NAMES: Record<string, string> = {
+  association: 'association',
+  stock: 'stock', 
+  user: 'user',
+  email: 'email',
+  geo: 'geo',
+  planning: 'planning',
+  mcp: 'mcp',
+  document: 'document'
+};
 
 /**
  * Génère l'URL d'API pour un module donné
- * En production: https://api.maraudr.eu/api/... (pour planning, user, mcp)
- * En production: https://api.maraudr.eu/... (pour geo, stock, association, etc.)
- * En développement: http://localhost:8082/api/... ou http://localhost:8084/...
+ * En production: https://api.maraudr.eu/user/api/... (pour user, planning, mcp)
+ * En production: https://api.maraudr.eu/geo/... (pour geo, stock, association, etc.)
+ * En développement: http://localhost:8082/user/api/... ou http://localhost:8084/geo/...
  */
 export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
+  const moduleName = MODULE_URL_NAMES[module];
+  
   if (isProduction) {
     // En production, tous les modules utilisent le même domaine
     if (MODULES_WITH_API_PREFIX.includes(module)) {
-      // Modules qui ont /api dans leurs routes
-      return `${API_DOMAIN}${API_PREFIX}`;
+      // Modules qui ont /api dans leurs routes (Controllers)
+      return `${API_DOMAIN}/${moduleName}${API_PREFIX}`;
     } else {
-      // Modules sans /api dans leurs routes
-      return API_DOMAIN;
+      // Modules sans /api dans leurs routes (Program.cs)
+      return `${API_DOMAIN}/${moduleName}`;
     }
   } else {
     // En développement, chaque module a son propre port
     const baseUrl = `${API_DOMAIN}:${PORTS[module]}`;
     if (MODULES_WITH_API_PREFIX.includes(module)) {
-      // Modules qui ont /api dans leurs routes
+      // Modules qui ont /api dans leurs routes (Controllers)
       return `${baseUrl}${API_PREFIX}`;
     } else {
-      // Modules sans /api dans leurs routes
+      // Modules sans /api dans leurs routes (Program.cs)
       return baseUrl;
     }
   }
@@ -62,12 +76,18 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
 
 /**
  * Génère l'URL de base d'un module (sans /api)
- * En production: https://api.maraudr.eu
+ * En production: https://api.maraudr.eu/user
  * En développement: http://localhost:8082
  */
 export const getModuleBaseUrl = (module: keyof typeof PORTS): string => {
+  const moduleName = MODULE_URL_NAMES[module];
+  
   if (isProduction) {
-    return API_DOMAIN;
+    if (MODULES_WITH_API_PREFIX.includes(module)) {
+      return `${API_DOMAIN}/${moduleName}`;
+    } else {
+      return `${API_DOMAIN}/${moduleName}`;
+    }
   } else {
     return `${API_DOMAIN}:${PORTS[module]}`;
   }
@@ -87,5 +107,6 @@ export const debugApiUrls = () => {
     console.log(`  API URL: ${getModuleApiUrl(module)}`);
     console.log(`  Base URL: ${getModuleBaseUrl(module)}`);
     console.log(`  Uses API prefix: ${MODULES_WITH_API_PREFIX.includes(module)}`);
+    console.log(`  Module URL name: ${MODULE_URL_NAMES[module]}`);
   });
 };
