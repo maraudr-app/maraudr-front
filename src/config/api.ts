@@ -1,8 +1,20 @@
 // Configuration API selon l'environnement
-const isProduction = import.meta.env.PROD;
+// Détection automatique de l'environnement
+const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production' || window.location.hostname !== 'localhost';
+
+// Logs de debug pour vérifier la détection
+console.log('🔍 Debug Environment Detection:');
+console.log('import.meta.env.PROD:', import.meta.env.PROD);
+console.log('import.meta.env.MODE:', import.meta.env.MODE);
+console.log('window.location.hostname:', window.location.hostname);
+console.log('isProduction:', isProduction);
+
+// En production, utiliser l'URL de votre serveur de production
+// En développement, utiliser localhost
 const API_DOMAIN = isProduction 
-  ? import.meta.env.VITE_API_DOMAIN_PROD 
-  : import.meta.env.VITE_API_DOMAIN_LOCAL;
+  ? (import.meta.env.VITE_API_DOMAIN_PROD || 'https://api.maraudr.eu') // URL de votre serveur de production
+  : (import.meta.env.VITE_API_DOMAIN_LOCAL || 'http://localhost:8082');
+
 const API_PREFIX = import.meta.env.VITE_API_PREFIX || '/api';
 
 const PORTS: Record<string, string> = {
