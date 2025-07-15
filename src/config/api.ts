@@ -32,16 +32,45 @@ const MODULE_NAMES: Record<string, string> = {
   document: 'document'
 };
 
+// Modules qui utilisent /api dans leurs routes (Controllers)
+const MODULES_WITH_API_PREFIX = ['user', 'planning', 'mcp'];
+
 /**
  * Génère l'URL d'API pour un module donné
  * En développement: http://localhost:PORT
  * En production: https://api.maraudr.eu/MODULE
+ * 
+ * Pour les modules avec Controllers (/api): https://api.maraudr.eu/MODULE/api
+ * Pour les modules sans Controllers: https://api.maraudr.eu/MODULE
  */
 export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
   const moduleName = MODULE_NAMES[module];
   
   if (isProduction) {
-    // En production: https://api.maraudr.eu/MODULE
+    // En production
+    if (MODULES_WITH_API_PREFIX.includes(module)) {
+      // Modules avec Controllers: https://api.maraudr.eu/MODULE/api
+      return `${API_DOMAIN}/${moduleName}/api`;
+    } else {
+      // Modules sans Controllers: https://api.maraudr.eu/MODULE
+      return `${API_DOMAIN}/${moduleName}`;
+    }
+  } else {
+    // En développement: http://localhost:PORT
+    return `${API_DOMAIN}:${PORTS[module]}`;
+  }
+};
+
+/**
+ * Génère l'URL de base d'un module (sans /api)
+ * En développement: http://localhost:PORT
+ * En production: https://api.maraudr.eu/MODULE
+ */
+export const getModuleBaseUrl = (module: keyof typeof PORTS): string => {
+  const moduleName = MODULE_NAMES[module];
+  
+  if (isProduction) {
+    // En production: toujours sans /api
     return `${API_DOMAIN}/${moduleName}`;
   } else {
     // En développement: http://localhost:PORT
@@ -50,10 +79,13 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
 };
 
 /**
- * Génère l'URL de base d'un module (même logique que getModuleApiUrl)
+ * Génère l'URL pour les endpoints team du module User
+ * Ces endpoints sont définis dans Program.cs sans /api
+ * En développement: http://localhost:8082
+ * En production: https://api.maraudr.eu/user
  */
-export const getModuleBaseUrl = (module: keyof typeof PORTS): string => {
-  return getModuleApiUrl(module);
+export const getUserTeamUrl = (): string => {
+  return getModuleBaseUrl('user');
 };
 
 // Fonction de debug pour vérifier les URLs générées
@@ -67,9 +99,13 @@ export const debugApiUrls = () => {
   modules.forEach(module => {
     console.log(`${module}:`);
     console.log(`  API URL: ${getModuleApiUrl(module)}`);
+    console.log(`  Base URL: ${getModuleBaseUrl(module)}`);
     console.log(`  Module name: ${MODULE_NAMES[module]}`);
+    console.log(`  Uses API prefix: ${MODULES_WITH_API_PREFIX.includes(module)}`);
     if (!isProduction) {
       console.log(`  Port: ${PORTS[module]}`);
     }
   });
+  
+  console.log('User Team URL:', getUserTeamUrl());
 };
