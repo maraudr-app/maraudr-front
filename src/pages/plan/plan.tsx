@@ -27,6 +27,8 @@ import MapNavbar from '../../components/map/MapNavbar';
 import AddPointModal from '../../components/map/AddPointModal';
 import { Event, CreateEventDto } from '../../types/planning/event';
 import { planningService } from '../../services/planningService';
+import { useTranslation } from 'react-i18next';
+import { getModuleApiUrl } from '../../config/api';
 
 // Fix for default marker icons
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -632,7 +634,8 @@ const Plan: React.FC = () => {
                 throw new Error('Token d\'authentification non trouvé');
             }
             
-            const response = await fetch(`http://localhost:8084/autocomplete?text=${encodeURIComponent(query)}`, {
+            const GEO_API_URL = getModuleApiUrl('geo');
+            const response = await fetch(`${GEO_API_URL}/autocomplete?text=${encodeURIComponent(query)}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,

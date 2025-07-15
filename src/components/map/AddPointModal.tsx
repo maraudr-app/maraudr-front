@@ -6,6 +6,7 @@ import { Input } from '../common/input/input';
 import { Button } from '../common/button/button';
 import { useAssoStore } from '../../store/assoStore';
 import { geoService } from '../../services/geoService';
+import { getModuleApiUrl } from '../../config/api';
 
 interface AddPointModalProps {
   isOpen: boolean;
@@ -106,7 +107,8 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
         throw new Error(t_map('auth_error'));
       }
 
-      const response = await fetch(`http://localhost:8084/autocomplete?text=${encodeURIComponent(query)}`, {
+      const GEO_API_URL = getModuleApiUrl('geo');
+      const response = await fetch(`${GEO_API_URL}/autocomplete?text=${encodeURIComponent(query)}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

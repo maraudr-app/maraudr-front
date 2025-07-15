@@ -2,13 +2,6 @@
 // Détection automatique de l'environnement
 const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production' || window.location.hostname !== 'localhost';
 
-// Logs de debug pour vérifier la détection
-console.log('🔍 Debug Environment Detection:');
-console.log('import.meta.env.PROD:', import.meta.env.PROD);
-console.log('import.meta.env.MODE:', import.meta.env.MODE);
-console.log('window.location.hostname:', window.location.hostname);
-console.log('isProduction:', isProduction);
-
 // En production, utiliser l'URL de votre serveur de production
 // En développement, utiliser localhost
 const API_DOMAIN = isProduction 
@@ -47,7 +40,7 @@ const MODULE_URL_NAMES: Record<string, string> = {
  * Génère l'URL d'API pour un module donné
  * En production: https://api.maraudr.eu/user/api/... (pour user, planning, mcp)
  * En production: https://api.maraudr.eu/geo/... (pour geo, stock, association, etc.)
- * En développement: http://localhost:8082/user/api/... ou http://localhost:8084/geo/...
+ * En développement: http://localhost:8082/api/... ou http://localhost:8084/...
  */
 export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
   const moduleName = MODULE_URL_NAMES[module];
@@ -56,7 +49,8 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
     // En production, tous les modules utilisent le même domaine
     if (MODULES_WITH_API_PREFIX.includes(module)) {
       // Modules qui ont /api dans leurs routes (Controllers)
-      return `${API_DOMAIN}/${moduleName}${API_PREFIX}`;
+      // Le /api est déjà dans la route du Controller, donc on ne l'ajoute pas
+      return `${API_DOMAIN}/${moduleName}`;
     } else {
       // Modules sans /api dans leurs routes (Program.cs)
       return `${API_DOMAIN}/${moduleName}`;
