@@ -26,6 +26,7 @@ import HeatmapLayer from '../../components/common/map/HeatmapLayer';
 import MapNavbar from '../../components/map/MapNavbar';
 import AddPointModal from '../../components/map/AddPointModal';
 import { GroupedMarkers } from '../../components/common/map/GroupedMarkers';
+
 import { Event, CreateEventDto } from '../../types/planning/event';
 import { planningService } from '../../services/planningService';
 import { useTranslation } from 'react-i18next';
@@ -810,13 +811,11 @@ const Plan: React.FC = () => {
                             )}
                             
                             {/* Affichage des points existants avec groupement (masqués si heatmap active) */}
-                            {!showHeatmap && (
-                                <GroupedMarkers
-                                    points={geoPoints}
-                                    onShowRoute={handleShowRoute}
-                                    formatDate={formatDate}
-                                />
-                            )}
+                            <GroupedMarkers
+                                points={geoPoints}
+                                onShowRoute={handleShowRoute}
+                                formatDate={formatDate}
+                            />
 
                             {/* Affichage des routes d'événements */}
                             {!routesDisabled && routes.map((route, index) => {
@@ -1404,7 +1403,7 @@ const Plan: React.FC = () => {
             )}
 
             {/* Toasts */}
-            <div className="fixed top-4 right-4 z-50 space-y-2">
+            <div className="fixed top-20 right-4 z-50 space-y-2">
                 {toasts.map((toast) => (
                     <Toast
                         key={toast.id}

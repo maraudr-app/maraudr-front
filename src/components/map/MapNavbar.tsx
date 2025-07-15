@@ -15,10 +15,10 @@ interface MapNavbarProps {
   eventsCount?: number;
 }
 
-const MapNavbar: React.FC<MapNavbarProps> = ({ 
+const MapNavbar: React.FC<MapNavbarProps> = ({
   isConnected, 
   showHeatmap, 
-  onToggleHeatmap, 
+  onToggleHeatmap,
   onAddPoint,
   daysFilter,
   onDaysFilterChange,
@@ -61,7 +61,7 @@ const MapNavbar: React.FC<MapNavbarProps> = ({
             </span>
           </div>
         </div>
-        
+
         {/* Boutons d'action */}
         <div className="flex-shrink-0 flex flex-col sm:flex-row justify-center sm:justify-end gap-2 order-2 sm:order-2">
           {/* Filtre par jours */}
