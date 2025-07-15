@@ -11,6 +11,7 @@ import { UserGroupIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { planningService } from '../../services/planningService';
 import { assoService } from '../../services/assoService';
 import { useAssoStore } from '../../store/assoStore';
+import { useAuthStore } from '../../store/authStore';
 import { PlanningNavbar } from '../../components/planning/PlanningNavbar';
 
 const EventHistoryPage: React.FC = () => {
@@ -18,6 +19,7 @@ const EventHistoryPage: React.FC = () => {
     const navigate = useNavigate();
     const { selectedAssociation, sidebarCollapsed } = useAssoStore();
     const { calculateEventTiming } = useEventBusinessRules();
+    const { user } = useAuthStore();
 
     const t_planning = (key: string): string => t(`planning.${key}` as any);
 
@@ -58,7 +60,11 @@ const EventHistoryPage: React.FC = () => {
                     createdAt: member.createdAt,
                     updatedAt: member.updatedAt
                 }));
-                setTeamUsers(convertedMembers);
+                
+                // Filtrer le manager connecté de la liste des utilisateurs
+                const filteredMembers = convertedMembers.filter(member => member.id !== user?.sub);
+                
+                setTeamUsers(filteredMembers);
             } finally {
                 setLoading(false);
             }

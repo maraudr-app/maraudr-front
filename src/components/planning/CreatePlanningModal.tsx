@@ -92,7 +92,10 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
                 updatedAt: member.updatedAt
             }));
             
-            setTeamMembers(convertedMembers);
+            // Filtrer le manager connecté de la liste des membres de l'équipe
+            const filteredMembers = convertedMembers.filter(member => member.id !== user?.sub);
+            
+            setTeamMembers(filteredMembers);
         } catch (error) {
             console.error('Erreur lors du chargement des membres:', error);
         } finally {
