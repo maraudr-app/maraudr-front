@@ -28,33 +28,41 @@ const PORTS: Record<string, string> = {
   document: import.meta.env.VITE_MODULE_DOCUMENT_PORT || '8087',
 };
 
+// Modules qui utilisent /api dans leurs routes
+const MODULES_WITH_API_PREFIX = ['planning', 'user', 'mcp'];
+
 /**
  * Génère l'URL d'API pour un module donné
- * En production: https://api.maraudr.com/api/...
- * En développement: http://localhost:8082/api/...
+ * En production: https://api.maraudr.eu/api/... (pour planning, user, mcp)
+ * En production: https://api.maraudr.eu/... (pour geo, stock, association, etc.)
+ * En développement: http://localhost:8082/api/... ou http://localhost:8084/...
  */
 export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
   if (isProduction) {
     // En production, tous les modules utilisent le même domaine
-    return `${API_DOMAIN}${API_PREFIX}`;
+    if (MODULES_WITH_API_PREFIX.includes(module)) {
+      // Modules qui ont /api dans leurs routes
+      return `${API_DOMAIN}${API_PREFIX}`;
+    } else {
+      // Modules sans /api dans leurs routes
+      return API_DOMAIN;
+    }
   } else {
     // En développement, chaque module a son propre port
-    if (module === 'user') {
-      // Module user en développement: http://localhost:8082/api/...
-      return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
-    } else if (module === 'planning') {
-      // Module planning en développement: http://localhost:8085/api/...
-      return `${API_DOMAIN}:${PORTS[module]}${API_PREFIX}`;
+    const baseUrl = `${API_DOMAIN}:${PORTS[module]}`;
+    if (MODULES_WITH_API_PREFIX.includes(module)) {
+      // Modules qui ont /api dans leurs routes
+      return `${baseUrl}${API_PREFIX}`;
     } else {
-      // Autres modules en développement: http://localhost:8081/...
-      return `${API_DOMAIN}:${PORTS[module]}`;
+      // Modules sans /api dans leurs routes
+      return baseUrl;
     }
   }
 };
 
 /**
  * Génère l'URL de base d'un module (sans /api)
- * En production: https://api.maraudr.com
+ * En production: https://api.maraudr.eu
  * En développement: http://localhost:8082
  */
 export const getModuleBaseUrl = (module: keyof typeof PORTS): string => {
@@ -78,5 +86,6 @@ export const debugApiUrls = () => {
     console.log(`${module}:`);
     console.log(`  API URL: ${getModuleApiUrl(module)}`);
     console.log(`  Base URL: ${getModuleBaseUrl(module)}`);
+    console.log(`  Uses API prefix: ${MODULES_WITH_API_PREFIX.includes(module)}`);
   });
 };
