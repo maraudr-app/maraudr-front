@@ -143,42 +143,65 @@ export const geoService = {
         }
     },
 
-    // Créer une connexion WebSocket pour les mises à jour en temps réel
-    createLiveConnection: (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): WebSocket => {
-        // Utiliser la même logique que getModuleBaseUrl pour geo
-        const geoBaseUrl = getModuleBaseUrl('geo');
+    // Créer une connexion temps réel (fallback polling car WebSocket nécessite auth backend)
+    createLiveConnection: async (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): Promise<{ close: () => void }> => {
+        console.log('🔄 Démarrage de la surveillance temps réel par polling (WebSocket indisponible)');
         
-        // Convertir HTTP(S) vers WS(S) pour WebSocket
-        const wsUrl = `${geoBaseUrl.replace('https://', 'wss://').replace('http://', 'ws://')}/geo/live?associationId=${associationId}`;
+        let lastCheckTime = new Date();
+        let isActive = true;
+        
+        // Fonction de polling pour simuler le temps réel
+        const pollForUpdates = async () => {
+            if (!isActive) return;
             
-        console.log('🔌 Connexion WebSocket:', { geoBaseUrl, wsUrl, associationId });
-        const socket = new WebSocket(wsUrl);
-        
-        socket.onopen = () => {
-            console.log('WebSocket connection opened for association:', associationId);
-        };
-
-        socket.onmessage = (event) => {
             try {
-                const data = JSON.parse(event.data);
-                onMessage(data);
+                // Récupérer les points récents (dernières 5 minutes)
+                const fiveMinutesAgo = Math.ceil((Date.now() - lastCheckTime.getTime()) / (1000 * 60 * 60 * 24)) || 1;
+                const points = await geoService.getGeoPoints(associationId, fiveMinutesAgo);
+                
+                // Filtrer les points ajoutés depuis la dernière vérification
+                const newPoints = points.filter(point => {
+                    const pointDate = point.timestamp || point.observedAt;
+                    return pointDate && new Date(pointDate) > lastCheckTime;
+                });
+                
+                if (newPoints.length > 0) {
+                    console.log(`📍 ${newPoints.length} nouveau(x) point(s) détecté(s)`);
+                    newPoints.forEach(point => {
+                        onMessage({
+                            type: 'new_point',
+                            point: point
+                        });
+                    });
+                }
+                
+                lastCheckTime = new Date();
+                
+                // Répéter toutes les 5 secondes
+                if (isActive) {
+                    setTimeout(pollForUpdates, 5000);
+                }
+                
             } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
+                console.error('Erreur lors du polling:', error);
+                if (isActive) {
+                    setTimeout(pollForUpdates, 10000); // Retry plus lentement en cas d'erreur
+                }
             }
         };
-
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            if (onError) {
-                onError(error);
+        
+        // Démarrer le polling
+        pollForUpdates();
+        
+        console.log('✅ Surveillance temps réel activée (polling toutes les 5s)');
+        
+        // Retourner un objet compatible avec WebSocket
+        return {
+            close: () => {
+                isActive = false;
+                console.log('🔌 Surveillance temps réel arrêtée');
             }
         };
-
-        socket.onclose = () => {
-            console.log('WebSocket connection closed for association:', associationId);
-        };
-
-        return socket;
     },
 
     // Obtenir la position actuelle de l'utilisateur

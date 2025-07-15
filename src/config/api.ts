@@ -57,7 +57,14 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
     }
   } else {
     // En développement: http://localhost:PORT
-    return `${API_DOMAIN}:${PORTS[module]}`;
+    const baseUrl = `${API_DOMAIN}:${PORTS[module]}`;
+    if (MODULES_WITH_API_PREFIX.includes(module)) {
+      // Modules avec Controllers: http://localhost:PORT/api
+      return `${baseUrl}/api`;
+    } else {
+      // Modules sans Controllers: http://localhost:PORT
+      return baseUrl;
+    }
   }
 };
 

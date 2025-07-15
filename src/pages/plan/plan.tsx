@@ -183,8 +183,8 @@ const Plan: React.FC = () => {
     // Position par défaut (Paris)
     const [mapCenter] = useState<[number, number]>([48.8566, 2.3522]);
     
-    // Référence WebSocket
-    const socketRef = useRef<WebSocket | null>(null);
+    // Référence connexion temps réel
+    const connectionRef = useRef<{ close: () => void } | null>(null);
 
     const { sidebarCollapsed } = useAssoStore();
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
@@ -237,9 +237,9 @@ const Plan: React.FC = () => {
     useEffect(() => {
         if (!selectedAssociation?.id) return;
 
-        const connectWebSocket = () => {
+        const connectLiveUpdates = async () => {
             try {
-                socketRef.current = geoService.createLiveConnection(
+                connectionRef.current = await geoService.createLiveConnection(
                     selectedAssociation.id,
                     (data) => {
                         console.log('Nouvelle donnée reçue:', data);
@@ -251,32 +251,29 @@ const Plan: React.FC = () => {
                         }
                     },
                     (error) => {
-                        console.error('Erreur WebSocket:', error);
+                        console.error('Erreur connexion temps réel:', error);
                         setIsConnected(false);
                         toast.error('Connexion temps réel interrompue');
                     }
                 );
 
-                socketRef.current.onopen = () => {
-                    setIsConnected(true);
-                    toast.success('Connexion temps réel établie');
-                };
-
-                socketRef.current.onclose = () => {
-                    setIsConnected(false);
-                };
+                // Simulation des événements WebSocket
+                setIsConnected(true);
+                toast.success('Surveillance temps réel activée');
 
             } catch (error) {
-                console.error('Erreur lors de la connexion WebSocket:', error);
+                console.error('Erreur lors de la connexion temps réel:', error);
                 setIsConnected(false);
+                toast.error(`Erreur temps réel: ${error instanceof Error ? error.message : 'Connexion impossible'}`);
             }
         };
 
-        connectWebSocket();
+        connectLiveUpdates();
 
         return () => {
-            if (socketRef.current) {
-                socketRef.current.close();
+            if (connectionRef.current) {
+                connectionRef.current.close();
+                setIsConnected(false);
             }
         };
     }, [selectedAssociation?.id]);
