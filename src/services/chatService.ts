@@ -45,7 +45,7 @@ export const chatService = {
     // Envoyer un message sans streaming (réponse complète)
     sendMessage: async (request: ChatRequest): Promise<ChatResponse> => {
         try {
-            const response = await chatApi.post('/api/chat', request);
+            const response = await chatApi.post('/chat', request);
             return response.data;
         } catch (error: any) {
             console.error('Erreur lors de l\'envoi du message:', error);
@@ -62,7 +62,7 @@ export const chatService = {
     ): Promise<void> => {
         try {
             const token = await tokenManager.ensureValidToken();
-            const response = await fetch(`${CHAT_API_URL}/api/chat/stream`, {
+            const response = await fetch(`${CHAT_API_URL}/chat/stream`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

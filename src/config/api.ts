@@ -38,7 +38,7 @@ const MODULE_URL_NAMES: Record<string, string> = {
 
 /**
  * Génère l'URL d'API pour un module donné
- * En production: https://api.maraudr.eu/user/api/... (pour user, planning, mcp)
+ * En production: https://api.maraudr.eu/api/... (pour user, planning, mcp avec Controllers)
  * En production: https://api.maraudr.eu/geo/... (pour geo, stock, association, etc.)
  * En développement: http://localhost:8082/api/... ou http://localhost:8084/...
  */
@@ -49,8 +49,8 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
     // En production, tous les modules utilisent le même domaine
     if (MODULES_WITH_API_PREFIX.includes(module)) {
       // Modules qui ont /api dans leurs routes (Controllers)
-      // Le /api est déjà dans la route du Controller, donc on ne l'ajoute pas
-      return `${API_DOMAIN}/${moduleName}`;
+      // En production, les Controllers sont montés directement sur le domaine principal
+      return API_DOMAIN;
     } else {
       // Modules sans /api dans leurs routes (Program.cs)
       return `${API_DOMAIN}/${moduleName}`;
@@ -60,6 +60,7 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
     const baseUrl = `${API_DOMAIN}:${PORTS[module]}`;
     if (MODULES_WITH_API_PREFIX.includes(module)) {
       // Modules qui ont /api dans leurs routes (Controllers)
+      // En dev, on ajoute /api car le Controller l'attend
       return `${baseUrl}${API_PREFIX}`;
     } else {
       // Modules sans /api dans leurs routes (Program.cs)
