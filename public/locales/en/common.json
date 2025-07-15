@@ -66,5 +66,8 @@
   "stock": {
     "createStock": "Create Stock",
     "title": "Stock Management"
+  },
+  "map": {
+    "name_placeholder": "Name of the reporting point..."
   }
 } 

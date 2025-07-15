@@ -49,11 +49,16 @@ geoApi.interceptors.response.use(
 
 export interface GeoPoint {
     id?: string;
+    geoStoreId?: string;
+    name?: string;
     associationId: string;
     latitude: number;
     longitude: number;
     notes: string;
     timestamp?: string;
+    observedAt?: string;
+    address?: string;
+    isActive?: boolean;
     userId?: string;
 }
 

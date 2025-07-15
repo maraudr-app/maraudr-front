@@ -23,7 +23,9 @@ import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/common/toast/Toast';
 import RouteInfoModal from '../../components/common/modal/RouteInfoModal';
 import HeatmapLayer from '../../components/common/map/HeatmapLayer';
-import { Event } from '../../types/planning/event';
+import MapNavbar from '../../components/map/MapNavbar';
+import AddPointModal from '../../components/map/AddPointModal';
+import { Event, CreateEventDto } from '../../types/planning/event';
 import { planningService } from '../../services/planningService';
 
 // Fix for default marker icons
@@ -161,6 +163,7 @@ const Plan: React.FC = () => {
     const [isCreatingRoute, setIsCreatingRoute] = useState(false);
     const [selectedRoutePoint, setSelectedRoutePoint] = useState<{ lat: number; lng: number } | null>(null);
     const [showRouteCreationModal, setShowRouteCreationModal] = useState(false);
+    const [showRouteConfirmationModal, setShowRouteConfirmationModal] = useState(false);
     const [routesDisabled, setRoutesDisabled] = useState(false);
     
     // États pour les itinéraires existants
@@ -284,10 +287,12 @@ const Plan: React.FC = () => {
             if (!selectedAssociation?.id) return;
             
             try {
+                console.log('🔄 Chargement des événements pour l\'association:', selectedAssociation.id);
                 const eventsData = await planningService.getAllEvents(selectedAssociation.id);
+                console.log('✅ Événements récupérés:', eventsData);
                 setEvents(eventsData);
             } catch (error) {
-                console.error('Erreur lors du chargement des événements:', error);
+                console.error('❌ Erreur lors du chargement des événements:', error);
                 toast.error('Erreur lors du chargement des événements');
             }
         };
@@ -409,9 +414,28 @@ const Plan: React.FC = () => {
 
     // Gérer le clic sur la carte pour créer une route
     const handleMapClickForRoute = (lat: number, lng: number) => {
-        if (!isCreatingRoute || !selectedEvent || selectionMode !== 'map') return;
+        console.log('🎯 handleMapClickForRoute appelé avec:', { lat, lng });
+        console.log('🔍 États actuels:', { 
+            isCreatingRoute, 
+            selectedEvent: selectedEvent?.title, 
+            selectionMode 
+        });
         
+        if (!isCreatingRoute || !selectedEvent || selectionMode !== 'map') {
+            console.log('❌ Conditions non remplies:', { 
+                isCreatingRoute, 
+                hasSelectedEvent: !!selectedEvent, 
+                selectionMode 
+            });
+            return;
+        }
+        
+        console.log('✅ Conditions remplies, sélection du point');
         setSelectedRoutePoint({ lat, lng });
+        setShowRouteConfirmationModal(true); // Réafficher le modal de confirmation
+        setIsCreatingRoute(false); // Arrêter le mode création
+        
+        console.log('🎉 Modal de confirmation activé');
     };
 
     // Ajouter un nouveau point
@@ -458,18 +482,41 @@ const Plan: React.FC = () => {
     };
 
     // Formater la date
-    const formatDate = (timestamp?: string) => {
-        if (!timestamp) return 'Date inconnue';
-        return new Date(timestamp).toLocaleString('fr-FR');
+    const formatDate = (timestamp?: string, observedAt?: string) => {
+        // Utiliser observedAt en priorité, sinon timestamp
+        const dateString = observedAt || timestamp;
+        if (!dateString) return 'Date inconnue';
+        
+        // Le serveur envoie les dates en UTC, on les affiche directement en heure locale
+        const date = new Date(dateString);
+        return date.toLocaleString('fr-FR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Europe/Paris'
+        });
     };
 
     // Créer une route pour un événement
     const handleCreateRoute = async () => {
-        if (!selectedEvent || !selectedRoutePoint || !selectedAssociation?.id) return;
+        console.log('🚀 handleCreateRoute appelé');
+        console.log('📋 Données disponibles:', { 
+            selectedEvent: selectedEvent?.title, 
+            selectedRoutePoint, 
+            selectedAssociation: selectedAssociation?.id 
+        });
+        
+        if (!selectedEvent || !selectedRoutePoint || !selectedAssociation?.id) {
+            console.log('❌ Données manquantes pour créer la route');
+            return;
+        }
 
         try {
+            console.log('✅ Données complètes, début de création');
             setIsCreatingRoute(false);
-            setShowRouteCreationModal(false);
+            setShowRouteConfirmationModal(false);
             
             const routeData = {
                 associationId: selectedAssociation.id,
@@ -486,6 +533,7 @@ const Plan: React.FC = () => {
             console.log('📍 Point sélectionné:', selectedRoutePoint);
 
             const newRoute = await geoService.createRoute(routeData);
+            console.log('✅ Route créée avec succès:', newRoute);
             setRoutes(prev => [...prev, newRoute]);
             toast.success('Route créée avec succès !');
             
@@ -493,7 +541,7 @@ const Plan: React.FC = () => {
             setSelectedEvent(null);
             setSelectedRoutePoint(null);
         } catch (error) {
-            console.error('Erreur lors de la création de la route:', error);
+            console.error('❌ Erreur lors de la création de la route:', error);
             toast.error('Erreur lors de la création de la route');
         }
     };
@@ -693,51 +741,29 @@ const Plan: React.FC = () => {
     return (
         <div className="h-full bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             {/* Navbar Carte, style StockNavbar */}
-            <nav
-                className="fixed top-16 right-0 z-40 bg-white dark:bg-gray-800 shadow transition-all duration-300 border-b border-orange-200/50 dark:border-gray-700"
-                style={{ left: sidebarWidth }}
-            >
-                <div className="flex items-center justify-between h-16 px-7">
-                    <div className="flex items-center gap-3">
-                        <MapPinIcon className="w-6 h-6 text-orange-500" />
-                        <span className="text-gray-900 dark:text-white text-lg font-bold">Plan & Géolocalisation</span>
-                        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${isConnected ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'}`}> <WifiIcon className="w-4 h-4" /> <span>{isConnected ? 'Temps réel actif' : 'Hors ligne'}</span> </div>
-                        </div>
-                    <div className="flex items-center space-x-6">
-                        <select
-                            value={daysFilter}
-                            onChange={(e) => setDaysFilter(parseInt(e.target.value))}
-                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                        >
-                            <option value={1}>Aujourd'hui</option>
-                            <option value={7}>7 derniers jours</option>
-                            <option value={30}>30 derniers jours</option>
-                            <option value={90}>3 derniers mois</option>
-                        </select>
-                        <button
-                            onClick={() => setShowHeatmap(!showHeatmap)}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${showHeatmap ? 'bg-purple-500 hover:bg-purple-600 text-white' : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'}`}
-                        >
-                            <FireIcon className="w-4 h-4" />
-                            <span>{showHeatmap ? 'Masquer heatmap' : 'Afficher heatmap'}</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (events.length === 0) {
-                                    toast.error('Aucun événement disponible pour créer une route');
-                                    return;
-                                }
-                                setShowRouteCreationModal(true);
-                            }}
-                            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all"
-                        >
-                                    <PlusIcon className="w-4 h-4" />
-                            <span>Créer une route</span>
-                        </button>
-                       
-                        </div>
-                        </div>
-            </nav>
+            <MapNavbar
+                isConnected={isConnected}
+                showHeatmap={showHeatmap}
+                onToggleHeatmap={() => setShowHeatmap(!showHeatmap)}
+                onAddPoint={() => {
+                    setIsAddingPoint(true);
+                    setShowPointModal(true);
+                    setSelectedPoint(null);
+                    setNewPointNotes('');
+                }}
+                daysFilter={daysFilter}
+                onDaysFilterChange={setDaysFilter}
+                onCreateRoute={() => {
+                    if (events.length === 0) {
+                        toast.error('Aucun événement disponible. Vérifiez que les événements sont bien chargés depuis le service Planning.');
+                        return;
+                    }
+                    setShowRouteCreationModal(true);
+                    setSelectedEvent(null);
+                    setSelectedRoutePoint(null);
+                }}
+                eventsCount={events.length}
+            />
             {/* Main content scrolls under the navbar, with correct padding */}
             <div className="pt-16" />
 
@@ -784,33 +810,31 @@ const Plan: React.FC = () => {
                                 <Marker
                                     key={point.id || index}
                                     position={[point.latitude, point.longitude]}
-                                    icon={createCustomIcon(getPointColor(point.timestamp))}
+                                    icon={createCustomIcon(getPointColor(point.observedAt || point.timestamp))}
                                 >
                                     <Popup>
                                         <div className="p-2 min-w-[200px]">
-                                            <h3 className="font-semibold text-gray-900 mb-2">Point de géolocalisation</h3>
+                                            <h3 className="font-semibold text-gray-900 mb-2">
+                                                {point.name || 'Point de géolocalisation'}
+                                            </h3>
+                                            {point.address && (
+                                                <p className="text-xs text-gray-500 mb-2">
+                                                    📍 {point.address}
+                                                </p>
+                                            )}
                                             <p className="text-sm text-gray-600 mb-2">{point.notes}</p>
-                                            <div className="text-xs text-gray-500 space-y-1 mb-3">
-                                                <div className="flex items-center">
-                                                    <ClockIcon className="w-3 h-3 mr-1" />
-                                                    {formatDate(point.timestamp)}
-                                                </div>
-                                                {point.userId && (
-                                                    <div className="flex items-center">
-                                                        <UserIcon className="w-3 h-3 mr-1" />
-                                                        Utilisateur: {point.userId}
-                                                    </div>
-                                                )}
-                                                <div className="text-xs text-gray-400">
-                                                    Lat: {point.latitude.toFixed(6)}, Lng: {point.longitude.toFixed(6)}
+                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                <div>{formatDate(point.timestamp, point.observedAt)}</div>
+                                                <div className="mt-1">
+                                                    {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() => handleShowRoute(point)}
-                                                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-sm rounded-lg transition-all"
+                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
                                             >
-                                                <MapIcon className="w-4 h-4" />
-                                                <span>Voir l'itinéraire</span>
+                                                <MapIcon className="w-3 h-3" />
+                                                <span>Itinéraire</span>
                                             </button>
                                         </div>
                                     </Popup>
@@ -1039,17 +1063,22 @@ const Plan: React.FC = () => {
                                                 <div className="flex items-center mb-2">
                                                     <div 
                                                         className="w-3 h-3 rounded-full mr-2"
-                                                        style={{ backgroundColor: getPointColor(point.timestamp) }}
+                                                        style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
                                                     ></div>
                                                     <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                        Point #{index + 1}
+                                                        {point.name || `Point #${index + 1}`}
                                                     </h4>
                                                 </div>
+                                                {point.address && (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                        📍 {point.address}
+                                                    </p>
+                                                )}
                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                                                     {point.notes || 'Aucune description'}
                                                 </p>
                                                 <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                    <div>{formatDate(point.timestamp)}</div>
+                                                    <div>{formatDate(point.timestamp, point.observedAt)}</div>
                                                     <div className="mt-1">
                                                         {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
                                                     </div>
@@ -1158,58 +1187,25 @@ const Plan: React.FC = () => {
                 </div>
             </div>
 
-            {/* Modal de confirmation d'ajout de point */}
-            {showPointModal && selectedPoint && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Confirmer l'ajout du point
-                        </h3>
-                        
-                        <div className="space-y-4 mb-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Position
-                                </label>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    Latitude: {selectedPoint.latitude.toFixed(6)}<br/>
-                                    Longitude: {selectedPoint.longitude.toFixed(6)}
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Description
-                                </label>
-                                <Input
-                                    placeholder="Description du point"
-                                    value={newPointNotes}
-                                    onChange={(e) => setNewPointNotes(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex space-x-3">
-                            <button
-                                onClick={handleAddPoint}
-                                className="flex-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-all"
-                            >
-                                Ajouter le point
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowPointModal(false);
-                                    setSelectedPoint(null);
-                                    setIsAddingPoint(false);
-                                }}
-                                className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
-                            >
-                                Annuler
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Modal d'ajout de point */}
+            <AddPointModal
+                isOpen={showPointModal}
+                onClose={() => {
+                    setShowPointModal(false);
+                    setSelectedPoint(null);
+                    setIsAddingPoint(false);
+                }}
+                onPointAdded={() => {
+                    // Recharger les points après ajout
+                    if (selectedAssociation?.id) {
+                        geoService.getGeoPoints(selectedAssociation.id, daysFilter)
+                            .then(setGeoPoints)
+                            .catch(console.error);
+                    }
+                }}
+                initialLat={selectedPoint?.latitude}
+                initialLng={selectedPoint?.longitude}
+            />
 
             {/* Modal de création de route */}
             {showRouteCreationModal && (
@@ -1275,8 +1271,11 @@ const Plan: React.FC = () => {
                                 <>
                                     <button
                                         onClick={() => {
+                                            console.log('🚀 Bouton Commencer cliqué');
+                                            console.log('📋 Événement sélectionné:', selectedEvent?.title);
                                             setIsCreatingRoute(true);
                                             setShowRouteCreationModal(false);
+                                            console.log('✅ Mode création activé, modal fermé');
                                             toast.success('Cliquez maintenant sur la carte pour sélectionner le point de départ');
                                         }}
                                         className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-all"
@@ -1310,7 +1309,7 @@ const Plan: React.FC = () => {
             )}
 
             {/* Modal de confirmation de création de route */}
-            {showRouteCreationModal && selectedRoutePoint && selectedEvent && (
+            {showRouteConfirmationModal && selectedRoutePoint && selectedEvent && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -1351,7 +1350,7 @@ const Plan: React.FC = () => {
                                     setSelectedRoutePoint(null);
                                     setSelectedEvent(null);
                                     setIsCreatingRoute(false);
-                                    setShowRouteCreationModal(false);
+                                    setShowRouteConfirmationModal(false);
                                     setAddressQuery('');
                                     setSelectedAddress(null);
                                 }}

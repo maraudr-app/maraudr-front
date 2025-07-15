@@ -7,6 +7,8 @@ import { getPasswordStrength } from "../../utils/passwordStrength";
 import Button from "../../components/common/button/button";
 import { useTranslation } from "react-i18next";
 import { userService } from "../../services/userService";
+import { authService } from "../../services/authService";
+import { useAuthStore } from "../../store/authStore";
 import { Language } from "../../types/enums/Language";
 import { toast } from "react-hot-toast";
 import { UserCircleIcon } from '@heroicons/react/24/outline';
@@ -172,28 +174,13 @@ const CreateAccount = () => {
       
       console.log('📡 Données formatées pour le backend:', backendData);
       
+      
       const response = await userService.createAccount(backendData);
+   
       
       console.log('✅ Réponse de création d\'utilisateur:', response);
       
-      if (response) {
-        // Toast de succès
-        toast.success('Compte créé avec succès ! Redirection vers la page de connexion...', {
-          duration: 3000,
-          position: 'top-center',
-          style: {
-            background: '#10b981',
-            color: '#fff',
-            padding: '16px',
-            borderRadius: '8px',
-          },
-        });
-        
-        // Naviguer vers login après 3 secondes
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
-      }
+  
     } catch (error: any) {
       let errorMessage = t_register('error.default');
       
@@ -214,7 +201,7 @@ const CreateAccount = () => {
         },
       });
     } finally {
-      setIsLoading(false);
+  
     }
   };
 

@@ -66,5 +66,8 @@
   "stock": {
     "createStock": "Créer un stock",
     "title": "Gestion des stocks"
+  },
+  "map": {
+    "name_placeholder": "Nom du point de signalement..."
   }
 } 
