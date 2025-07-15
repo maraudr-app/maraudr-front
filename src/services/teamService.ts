@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { getUserTeamUrl } from '../config/api';
+import { getModuleBaseUrl } from '../config/api';
 
-const API_URL = getUserTeamUrl();
+const API_URL = getModuleBaseUrl('user');
 
 export interface TeamMember {
     id: string;

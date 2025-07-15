@@ -145,10 +145,13 @@ export const geoService = {
 
     // Créer une connexion WebSocket pour les mises à jour en temps réel
     createLiveConnection: (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): WebSocket => {
-        const isProd = import.meta.env.VITE_NODE_ENV === 'production';
-        const wsUrl = isProd 
-            ? `wss://${import.meta.env.VITE_API_DOMAIN_PROD?.replace('https://', '')}/geo/geo/live?associationId=${associationId}`
-            : `ws://localhost:8084/geo/live?associationId=${associationId}`;
+        // Utiliser la même logique que getModuleBaseUrl pour geo
+        const geoBaseUrl = getModuleBaseUrl('geo');
+        
+        // Convertir HTTP(S) vers WS(S) pour WebSocket
+        const wsUrl = `${geoBaseUrl.replace('https://', 'wss://').replace('http://', 'ws://')}/geo/live?associationId=${associationId}`;
+            
+        console.log('🔌 Connexion WebSocket:', { geoBaseUrl, wsUrl, associationId });
         const socket = new WebSocket(wsUrl);
         
         socket.onopen = () => {
@@ -351,6 +354,42 @@ export const geoService = {
                 throw new Error(`Service géolocalisation non accessible sur ${GEO_API_URL}. Vérifiez que le service est démarré.`);
             }
             
+            throw error;
+        }
+    },
+
+    // Récupérer les itinéraires d'une association
+    getItineraries: async (associationId: string): Promise<any[]> => {
+        try {
+            const response = await geoApi.get('/itineraries', {
+                params: { associationId }
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error('Erreur lors de la récupération des itinéraires:', error);
+            throw error;
+        }
+    },
+
+    // Autocomplete d'adresses
+    searchAddresses: async (query: string): Promise<any> => {
+        try {
+            const response = await geoApi.get('/autocomplete', {
+                params: { text: query }
+            });
+            return response.data;
+        } catch (error: any) {
+            console.error('Erreur lors de la recherche d\'adresses:', error);
+            throw error;
+        }
+    },
+
+    // Supprimer un itinéraire
+    deleteItinerary: async (itineraryId: string): Promise<void> => {
+        try {
+            await geoApi.delete(`/itineraries/${itineraryId}`);
+        } catch (error: any) {
+            console.error('Erreur lors de la suppression de l\'itinéraire:', error);
             throw error;
         }
     }

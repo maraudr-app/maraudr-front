@@ -652,11 +652,8 @@ const Planning: React.FC = () => {
                 updatedAt: member.updatedAt
             }));
             
-            // Filtrer le manager connecté de la liste des utilisateurs de l'équipe
-            const filteredMembers = convertedMembers.filter(member => member.id !== user?.sub);
-            
-            console.log('Utilisateurs de l\'équipe chargés (manager exclu):', filteredMembers);
-            setTeamUsers(filteredMembers);
+            console.log('Utilisateurs de l\'équipe chargés:', convertedMembers);
+            setTeamUsers(convertedMembers);
         } catch (error) {
             console.error('Erreur lors du chargement des utilisateurs:', error);
         // @ts-ignore

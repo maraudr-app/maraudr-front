@@ -25,12 +25,8 @@ import RouteInfoModal from '../../components/common/modal/RouteInfoModal';
 import HeatmapLayer from '../../components/common/map/HeatmapLayer';
 import MapNavbar from '../../components/map/MapNavbar';
 import AddPointModal from '../../components/map/AddPointModal';
-import { GroupedMarkers } from '../../components/common/map/GroupedMarkers';
-
 import { Event, CreateEventDto } from '../../types/planning/event';
 import { planningService } from '../../services/planningService';
-import { useTranslation } from 'react-i18next';
-import { getModuleApiUrl } from '../../config/api';
 
 // Fix for default marker icons
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -318,19 +314,7 @@ const Plan: React.FC = () => {
                     throw new Error('Token d\'authentification non trouvé');
                 }
                 
-                const response = await fetch(`http://localhost:8084/itineraries?associationId=${selectedAssociation.id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const itinerariesData = await response.json();
+                const itinerariesData = await geoService.getItineraries(selectedAssociation.id);
                 console.log('✅ Itinéraires récupérés:', itinerariesData);
                 console.log('📊 Structure des données:', {
                     type: typeof itinerariesData,
@@ -630,27 +614,7 @@ const Plan: React.FC = () => {
             setIsLoadingAddresses(true);
             console.log('🔍 Recherche d\'adresses pour:', query);
             
-            // Récupérer le token depuis le store d'authentification
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Token d\'authentification non trouvé');
-            }
-            
-            const GEO_API_URL = getModuleApiUrl('geo');
-            const response = await fetch(`${GEO_API_URL}/autocomplete?text=${encodeURIComponent(query)}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            console.log('📡 Réponse API:', response.status);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
+            const data = await geoService.searchAddresses(query);
             console.log('📄 Données reçues:', data);
             
             if (data.features && Array.isArray(data.features)) {
@@ -711,31 +675,13 @@ const Plan: React.FC = () => {
         if (!itineraryToDelete || !selectedAssociation?.id) return;
         setDeletingItinerary(true);
         try {
-            const token = localStorage.getItem('token');
-            if (!token) throw new Error('Token manquant');
-            const response = await fetch(`http://localhost:8084/itineraries/${itineraryToDelete.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) throw new Error('Erreur API');
+            await geoService.deleteItinerary(itineraryToDelete.id);
             toast.success('Itinéraire supprimé avec succès');
             setShowDeleteItineraryModal(false);
             setItineraryToDelete(null);
             // Recharge la liste
-            const refreshed = await fetch(`http://localhost:8084/itineraries?associationId=${selectedAssociation.id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (refreshed.ok) {
-                const data = await refreshed.json();
-                setItineraries(data.filter((it: any) => it.associationId === selectedAssociation.id));
-            }
+            const data = await geoService.getItineraries(selectedAssociation.id);
+            setItineraries(data.filter((it: any) => it.associationId === selectedAssociation.id));
         } catch (error) {
             toast.error('Erreur lors de la suppression de l\'itinéraire');
         } finally {
@@ -810,12 +756,41 @@ const Plan: React.FC = () => {
                                 />
                             )}
                             
-                            {/* Affichage des points existants avec groupement (masqués si heatmap active) */}
-                            <GroupedMarkers
-                                points={geoPoints}
-                                onShowRoute={handleShowRoute}
-                                formatDate={formatDate}
-                            />
+                            {/* Affichage des points existants (masqués si heatmap active) */}
+                            {!showHeatmap && geoPoints.map((point, index) => (
+                                <Marker
+                                    key={point.id || index}
+                                    position={[point.latitude, point.longitude]}
+                                    icon={createCustomIcon(getPointColor(point.observedAt || point.timestamp))}
+                                >
+                                    <Popup>
+                                        <div className="p-2 min-w-[200px]">
+                                            <h3 className="font-semibold text-gray-900 mb-2">
+                                                {point.name || 'Point de géolocalisation'}
+                                            </h3>
+                                            {point.address && (
+                                                <p className="text-xs text-gray-500 mb-2">
+                                                    📍 {point.address}
+                                                </p>
+                                            )}
+                                            <p className="text-sm text-gray-600 mb-2">{point.notes}</p>
+                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                <div>{formatDate(point.timestamp, point.observedAt)}</div>
+                                                <div className="mt-1">
+                                                    {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleShowRoute(point)}
+                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                            >
+                                                <MapIcon className="w-3 h-3" />
+                                                <span>Itinéraire</span>
+                                            </button>
+                                        </div>
+                                    </Popup>
+                                </Marker>
+                            ))}
 
                             {/* Affichage des routes d'événements */}
                             {!routesDisabled && routes.map((route, index) => {
@@ -936,10 +911,10 @@ const Plan: React.FC = () => {
                                                             href={itinerary.googleMapsUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded transition-all"
+                                                            className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-lg transition-all"
                                                         >
-                                                            <MapIcon className="w-3 h-3" />
-                                                            <span>Google Maps</span>
+                                                            <MapIcon className="w-4 h-4" />
+                                                            <span>Voir sur Google Maps</span>
                                                         </a>
                                                     )}
                                                     <button onClick={e => { e.stopPropagation(); setItineraryToDelete(itinerary); setShowDeleteItineraryModal(true); }}
@@ -1029,90 +1004,47 @@ const Plan: React.FC = () => {
                             </div>
                         ) : (
                             <div className="p-4 space-y-3">
-                                {geoPoints.map((point, index) => {
-                                    const getIconType = (point: GeoPoint) => {
-                                        if (point.notes?.toLowerCase().includes('urgence') || point.notes?.toLowerCase().includes('urgent')) {
-                                            return 'emergency';
-                                        }
-                                        if (point.notes?.toLowerCase().includes('surveillance') || point.notes?.toLowerCase().includes('watch')) {
-                                            return 'surveillance';
-                                        }
-                                        if (point.notes?.toLowerCase().includes('incident') || point.notes?.toLowerCase().includes('accident')) {
-                                            return 'incident';
-                                        }
-                                        if (point.notes?.toLowerCase().includes('patrouille') || point.notes?.toLowerCase().includes('patrol')) {
-                                            return 'patrol';
-                                        }
-                                        return 'default';
-                                    };
-
-                                    const iconType = getIconType(point);
-                                    const iconColors = {
-                                        emergency: '#EF4444',
-                                        surveillance: '#3B82F6',
-                                        incident: '#F59E0B',
-                                        patrol: '#10B981',
-                                        default: getPointColor(point.observedAt || point.timestamp)
-                                    };
-
-                                    const iconSymbols = {
-                                        emergency: '🚨',
-                                        surveillance: '👁️',
-                                        incident: '⚠️',
-                                        patrol: '🚶',
-                                        default: '📍'
-                                    };
-
-                                    return (
-                                        <div
-                                            key={point.id || index}
-                                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center mb-2">
-                                                        <div 
-                                                            className="w-8 h-8 rounded-full mr-3 flex items-center justify-center text-white text-sm font-bold"
-                                                            style={{ backgroundColor: iconColors[iconType] }}
-                                                        >
-                                                            {iconSymbols[iconType]}
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                {point.name || `Point #${index + 1}`}
-                                                            </h4>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {formatDate(point.timestamp, point.observedAt)}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    {point.address && (
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 flex items-center">
-                                                            <MapPinIcon className="w-3 h-3 mr-1" />
-                                                            {point.address}
-                                                        </p>
-                                                    )}
-                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                                                        {point.notes || 'Aucune description'}
-                                                    </p>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                        <div className="flex items-center justify-between">
-                                                            <span>{formatDate(point.timestamp, point.observedAt)}</span>
-                                                            <span>{point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}</span>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleShowRoute(point)}
-                                                        className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                    >
-                                                        <MapIcon className="w-3 h-3" />
-                                                        <span>Itinéraire</span>
-                                                    </button>
+                                {geoPoints.map((point, index) => (
+                                    <div
+                                        key={point.id || index}
+                                        className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center mb-2">
+                                                    <div 
+                                                        className="w-3 h-3 rounded-full mr-2"
+                                                        style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
+                                                    ></div>
+                                                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {point.name || `Point #${index + 1}`}
+                                                    </h4>
                                                 </div>
+                                                {point.address && (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                        📍 {point.address}
+                                                    </p>
+                                                )}
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                                    {point.notes || 'Aucune description'}
+                                                </p>
+                                                <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                    <div>{formatDate(point.timestamp, point.observedAt)}</div>
+                                                    <div className="mt-1">
+                                                        {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleShowRoute(point)}
+                                                    className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                >
+                                                    <MapIcon className="w-3 h-3" />
+                                                    <span>Itinéraire</span>
+                                                </button>
                                             </div>
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -1403,7 +1335,7 @@ const Plan: React.FC = () => {
             )}
 
             {/* Toasts */}
-            <div className="fixed top-20 right-4 z-50 space-y-2">
+            <div className="fixed top-4 right-4 z-50 space-y-2">
                 {toasts.map((toast) => (
                     <Toast
                         key={toast.id}
