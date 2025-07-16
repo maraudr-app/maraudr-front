@@ -45,6 +45,7 @@ interface DashboardData {
   stockItemsData: any[];
   userEvents: Event[];
   currentEvents?: number; // Nombre d'événements d'aujourd'hui pour les managers
+  todayEvents: Event[]; // Événements en cours aujourd'hui pour l'affichage
 }
 
 // Ajout de la fonction utilitaire pour regrouper les événements par mois (similaire à planning)
@@ -109,7 +110,8 @@ const DashBoard = () => {
     activeDisponibilities: 0,
     isUserInAssociation: true,
     stockItemsData: [],
-    userEvents: []
+    userEvents: [],
+    todayEvents: []
   });
 
   const isManager = user?.userType === 'Manager';
@@ -230,87 +232,205 @@ const DashBoard = () => {
 
   // Charger les données du dashboard
   useEffect(() => {
+    console.log('🔍 ===== DÉBUT DEBUG DASHBOARD =====');
+    console.log('👤 User:', user);
+    console.log('🏢 Selected Association:', selectedAssociation);
+    console.log('🎯 User Type:', user?.userType);
+    console.log('🆔 Association ID:', selectedAssociation?.id);
+    
     if (!selectedAssociation?.id) {
+      console.log('❌ Pas d\'association sélectionnée, arrêt du chargement');
       return;
     }
+    
+    console.log('✅ Association trouvée, démarrage du chargement...');
 
     const loadDashboardData = async () => {
       setLoading(true);
+      
+      console.log('🚀 Début de loadDashboardData');
+      
       try {
-        // Charger les données de stock
-        const stockItems = await stockService.getStockItems(selectedAssociation.id);
-        // Pour l'instant, considérer qu'un item est en stock faible si quantity < 5
-        const lowStockItems = stockItems.filter(item => item.quantity < 5);
-        setDashboardData({
-          stockItems: stockItems.length,
-          lowStockItems: lowStockItems.length,
+        // ===== 1. VÉRIFICATION STOCK =====
+        console.log('📦 Chargement du stock...');
+        let stockItems: any[] = [];
+        let lowStockItems: any[] = [];
+        
+        try {
+          stockItems = await stockService.getStockItems(selectedAssociation.id);
+          console.log('📦 Stock Items reçus:', stockItems);
+          console.log('📦 Nombre d\'articles:', stockItems?.length || 0);
+          
+          // Pour l'instant, considérer qu'un item est en stock faible si quantity < 5
+          lowStockItems = stockItems.filter(item => item.quantity < 5);
+          console.log('⚠️ Articles en stock faible:', lowStockItems?.length || 0);
+        } catch (stockError) {
+          console.error('❌ Erreur chargement stock (continuons quand même):', stockError);
+          stockItems = [];
+          lowStockItems = [];
+        }
+        
+        // Initialisation des données de base
+        const initialData = {
+          stockItems: stockItems?.length || 0,
+          lowStockItems: lowStockItems?.length || 0,
           teamMembers: 0,
           teamMembersList: [],
           upcomingEvents: 0,
           activeDisponibilities: 0,
           isUserInAssociation: true,
-          stockItemsData: stockItems,
+          stockItemsData: stockItems || [],
           userEvents: [],
-          currentEvents: 0
+          todayEvents: []
+        };
+        
+        console.log('📋 Données initiales:', initialData);
+        setDashboardData(initialData);
+
+        // ===== 2. VÉRIFICATION ÉQUIPE (si Manager) =====
+        if (user?.userType === 'Manager') {
+          console.log('👨‍💼 UTILISATEUR EST MANAGER - Chargement des données équipe...');
+          
+          try {
+            const teamResponse = await teamService.getTeamMembers(user.sub);
+            console.log('👥 Team Response:', teamResponse);
+            console.log('👥 Membres de l\'équipe:', teamResponse?.members);
+            console.log('👥 Nombre de membres:', teamResponse?.members?.length || 0);
+            
+            const teamCount = teamResponse?.members?.length || 0;
+            
+            setDashboardData(prev => {
+              const newData = { 
+                ...prev, 
+                teamMembers: teamCount, 
+                teamMembersList: teamResponse?.members || [] 
+              };
+              console.log('👥 Mise à jour données équipe:', newData);
+              return newData;
+            });
+          } catch (teamError) {
+            console.error('❌ Erreur chargement équipe:', teamError);
+          }
+        } else {
+          console.log('👤 UTILISATEUR N\'EST PAS MANAGER (type:', user?.userType, ')');
+        }
+
+        // ===== 3. VÉRIFICATION DISPONIBILITÉS =====
+        console.log('📅 Chargement des disponibilités...');
+        try {
+          const availability = await userService.getDisponibilities(selectedAssociation.id);
+          console.log('📅 Disponibilités reçues:', availability);
+          console.log('📅 Nombre de disponibilités:', availability?.length || 0);
+          
+          setDashboardData(prev => {
+            const newData = { ...prev, activeDisponibilities: availability?.length || 0 };
+            console.log('📅 Mise à jour disponibilités:', newData);
+            return newData;
+          });
+        } catch (availabilityError) {
+          console.error('❌ Erreur chargement disponibilités:', availabilityError);
+        }
+
+        // ===== 4. VÉRIFICATION DISPONIBILITÉS GLOBALES (si Manager) =====
+        if (user?.userType === 'Manager') {
+          console.log('🌍 Chargement de toutes les disponibilités...');
+          try {
+            const allAvailabilities = await userService.getAllDisponibilities(selectedAssociation.id);
+            console.log('🌍 Toutes les disponibilités:', allAvailabilities);
+            setAllDisponibilities(allAvailabilities || []);
+          } catch (allAvailabilityError) {
+            console.error('❌ Erreur chargement toutes disponibilités:', allAvailabilityError);
+          }
+        }
+
+        // ===== 5. VÉRIFICATION ÉVÉNEMENTS =====
+        console.log('🎯 Chargement des événements...');
+        let userEvents: Event[] = [];
+        let allAssociationEvents: Event[] = [];
+        let todayEvents: Event[] = [];
+        
+        if (user?.userType === 'Manager') {
+          console.log('👨‍💼 Manager - Récupération de TOUS les événements de l\'association');
+          
+          try {
+            allAssociationEvents = await planningService.getAllEvents(selectedAssociation.id);
+            console.log('🎯 Tous les événements de l\'association:', allAssociationEvents);
+            console.log('🎯 Nombre total d\'événements:', allAssociationEvents?.length || 0);
+            
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            console.log('📅 Aujourd\'hui c\'est:', today.toLocaleDateString('fr-FR'));
+            
+            // Filtrer les événements du jour
+            todayEvents = allAssociationEvents.filter(event => {
+              const eventStart = new Date(event.beginningDate);
+              const eventEnd = new Date(event.endDate);
+              
+              // Normaliser les dates pour la comparaison (ignorer les heures)
+              const eventStartDate = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
+              const eventEndDate = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate());
+              const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+              
+              const isActiveToday = eventStartDate <= todayDate && eventEndDate >= todayDate;
+              
+              console.log(`🔍 Événement "${event.title}":`, {
+                start: event.beginningDate,
+                end: event.endDate,
+                startDate: eventStartDate.toLocaleDateString('fr-FR'),
+                endDate: eventEndDate.toLocaleDateString('fr-FR'),
+                isActiveToday
+              });
+              
+              return isActiveToday;
+            });
+            
+            console.log('🎯 Événements du jour trouvés:', todayEvents);
+            console.log('🎯 Nombre d\'événements du jour:', todayEvents.length);
+            
+          } catch (eventsError) {
+            console.error('❌ Erreur chargement événements:', eventsError);
+          }
+          
+        } else {
+          console.log('👤 Membre - Récupération de MES événements');
+          try {
+            userEvents = await planningService.getMyEventsByAssociation(selectedAssociation.id);
+            console.log('👤 Mes événements:', userEvents);
+            console.log('👤 Nombre de mes événements:', userEvents?.length || 0);
+          } catch (myEventsError) {
+            console.error('❌ Erreur chargement mes événements:', myEventsError);
+          }
+        }
+        
+        // ===== 6. CALCUL DES ÉVÉNEMENTS FUTURS =====
+        const now = new Date();
+        const eventsToCheck = user?.userType === 'Manager' ? allAssociationEvents : userEvents;
+        const upcomingEvents = eventsToCheck.filter(event => new Date(event.beginningDate) > now);
+        
+        console.log('🔮 Événements à venir:', upcomingEvents);
+        console.log('🔮 Nombre d\'événements à venir:', upcomingEvents.length);
+        
+        // ===== 7. MISE À JOUR FINALE =====
+        const finalData = {
+          upcomingEvents: upcomingEvents.length,
+          userEvents: user?.userType === 'Manager' ? allAssociationEvents : userEvents,
+          currentEvents: user?.userType === 'Manager' ? todayEvents.length : 0,
+          todayEvents: user?.userType === 'Manager' ? todayEvents : []
+        };
+        
+        console.log('🏁 Données finales à appliquer:', finalData);
+        
+        setDashboardData(prev => {
+          const result = { ...prev, ...finalData };
+          console.log('🏁 Données dashboard après mise à jour complète:', result);
+          return result;
         });
 
-        // Charger les données d'équipe si l'utilisateur est manager
-        if (user?.userType === 'Manager') {
-          const teamResponse = await teamService.getTeamMembers(user.sub);
-          const teamCount = teamResponse?.members?.length || 0;
-          setDashboardData(prev => ({ ...prev, teamMembers: teamCount, teamMembersList: teamResponse?.members || [] }));
-        }
-
-        // Charger les données de planning
-        const availability = await userService.getDisponibilities(selectedAssociation.id);
-        setDashboardData(prev => ({ ...prev, activeDisponibilities: availability?.length || 0 }));
-
-        // Charger toutes les disponibilités pour le calcul des personnes disponibles
-        if (user?.userType === 'Manager') {
-          const allAvailabilities = await userService.getAllDisponibilities(selectedAssociation.id);
-          setAllDisponibilities(allAvailabilities || []);
-        }
-
-        // Charger les événements selon le rôle de l'utilisateur
-        let userEvents: Event[] = [];
-        let allAssociationEvents: Event[] = []; // Pour le graphique des managers
-        
-        if (user?.userType === 'Manager') {
-          // Pour les managers : récupérer TOUS les événements de l'association
-          allAssociationEvents = await planningService.getAllEvents(selectedAssociation.id);
-          const now = new Date();
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-          
-          // Pour les cartes : ne garder que les événements d'aujourd'hui
-          userEvents = allAssociationEvents.filter(event => {
-            const eventStart = new Date(event.beginningDate);
-            const eventStartDate = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
-            return eventStartDate.getTime() === today.getTime(); // Événements qui commencent aujourd'hui
-          });
-          
-          console.log(`🎯 Manager Dashboard: ${userEvents.length} événements aujourd'hui sur ${allAssociationEvents.length} total`);
-        } else {
-          // Pour les membres : récupérer seulement les événements auxquels je participe
-          userEvents = await planningService.getMyEventsByAssociation(selectedAssociation.id);
-          console.log(`👤 Membre Dashboard: ${userEvents.length} événements auxquels je participe`);
-        }
-        
-        // Calculer les prochaines missions (événements futurs)
-        const now = new Date();
-        const upcomingEvents = userEvents.filter(event => new Date(event.beginningDate) > now);
-        
-        setDashboardData(prev => ({ 
-          ...prev, 
-          upcomingEvents: upcomingEvents.length,
-          userEvents: user?.userType === 'Manager' ? allAssociationEvents : userEvents, // Utiliser tous les événements pour le graphique des managers
-          currentEvents: userEvents.length // Nombre d'événements d'aujourd'hui pour les managers
-        }));
-
       } catch (error) {
-        // Erreur silencieuse
+        console.error('❌ ERREUR GLOBALE dans loadDashboardData:', error);
       } finally {
         setLoading(false);
+        console.log('🔍 ===== FIN DEBUG DASHBOARD =====');
       }
     };
 
@@ -341,10 +461,14 @@ const DashBoard = () => {
     return created >= startOfMonth && created <= now;
   }).length;
 
-  // Variation événements : nombre d'événements qui commencent ce mois-ci
+  // Variation événements : nombre d'événements en cours ou ayant eu lieu ce mois-ci
   const eventsThisMonth = dashboardData.userEvents.filter(event => {
-    const begin = new Date(event.beginningDate);
-    return begin >= startOfMonth && begin <= now;
+    const eventStart = new Date(event.beginningDate);
+    const eventEnd = new Date(event.endDate);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Dernier jour du mois
+    
+    // Un événement compte pour ce mois s'il y a chevauchement avec le mois
+    return eventStart <= endOfMonth && eventEnd >= startOfMonth;
   }).length;
 
   // Variation membres : nombre de membres créés ce mois-ci
@@ -432,12 +556,51 @@ const DashBoard = () => {
           link: "/maraudApp/stock"
         },
         {
-          title: t_dashboard('eventsToday'),
-          value: (dashboardData.currentEvents || 0).toString(),
+          title: t_dashboard('overview'),
+          value: eventsThisMonth.toString(),
           variation: eventsThisMonth,
           icon: <CalendarDaysIcon className="w-6 h-6 text-green-500" />,
           iconBg: 'bg-green-100 dark:bg-green-900/30',
-          description: t_dashboard('today'),
+          isCustomCard: true,
+          customContent: (
+            <div className="mt-2">
+              {dashboardData.todayEvents?.length > 0 ? (
+                dashboardData.todayEvents.slice(0, 1).map((event, index) => {
+                  const startDate = new Date(event.beginningDate);
+                  return (
+                    <div 
+                      key={event.id} 
+                      className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                        setShowEventModal(true);
+                      }}
+                    >
+                      <div className="flex-1 pr-3">
+                        <p className="text-xs font-medium text-green-800 dark:text-green-200 truncate">
+                          {event.title}
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-300">
+                          {t_dashboard('ongoingSince')} {startDate.toLocaleDateString('fr-FR', { 
+                            day: 'numeric', 
+                            month: 'short' 
+                          })}
+                        </p>
+                      </div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t_dashboard('noEventsToday')}
+                  </p>
+                </div>
+              )}
+            </div>
+          ),
           action: (
             <Link
               to="/maraudApp/planing"
@@ -446,8 +609,7 @@ const DashBoard = () => {
               {t_dashboard('viewEvents')}
             </Link>
           ),
-          clickable: true,
-          link: "/maraudApp/planing"
+          clickable: false // Désactivé car on a des clics internes
         }
       ];
     } else {
@@ -611,36 +773,40 @@ const DashBoard = () => {
                 ? 'hover:shadow-md hover:scale-105 cursor-pointer' 
                 : 'hover:shadow-md'
             }`}
-            onClick={card.clickable && card.link ? () => navigate(card.link) : undefined}
+            onClick={card.clickable && (card as any).link ? () => navigate((card as any).link) : undefined}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">
                   {card.title}
                 </p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {card.value}
-                </h3>
-                {card.variation > 0 ? (
-                  <span className="ml-2 text-sm text-green-600">
-                    +{card.variation} {t_dashboard('thisMonth')}
-                  </span>
-                ) : card.variation === 0 && card.title === t_dashboard('stockItems') ? (
-                  <span className="ml-2 text-xs text-gray-400">
+                <div className="flex items-baseline gap-2 mb-1">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {card.value}
+                  </h3>
+                  {card.variation > 0 ? (
+                    <span className="text-sm text-green-600">
+                      +{card.variation} {t_dashboard('thisMonth')}
+                    </span>
+                  ) : null}
+                </div>
+                {card.variation === 0 && card.title === t_dashboard('stockItems') ? (
+                  <span className="text-xs text-gray-400">
                     {t_dashboard('noNewItems')}
                   </span>
                 ) : card.variation === 0 && card.title === t_dashboard('upcomingEvents') ? (
-                  <span className="ml-2 text-xs text-gray-400">
+                  <span className="text-xs text-gray-400">
                     {t_dashboard('noNewEvents')}
                   </span>
                 ) : card.variation === 0 && card.title === t_dashboard('nextMissions') ? (
-                  <span className="ml-2 text-xs text-gray-400">
+                  <span className="text-xs text-gray-400">
                     {t_dashboard('noNewMissions')}
                   </span>
                 ) : null}
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                   {card.description}
                 </p>
+                {(card as any).customContent && (card as any).customContent}
                 {(card as any).action && (card as any).action}
               </div>
               <div className={`p-3 rounded-lg ${card.iconBg}`}>
@@ -872,7 +1038,7 @@ const DashBoard = () => {
               <div className="space-y-3">
                 {dashboardData.userEvents
                   .filter(event => new Date(event.beginningDate) > new Date())
-                    .slice(0, 3)
+                  .slice(0, 3)
                   .map((event, index) => {
                     const eventDate = new Date(event.beginningDate);
                     const endDate = new Date(event.endDate);
