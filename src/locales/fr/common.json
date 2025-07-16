@@ -652,6 +652,7 @@
     "availability_availabilities": "disponibilité",
     "availability_thisMonth": "ce mois",
     "availability_validationError": "Erreur de validation des données",
+    "availability_durationError": "La durée de disponibilité doit être raisonnable (moins de 120h)",
     "availability_networkError": "Erreur de connexion réseau",
     "availability_serverError": "Erreur du serveur",
     "availability_unknownError": "Erreur inconnue",

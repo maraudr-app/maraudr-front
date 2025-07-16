@@ -91,7 +91,36 @@ export const userService = {
       return response.data;
     } catch (error: any) {
       console.error('Erreur détaillée:', error.response?.data);
-      const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
+      
+      // Extraire le message d'erreur de la validation
+      let errorMessage = 'availability_unknownError';
+      
+      if (error.response?.data) {
+        const responseData = error.response.data;
+        let backendMessage = '';
+        
+        // Si c'est un tableau d'erreurs de validation
+        if (Array.isArray(responseData) && responseData.length > 0 && responseData[0].errorMessage) {
+          backendMessage = responseData[0].errorMessage;
+        }
+        // Si c'est un objet avec errorMessage
+        else if (responseData.errorMessage) {
+          backendMessage = responseData.errorMessage;
+        }
+        // Sinon, utiliser detail
+        else if (responseData.detail) {
+          backendMessage = responseData.detail;
+        }
+        
+        // Mapper les messages du backend vers les clés de traduction
+        if (backendMessage.includes('durée de disponibilité doit être raisonnable') || backendMessage.includes('moins de 120h')) {
+          errorMessage = 'availability_durationError';
+        } else if (backendMessage) {
+          // Si on a un message mais pas de mapping spécifique, retourner le message original
+          errorMessage = backendMessage;
+        }
+      }
+      
       throw new Error(errorMessage);
     }
   },

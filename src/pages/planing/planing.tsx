@@ -310,7 +310,12 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             } else if (error.message?.includes('Network') || error.code === 'NETWORK_ERROR') {
                 errorMessage = t_planning('availability_networkError');
             } else if (error.message) {
-                errorMessage = error.message;
+                // Si le message est une clé de traduction (commence par 'availability_'), la traduire
+                if (error.message.startsWith('availability_')) {
+                    errorMessage = t_planning(error.message);
+                } else {
+                    errorMessage = error.message;
+                }
             }
             
             toast?.error(errorMessage);
@@ -1265,7 +1270,12 @@ const Planning: React.FC = () => {
                 } else if (error.message?.includes('Network') || error.code === 'NETWORK_ERROR') {
                     errorMessage = t_planning('availability_networkError');
                 } else if (error.message) {
-                    errorMessage = error.message;
+                    // Si le message est une clé de traduction (commence par 'availability_'), la traduire
+                    if (error.message.startsWith('availability_')) {
+                        errorMessage = t_planning(error.message);
+                    } else {
+                        errorMessage = error.message;
+                    }
                 }
                 
                 setModalError(errorMessage);

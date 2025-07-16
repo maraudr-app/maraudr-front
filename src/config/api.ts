@@ -51,6 +51,9 @@ export const getModuleApiUrl = (module: keyof typeof PORTS): string => {
     if (MODULES_WITH_API_PREFIX.includes(module)) {
       // Modules avec Controllers: https://api.maraudr.eu/MODULE/api
       return `${API_DOMAIN}/${moduleName}/api`;
+    } else if (module === 'stock') {
+      // Exception pour stock: retourne l'URL de base car stockService ajoute déjà /stock/...
+      return `${API_DOMAIN}`;
     } else {
       // Modules sans Controllers: https://api.maraudr.eu/MODULE
       return `${API_DOMAIN}/${moduleName}`;
