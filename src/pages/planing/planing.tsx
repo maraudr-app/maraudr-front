@@ -942,11 +942,11 @@ const Planning: React.FC = () => {
         return end < now;
     };
 
-    // Filtrage des membres selon la recherche
+    // Filtrage des membres selon la recherche (exclure les managers)
     const filteredTeamUsers = teamUsers.filter(user => {
         const fullName = `${user.firstname} ${user.lastname}`.toLowerCase();
         console.log(user);
-        return fullName.includes(searchTeam.toLowerCase());
+        return !user.isManager && fullName.includes(searchTeam.toLowerCase());
     });
 
     // Vérifier l'authentification
