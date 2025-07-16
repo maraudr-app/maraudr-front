@@ -217,13 +217,10 @@ const AcceptInvitation = () => {
       console.log('✅ Réponse de l\'API - Succès:', response);
       
       if (response) {
-        console.log('🎉 Compte créé avec succès, redirection vers login dans 3 secondes');
+        console.log('🎉 Compte créé avec succès, reste sur la page');
         showNotification('success', 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
         
-        // Naviguer vers login après 3 secondes (même délai que l'auto-dismiss de la notification)
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        // Plus de redirection automatique - l'utilisateur reste sur la page
       }
     } catch (error: any) {
       console.log('❌ Erreur lors de la création du compte:', error);
