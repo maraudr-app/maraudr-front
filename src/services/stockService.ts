@@ -13,6 +13,18 @@ import {
 
 const API_URL = getModuleApiUrl('stock');
 
+// URL spéciale pour les opérations avec /stock : ajoute /stock en production pour avoir stock/stock
+const getStockUrl = (): string => {
+    const isProduction = !window.location.hostname.includes('localhost');
+    return isProduction ? `${API_URL}/stock/stock` : `${API_URL}/stock`;
+};
+
+// URL spéciale pour les opérations /item : ajoute /stock en production pour avoir stock/item
+const getItemUrl = (): string => {
+    const isProduction = !window.location.hostname.includes('localhost');
+    return isProduction ? `${API_URL}/stock/item` : `${API_URL}/item`;
+};
+
 // Fonction utilitaire pour mapper les réponses du backend vers le frontend
 const mapBackendItemToFrontend = (backendItem: any): StockItem => {
     return {
@@ -32,7 +44,7 @@ export const stockService = {
         }
 
         try {
-            const response = await axios.get(`${API_URL}/stock/${associationId}`, {
+            const response = await axios.get(`${getStockUrl()}/${associationId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
@@ -76,7 +88,7 @@ export const stockService = {
             throw new Error('No authentication token available');
         }
 
-        const response = await axios.get<any[]>(`${API_URL}/stock/items`, {
+        const response = await axios.get<any[]>(`${getStockUrl()}/items`, {
             params: { associationId },
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -96,7 +108,7 @@ export const stockService = {
         }
 
         const response = await axios.post<{ id: string }>(
-            `${API_URL}/item/${barcode}`,
+            `${getItemUrl()}/${barcode}`,
             { associationId },
             { 
                 headers: {
@@ -117,7 +129,7 @@ export const stockService = {
         }
 
         await axios.post(
-            `${API_URL}/item/${barcode}`,
+            `${getItemUrl()}/${barcode}`,
             { associationId },
             { 
                 headers: {
@@ -152,7 +164,7 @@ export const stockService = {
             };
 
             const response = await axios.post<{ id: string }>(
-                `${API_URL}/item`,
+                `${getItemUrl()}`,
                 requestData,
                 { 
                     headers: {
@@ -176,7 +188,7 @@ export const stockService = {
         }
 
         await axios.put(
-            `${API_URL}/stock/item/${itemId}`,
+            `${getStockUrl()}/item/${itemId}`,
             { quantity },
             {
                 headers: {
@@ -205,7 +217,7 @@ export const stockService = {
         };
 
         try {
-            await axios.put(`${API_URL}/item`, requestData, {
+            await axios.put(`${getItemUrl()}`, requestData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -225,7 +237,7 @@ export const stockService = {
             throw new Error('No authentication token available');
         }
 
-        await axios.delete(`${API_URL}/stock/item/${itemId}?associationId=${associationId}`, {
+        await axios.delete(`${getStockUrl()}/item/${itemId}?associationId=${associationId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -240,7 +252,7 @@ export const stockService = {
             throw new Error('No authentication token available');
         }
 
-        const response = await axios.get<any>(`${API_URL}/stock/item/${itemId}`, {
+        const response = await axios.get<any>(`${getStockUrl()}/item/${itemId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -258,7 +270,7 @@ export const stockService = {
             throw new Error('No authentication token available');
         }
 
-        const response = await axios.get<any[]>(`${API_URL}/item/type/${category}`, {
+        const response = await axios.get<any[]>(`${getItemUrl()}/type/${category}`, {
             params: { associationId },
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -277,7 +289,7 @@ export const stockService = {
             throw new Error('No authentication token available');
         }
 
-        const response = await axios.get<any>(`${API_URL}/item/barcode/${barcode}`, {
+        const response = await axios.get<any>(`${getItemUrl()}/barcode/${barcode}`, {
             params: { associationId },
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -295,7 +307,7 @@ export const stockService = {
             throw new Error('No authentication token available');
         }
         await axios.put(
-            `${API_URL}/item/reduce/${barcode}`,
+            `${getItemUrl()}/reduce/${barcode}`,
             data,
             {
                 headers: {
