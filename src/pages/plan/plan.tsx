@@ -99,25 +99,36 @@ const RouteRenderer: React.FC<{
                         const positions = feature.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]);
                         
                         return (
-                            <Polyline
-                                key={`${routeId}-${featureIndex}`}
-                                positions={positions}
-                                color={color}
-                                weight={4}
-                                opacity={opacity}
-                            >
-                                {feature.properties && feature.properties.summary && (
-                                    <Popup>
-                                        <div className="p-2">
-                                            <h4 className="font-semibold">
-                                                {routeId === 'example-route' ? 'Route d\'exemple' : 'Informations de route'}
-                                            </h4>
-                                            <p>Distance: {feature.properties.summary.distance} m</p>
-                                            <p>Durée: {feature.properties.summary.duration} s</p>
-                                        </div>
-                                    </Popup>
-                                )}
-                            </Polyline>
+                            <>
+                                {/* Bordure sombre pour meilleur contraste */}
+                                <Polyline
+                                    key={`${routeId}-${featureIndex}-border`}
+                                    positions={positions}
+                                    color="#000000"
+                                    weight={8}
+                                    opacity={opacity * 0.6}
+                                />
+                                {/* Route principale */}
+                                <Polyline
+                                    key={`${routeId}-${featureIndex}`}
+                                    positions={positions}
+                                    color={color}
+                                    weight={6}
+                                    opacity={opacity}
+                                >
+                                    {feature.properties && feature.properties.summary && (
+                                        <Popup>
+                                            <div className="p-2">
+                                                <h4 className="font-semibold">
+                                                    {routeId === 'example-route' ? 'Route d\'exemple' : 'Informations de route'}
+                                                </h4>
+                                                <p>Distance: {feature.properties.summary.distance} m</p>
+                                                <p>Durée: {feature.properties.summary.duration} s</p>
+                                            </div>
+                                        </Popup>
+                                    )}
+                                </Polyline>
+                            </>
                         );
                     }
                     return null;
@@ -178,13 +189,16 @@ const Plan: React.FC = () => {
     const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<any>(null);
     const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
-    const [selectionMode, setSelectionMode] = useState<'map' | 'address'>('map');
+    const [selectionMode, setSelectionMode] = useState<'map' | 'address'>('address');
+    
+    // États pour le rayon de recherche
+    const [radiusKm, setRadiusKm] = useState(10);
     
     // Position par défaut (Paris)
     const [mapCenter] = useState<[number, number]>([48.8566, 2.3522]);
     
     // Référence WebSocket
-    const socketRef = useRef<WebSocket | null>(null);
+    const socketRef = useRef<{ close: () => void } | null>(null);
 
     const { sidebarCollapsed } = useAssoStore();
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
@@ -257,14 +271,9 @@ const Plan: React.FC = () => {
                     }
                 );
 
-                socketRef.current.onopen = () => {
-                    setIsConnected(true);
-                    toast.success('Connexion temps réel établie');
-                };
-
-                socketRef.current.onclose = () => {
-                    setIsConnected(false);
-                };
+                // Connexion établie avec succès
+                setIsConnected(true);
+                toast.success('Connexion temps réel établie');
 
             } catch (error) {
                 console.error('Erreur lors de la connexion WebSocket:', error);
@@ -470,6 +479,83 @@ const Plan: React.FC = () => {
         return '#6B7280'; // Gris - ancien
     };
 
+    // Fonction pour calculer la distance entre deux points en mètres
+    const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+        const R = 6371e3; // Rayon de la Terre en mètres
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lng2-lng1) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c;
+    };
+
+    // Fonction pour grouper les points proches (clustering)
+    const clusterPoints = (points: GeoPoint[], maxDistance: number = 50) => {
+        const clusters: { center: GeoPoint; points: GeoPoint[]; }[] = [];
+        const processed = new Set<number>();
+
+        points.forEach((point, index) => {
+            if (processed.has(index)) return;
+
+            const cluster = {
+                center: point,
+                points: [point]
+            };
+
+            // Chercher tous les points dans le rayon
+            points.forEach((otherPoint, otherIndex) => {
+                if (otherIndex === index || processed.has(otherIndex)) return;
+
+                const distance = calculateDistance(
+                    point.latitude, point.longitude,
+                    otherPoint.latitude, otherPoint.longitude
+                );
+
+                if (distance <= maxDistance) {
+                    cluster.points.push(otherPoint);
+                    processed.add(otherIndex);
+                }
+            });
+
+            processed.add(index);
+            clusters.push(cluster);
+        });
+
+        return clusters;
+    };
+
+    // Créer l'icône pour un cluster
+    const createClusterIcon = (count: number, color: string) => L.divIcon({
+        html: `
+            <div style="
+                background-color: ${color}; 
+                width: 35px; 
+                height: 35px; 
+                border-radius: 50%; 
+                border: 3px solid white; 
+                box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: 12px;
+            ">${count}</div>
+        `,
+        iconSize: [35, 35],
+        iconAnchor: [17, 17],
+        className: 'cluster-marker'
+    });
+
+    // Obtenir les clusters de points
+    const pointClusters = clusterPoints(geoPoints);
+
     // Formater la date
     const formatDate = (timestamp?: string, observedAt?: string) => {
         // Utiliser observedAt en priorité, sinon timestamp
@@ -512,7 +598,7 @@ const Plan: React.FC = () => {
                 eventId: selectedEvent.id,
                 centerLat: selectedRoutePoint.lat,
                 centerLng: selectedRoutePoint.lng,
-                radiusKm: 10, // Rayon par défaut de 10km
+                radiusKm: radiusKm, // Utiliser le rayon sélectionné
                 startLat: selectedRoutePoint.lat,
                 startLng: selectedRoutePoint.lng
             };
@@ -526,9 +612,25 @@ const Plan: React.FC = () => {
             setRoutes(prev => [...prev, newRoute]);
             toast.success('Route créée avec succès !');
             
+            // Recharger toutes les routes et itinéraires pour mettre à jour l'affichage
+            try {
+                console.log('🔄 Rechargement des itinéraires...');
+                const updatedItineraries = await geoService.getItineraries(selectedAssociation.id);
+                const filteredItineraries = updatedItineraries.filter((it: any) => it.associationId === selectedAssociation.id);
+                setItineraries(filteredItineraries);
+                console.log('✅ Itinéraires rechargés:', filteredItineraries.length);
+            } catch (error) {
+                console.error('❌ Erreur lors du rechargement des itinéraires:', error);
+                // Pas grave, on garde l'ancienne liste
+            }
+            
             // Réinitialiser les états
             setSelectedEvent(null);
             setSelectedRoutePoint(null);
+            setAddressQuery('');
+            setSelectedAddress(null);
+            setShowAddressSuggestions(false);
+            setAddressSuggestions([]);
         } catch (error) {
             console.error('❌ Erreur lors de la création de la route:', error);
             toast.error('Erreur lors de la création de la route');
@@ -667,7 +769,8 @@ const Plan: React.FC = () => {
         
         if (lat && lng) {
             setSelectedRoutePoint({ lat, lng });
-            setShowRouteCreationModal(true);
+            setShowRouteCreationModal(false); // Fermer le modal de création
+            setShowRouteConfirmationModal(true); // Passer directement à la confirmation
         }
     };
 
@@ -757,41 +860,100 @@ const Plan: React.FC = () => {
                                 />
                             )}
                             
-                            {/* Affichage des points existants (masqués si heatmap active) */}
-                            {!showHeatmap && geoPoints.map((point, index) => (
-                                <Marker
-                                    key={point.id || index}
-                                    position={[point.latitude, point.longitude]}
-                                    icon={createCustomIcon(getPointColor(point.observedAt || point.timestamp))}
-                                >
-                                    <Popup>
-                                        <div className="p-2 min-w-[200px]">
-                                            <h3 className="font-semibold text-gray-900 mb-2">
-                                                {point.name || 'Point de géolocalisation'}
-                                            </h3>
-                                            {point.address && (
-                                                <p className="text-xs text-gray-500 mb-2">
-                                                    📍 {point.address}
-                                                </p>
-                                            )}
-                                            <p className="text-sm text-gray-600 mb-2">{point.notes}</p>
-                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                <div>{formatDate(point.timestamp, point.observedAt)}</div>
-                                                <div className="mt-1">
-                                                    {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
-                                                </div>
+                            {/* Affichage des points existants avec clustering (masqués si heatmap active) */}
+                            {!showHeatmap && pointClusters.map((cluster, clusterIndex) => {
+                                const isCluster = cluster.points.length > 1;
+                                const mainPoint = cluster.center;
+                                
+                                // Déterminer la couleur du cluster basée sur le point le plus récent
+                                const mostRecentColor = cluster.points.reduce((latest, point) => {
+                                    const pointTime = new Date(point.observedAt || point.timestamp || 0);
+                                    const latestTime = new Date(latest.observedAt || latest.timestamp || 0);
+                                    return pointTime > latestTime ? point : latest;
+                                }, cluster.points[0]);
+                                
+                                const clusterColor = getPointColor(mostRecentColor.observedAt || mostRecentColor.timestamp);
+                                
+                                return (
+                                    <Marker
+                                        key={`cluster-${clusterIndex}`}
+                                        position={[mainPoint.latitude, mainPoint.longitude]}
+                                        icon={isCluster 
+                                            ? createClusterIcon(cluster.points.length, clusterColor)
+                                            : createCustomIcon(clusterColor)
+                                        }
+                                    >
+                                        <Popup maxWidth={300}>
+                                            <div className="p-2">
+                                                {isCluster ? (
+                                                    // Affichage pour un cluster de plusieurs points
+                                                    <div>
+                                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                                                            📍 {cluster.points.length} points à proximité
+                                                        </h3>
+                                                        <div className="max-h-48 overflow-y-auto space-y-3">
+                                                            {cluster.points.map((point, pointIndex) => (
+                                                                <div key={`cluster-point-${pointIndex}`} className="border-l-4 pl-3 py-2" style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}>
+                                                                    <h4 className="font-medium text-sm text-gray-800 dark:text-white mb-1">
+                                                                        {point.name || `Point #${pointIndex + 1}`}
+                                                                    </h4>
+                                                                    {point.address && (
+                                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                                            📍 {point.address}
+                                                                        </p>
+                                                                    )}
+                                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                                                        {point.notes || 'Aucune description'}
+                                                                    </p>
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                                        <div>{formatDate(point.timestamp, point.observedAt)}</div>
+                                                                        <div className="mt-1">
+                                                                            {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
+                                                                        </div>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => handleShowRoute(point)}
+                                                                        className="w-full flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                                    >
+                                                                        <MapIcon className="w-3 h-3" />
+                                                                        <span>Itinéraire</span>
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    // Affichage pour un point isolé (comportement normal)
+                                                    <div className="min-w-[200px]">
+                                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                                                            {mainPoint.name || 'Point de géolocalisation'}
+                                                        </h3>
+                                                        {mainPoint.address && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                                📍 {mainPoint.address}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{mainPoint.notes}</p>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                                            <div>{formatDate(mainPoint.timestamp, mainPoint.observedAt)}</div>
+                                                            <div className="mt-1">
+                                                                {mainPoint.latitude.toFixed(4)}, {mainPoint.longitude.toFixed(4)}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleShowRoute(mainPoint)}
+                                                            className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                        >
+                                                            <MapIcon className="w-3 h-3" />
+                                                            <span>Itinéraire</span>
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <button
-                                                onClick={() => handleShowRoute(point)}
-                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                            >
-                                                <MapIcon className="w-3 h-3" />
-                                                <span>Itinéraire</span>
-                                            </button>
-                                        </div>
-                                    </Popup>
-                                </Marker>
-                            ))}
+                                        </Popup>
+                                    </Marker>
+                                );
+                            })}
 
                             {/* Affichage des routes d'événements */}
                             {!routesDisabled && routes.map((route, index) => {
@@ -820,17 +982,17 @@ const Plan: React.FC = () => {
                                         >
                                             <Popup>
                                                 <div className="p-2 min-w-[200px]">
-                                                    <h3 className="font-semibold text-gray-900 mb-2">
+                                                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                                                         {route.id === 'example-route' ? 'Route d\'exemple' : 'Point de départ'}
                                                     </h3>
-                                                    <div className="text-xs text-gray-500 space-y-1 mb-3">
-                                                        <div className="text-xs text-gray-400">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-3">
+                                                        <div className="text-xs text-gray-400 dark:text-gray-300">
                                                             Lat: {route.startLat.toFixed(6)}, Lng: {route.startLng.toFixed(6)}
                                                         </div>
-                                                        <div className="text-xs text-gray-400">
+                                                        <div className="text-xs text-gray-400 dark:text-gray-300">
                                                             Distance: {route.distanceKm} km
                                                         </div>
-                                                        <div className="text-xs text-gray-400">
+                                                        <div className="text-xs text-gray-400 dark:text-gray-300">
                                                             Durée: {route.durationMinutes} min
                                                         </div>
                                                     </div>
@@ -997,7 +1159,7 @@ const Plan: React.FC = () => {
 
                     {/* Liste des points */}
                     <div className="flex-1 overflow-y-auto max-h-80">
-                        {geoPoints.length === 0 ? (
+                        {pointClusters.length === 0 ? (
                             <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                                 <MapPinIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                                 <p>Aucun point de géolocalisation</p>
@@ -1005,47 +1167,97 @@ const Plan: React.FC = () => {
                             </div>
                         ) : (
                             <div className="p-4 space-y-3">
-                                {geoPoints.map((point, index) => (
-                                    <div
-                                        key={point.id || index}
-                                        className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                                    >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center mb-2">
-                                                    <div 
-                                                        className="w-3 h-3 rounded-full mr-2"
-                                                        style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
-                                                    ></div>
-                                                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                        {point.name || `Point #${index + 1}`}
-                                                    </h4>
-                                                </div>
-                                                {point.address && (
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                                        📍 {point.address}
+                                {pointClusters.map((cluster, clusterIndex) => {
+                                    const isCluster = cluster.points.length > 1;
+                                    const mainPoint = cluster.center;
+                                    
+                                    return (
+                                        <div key={`sidebar-cluster-${clusterIndex}`}>
+                                            {isCluster ? (
+                                                // Affichage cluster dans la sidebar
+                                                <div className="p-3 border-2 border-orange-200 dark:border-orange-700 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                                                    <div className="flex items-center mb-2">
+                                                        <div className="w-6 h-6 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center mr-2 font-bold">
+                                                            {cluster.points.length}
+                                                        </div>
+                                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            Cluster de {cluster.points.length} points
+                                                        </h4>
+                                                    </div>
+                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                                                        Points regroupés dans un rayon de 50 mètres
                                                     </p>
-                                                )}
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                    {point.notes || 'Aucune description'}
-                                                </p>
-                                                <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                    <div>{formatDate(point.timestamp, point.observedAt)}</div>
-                                                    <div className="mt-1">
-                                                        {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
+                                                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                                                        {cluster.points.map((point, pointIndex) => (
+                                                            <div key={`sidebar-point-${pointIndex}`} className="p-2 bg-white dark:bg-gray-800 rounded border-l-4" style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}>
+                                                                <div className="flex items-center mb-1">
+                                                                    <div 
+                                                                        className="w-2 h-2 rounded-full mr-2"
+                                                                        style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
+                                                                    ></div>
+                                                                    <h5 className="text-xs font-medium text-gray-800 dark:text-white">
+                                                                        {point.name || `Point #${pointIndex + 1}`}
+                                                                    </h5>
+                                                                </div>
+                                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                                    {point.notes || 'Aucune description'}
+                                                                </p>
+                                                                <div className="text-xs text-gray-500 mb-2">
+                                                                    {formatDate(point.timestamp, point.observedAt)}
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleShowRoute(point)}
+                                                                    className="w-full flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                                >
+                                                                    <MapIcon className="w-2 h-2" />
+                                                                    <span>Itinéraire</span>
+                                                                </button>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleShowRoute(point)}
-                                                    className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                >
-                                                    <MapIcon className="w-3 h-3" />
-                                                    <span>Itinéraire</span>
-                                                </button>
-                                            </div>
+                                            ) : (
+                                                // Affichage point isolé dans la sidebar (comportement normal)
+                                                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center mb-2">
+                                                                <div 
+                                                                    className="w-3 h-3 rounded-full mr-2"
+                                                                    style={{ backgroundColor: getPointColor(mainPoint.observedAt || mainPoint.timestamp) }}
+                                                                ></div>
+                                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {mainPoint.name || `Point isolé`}
+                                                                </h4>
+                                                            </div>
+                                                            {mainPoint.address && (
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                                    📍 {mainPoint.address}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                                                {mainPoint.notes || 'Aucune description'}
+                                                            </p>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                                <div>{formatDate(mainPoint.timestamp, mainPoint.observedAt)}</div>
+                                                                <div className="mt-1">
+                                                                    {mainPoint.latitude.toFixed(4)}, {mainPoint.longitude.toFixed(4)}
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => handleShowRoute(mainPoint)}
+                                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                            >
+                                                                <MapIcon className="w-3 h-3" />
+                                                                <span>Itinéraire</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -1206,15 +1418,108 @@ const Plan: React.FC = () => {
                             )}
 
                             {selectedEvent && (
-                                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
-                                    <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-400 mb-2">
-                                        <MapPinIcon className="w-5 h-5" />
-                                        <span className="font-medium">Étape suivante</span>
+                                <>
+                                    {/* Mode de sélection */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Mode de sélection du point
+                                        </label>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectionMode('address')}
+                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                                                    selectionMode === 'address'
+                                                        ? 'bg-blue-500 text-white'
+                                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                                }`}
+                                            >
+                                                📍 Par adresse
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectionMode('map')}
+                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                                                    selectionMode === 'map'
+                                                        ? 'bg-blue-500 text-white'
+                                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                                }`}
+                                            >
+                                                🗺️ Sur la carte
+                                            </button>
+                                        </div>
                                     </div>
-                                    <p className="text-sm text-orange-700 dark:text-orange-300">
-                                        Cliquez sur "Commencer" puis sélectionnez un point sur la carte pour créer la route.
-                                    </p>
-                                </div>
+
+                                    {/* Recherche par adresse */}
+                                    {selectionMode === 'address' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Rechercher une adresse
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={addressQuery}
+                                                    onChange={(e) => handleAddressInput(e.target.value)}
+                                                    placeholder="Tapez une adresse..."
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm pr-10"
+                                                />
+                                                {isLoadingAddresses && (
+                                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                                    </div>
+                                                )}
+                                                {showAddressSuggestions && addressSuggestions.length > 0 && (
+                                                    <div className="absolute left-0 z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                        {addressSuggestions.map((suggestion, index) => (
+                                                            <button
+                                                                key={index}
+                                                                type="button"
+                                                                onClick={() => handleAddressSelect(suggestion)}
+                                                                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                                                            >
+                                                                {suggestion.properties.formatted || suggestion.properties.name}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Rayon de recherche */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Rayon de recherche: {radiusKm} km
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="1"
+                                            max="50"
+                                            value={radiusKm}
+                                            onChange={(e) => setRadiusKm(parseInt(e.target.value))}
+                                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                        />
+                                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <span>1 km</span>
+                                            <span>50 km</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Instructions selon le mode */}
+                                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+                                        <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-400 mb-2">
+                                            <MapPinIcon className="w-5 h-5" />
+                                            <span className="font-medium">Étape suivante</span>
+                                        </div>
+                                        <p className="text-sm text-orange-700 dark:text-orange-300">
+                                            {selectionMode === 'address' ? 
+                                                'Recherchez une adresse ci-dessus ou cliquez sur "Commencer" puis sélectionnez un point sur la carte.' :
+                                                'Cliquez sur "Commencer" puis sélectionnez un point sur la carte pour créer la route.'
+                                            }
+                                        </p>
+                                    </div>
+                                </>
                             )}
                         </div>
 
@@ -1223,21 +1528,34 @@ const Plan: React.FC = () => {
                                 <>
                                     <button
                                         onClick={() => {
-                                            console.log('🚀 Bouton Commencer cliqué');
-                                            console.log('📋 Événement sélectionné:', selectedEvent?.title);
-                                            setIsCreatingRoute(true);
-                                            setShowRouteCreationModal(false);
-                                            console.log('✅ Mode création activé, modal fermé');
-                                            toast.success('Cliquez maintenant sur la carte pour sélectionner le point de départ');
+                                            if (selectionMode === 'map') {
+                                                console.log('🚀 Bouton Commencer cliqué - Mode carte');
+                                                console.log('📋 Événement sélectionné:', selectedEvent?.title);
+                                                setIsCreatingRoute(true);
+                                                setShowRouteCreationModal(false);
+                                                console.log('✅ Mode création activé, modal fermé');
+                                                toast.success('Cliquez maintenant sur la carte pour sélectionner le point de départ');
+                                            } else {
+                                                toast.error('Veuillez d\'abord sélectionner une adresse ou passer en mode carte');
+                                            }
                                         }}
-                                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-all"
+                                        disabled={selectionMode === 'address' && !selectedRoutePoint}
+                                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Commencer
+                                        {selectionMode === 'address' ? 
+                                            (selectedRoutePoint ? 'Continuer' : 'Sélectionner une adresse') : 
+                                            'Commencer'
+                                        }
                                     </button>
                                     <button
                                         onClick={() => {
                                             setShowRouteCreationModal(false);
                                             setSelectedEvent(null);
+                                            setSelectedRoutePoint(null);
+                                            setAddressQuery('');
+                                            setSelectedAddress(null);
+                                            setShowAddressSuggestions(false);
+                                            setAddressSuggestions([]);
                                         }}
                                         className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                                     >
@@ -1284,8 +1602,27 @@ const Plan: React.FC = () => {
                                     Point de départ sélectionné
                                 </label>
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    Latitude: {selectedRoutePoint.lat.toFixed(6)}<br/>
-                                    Longitude: {selectedRoutePoint.lng.toFixed(6)}
+                                    {selectedAddress ? (
+                                        <>
+                                            <div className="mb-2"><strong>Adresse:</strong> {addressQuery}</div>
+                                            <div>Latitude: {selectedRoutePoint.lat.toFixed(6)}<br/>
+                                            Longitude: {selectedRoutePoint.lng.toFixed(6)}</div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            Latitude: {selectedRoutePoint.lat.toFixed(6)}<br/>
+                                            Longitude: {selectedRoutePoint.lng.toFixed(6)}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Rayon de recherche
+                                </label>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    {radiusKm} km autour du point de départ
                                 </div>
                             </div>
                         </div>
