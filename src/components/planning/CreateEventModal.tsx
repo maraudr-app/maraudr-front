@@ -325,9 +325,9 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         }));
     };
 
-    // Filtrer les membres selon la recherche
+    // Filtrer les membres selon la recherche (exclure les managers)
     const filteredMembers = teamMembers.filter(member => 
-        `${member.firstname} ${member.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
+        !member.isManager && `${member.firstname} ${member.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Obtenir les noms des participants sélectionnés
