@@ -166,9 +166,17 @@ class TokenManager {
     } catch (error: any) {
       console.error('❌ Erreur lors du refresh du token:', error);
       
-      // Si le refresh échoue, nettoyer tout et rediriger
-      this.clearAllUserData();
-      this.redirectToLogin();
+      // ✅ Ne pas nettoyer/rediriger si on est sur une page d'invitation
+      const isInvitationPage = window.location.pathname === '/accept-invitation' || 
+                             window.location.pathname.includes('/accept-invitation');
+      
+      if (!isInvitationPage) {
+        // Si le refresh échoue, nettoyer tout et rediriger
+        this.clearAllUserData();
+        this.redirectToLogin();
+      } else {
+        console.log('🚫 Nettoyage/redirection bloqués après échec refresh : utilisateur sur page d\'invitation');
+      }
       
       throw new Error('Session expirée, veuillez vous reconnecter');
     }
@@ -176,6 +184,15 @@ class TokenManager {
 
   // Redirection vers la page de connexion
   redirectToLogin(): void {
+    // ✅ Ne pas rediriger si on est sur une page d'invitation
+    const isInvitationPage = window.location.pathname === '/accept-invitation' || 
+                           window.location.pathname.includes('/accept-invitation');
+    
+    if (isInvitationPage) {
+      console.log('🚫 Redirection bloquée : utilisateur sur page d\'invitation');
+      return;
+    }
+    
     // Éviter les redirections en boucle
     if (window.location.pathname !== '/login') {
       console.log('🔄 Redirection vers la page de connexion...');
@@ -189,8 +206,17 @@ class TokenManager {
     
     if (!currentToken) {
       console.log('❌ Aucun token trouvé');
-      this.clearAllUserData();
-      this.redirectToLogin();
+      
+      // ✅ Ne pas nettoyer/rediriger si on est sur une page d'invitation
+      const isInvitationPage = window.location.pathname === '/accept-invitation' || 
+                             window.location.pathname.includes('/accept-invitation');
+      
+      if (!isInvitationPage) {
+        this.clearAllUserData();
+        this.redirectToLogin();
+      } else {
+        console.log('🚫 Nettoyage/redirection bloqués : utilisateur sur page d\'invitation');
+      }
       return null;
     }
 

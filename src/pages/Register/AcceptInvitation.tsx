@@ -67,25 +67,19 @@ const AcceptInvitation = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | undefined>(undefined);
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // État pour les notifications flottantes
-  const [notification, setNotification] = useState<{
-    type: 'success' | 'error';
-    message: string;
-    isVisible: boolean;
-  }>({
-    type: 'success',
-    message: '',
-    isVisible: false
-  });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Récupérer et valider le token d'invitation depuis l'URL
   useEffect(() => {
     const token = searchParams.get('token');
     if (!token) {
-        // @ts-ignore
+      // @ts-ignore
       toast.error('Token d\'invitation manquant');
-      navigate('/login');
+      // ❌ SUPPRIMÉ : navigate('/login'); 
+      // ✅ On reste sur la page pour que l'utilisateur puisse voir l'erreur
+      setAssociationName(null);
+      setIsLoadingToken(false);
       return;
     }
     setInvitationToken(token);
@@ -110,6 +104,7 @@ const AcceptInvitation = () => {
           setForm(prev => ({ ...prev, email: data.invitedEmail }));
         }
       } catch (error) {
+        console.log('❌ Erreur lors du décodage du token d\'invitation:', error);
         // @ts-ignore
         toast.error('Invitation invalide ou expirée');
         setAssociationName(null);
@@ -119,7 +114,7 @@ const AcceptInvitation = () => {
     };
 
     fetchInvitationData();
-  }, [searchParams, navigate]);
+  }, [searchParams]);  // ❌ SUPPRIMÉ : navigate de la dépendance pour éviter les redirections
 
   const passwordStrength = getPasswordStrength(form.password);
 
@@ -159,23 +154,16 @@ const AcceptInvitation = () => {
     }
   };
 
-  // Fonctions pour gérer les notifications flottantes
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message, isVisible: true });
-    
-    // Auto-dismiss après 3 secondes
-    setTimeout(() => {
-      setNotification(prev => ({ ...prev, isVisible: false }));
-    }, 3000);
-  };
-
-  const hideNotification = () => {
-    setNotification(prev => ({ ...prev, isVisible: false }));
+  // Fonction pour nettoyer tous les messages d'erreur et de succès
+  const clearMessages = () => {
+    setFormError(null);
+    setApiError(null);
+    setSuccessMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError(null);
+    clearMessages(); // Nettoyer tous les messages précédents
     setIsLoading(true);
 
     console.log('🚀 Début de la soumission du formulaire d\'invitation');
@@ -218,9 +206,10 @@ const AcceptInvitation = () => {
       
       if (response) {
         console.log('🎉 Compte créé avec succès, reste sur la page');
-        showNotification('success', 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+        setSuccessMessage('🎉 Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
         
-        // Plus de redirection automatique - l'utilisateur reste sur la page
+        // ✅ L'utilisateur reste sur la page pour voir le message de succès
+        // Il peut ensuite cliquer manuellement sur "Aller à la connexion" s'il le souhaite
       }
     } catch (error: any) {
       console.log('❌ Erreur lors de la création du compte:', error);
@@ -241,7 +230,7 @@ const AcceptInvitation = () => {
       }
       
       console.log('💬 Message d\'erreur affiché à l\'utilisateur:', errorMessage);
-      showNotification('error', errorMessage);
+      setApiError(`❌ Erreur lors de la création du compte: ${errorMessage}`);
     } finally {
       console.log('🏁 Fin de la soumission du formulaire');
       setIsLoading(false);
@@ -261,12 +250,41 @@ const AcceptInvitation = () => {
 
   if (!associationName) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">Invitation invalide ou expirée</p>
-          <Link to="/login" className="text-blue-600 hover:text-blue-500 mt-2 inline-block">
-            Retour à la connexion
-          </Link>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Invitation invalide
+            </h2>
+            <p className="text-red-600 dark:text-red-400 mb-4">
+              Le lien d'invitation est invalide, expiré, ou a déjà été utilisé.
+            </p>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <p>• Vérifiez que le lien est complet</p>
+              <p>• Contactez la personne qui vous a invité</p>
+              <p>• Demandez un nouveau lien d'invitation</p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <Link 
+              to="/login" 
+              className="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Aller à la connexion
+            </Link>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Réessayer
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -486,10 +504,48 @@ const AcceptInvitation = () => {
                 </div>
               </div>
 
-              {/* Erreur globale */}
+              {/* Messages d'erreur et de succès */}
+              {apiError && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      {apiError}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg text-sm">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      {successMessage}
+                      <div className="mt-2">
+                        <Link to="/login" className="text-green-800 dark:text-green-200 underline hover:no-underline font-medium">
+                          → Aller à la page de connexion
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {formError && (
-                <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-                  {formError}
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      {formError}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -531,11 +587,13 @@ const AcceptInvitation = () => {
                 </Button>
               </div>
 
-              {/* Already have account */}
+              {/* Already have account / Login link */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Vous avez déjà un compte ?{" "}
-                 
+                  <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 underline">
+                    Se connecter
+                  </Link>
                 </p>
               </div>
             </form>
@@ -543,39 +601,7 @@ const AcceptInvitation = () => {
         </div>
       </div>
 
-      {/* Notification flottante */}
-      {notification.isVisible && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
-          <div className={`flex items-center p-4 rounded-lg shadow-lg max-w-sm ${
-            notification.type === 'success' 
-              ? 'bg-green-500 text-white' 
-              : 'bg-red-500 text-white'
-          }`}>
-            <div className="flex-shrink-0 mr-3">
-              {notification.type === 'success' ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              )}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">{notification.message}</p>
-            </div>
-            <button
-              onClick={hideNotification}
-              className="flex-shrink-0 ml-3 text-white hover:text-gray-200"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };
