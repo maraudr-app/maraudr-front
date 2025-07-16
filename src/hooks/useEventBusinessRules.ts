@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Event, EventStatus } from '../types/planning/event';
 import { planningService } from '../services/planningService';
 import { useAuthStore } from '../store/authStore';
+import { useAssoStore } from '../store/assoStore';
+import { geoService } from '../services/geoService';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { parseLocalDate } from '../utils/dateUtils';
@@ -28,6 +30,7 @@ export interface EventPermissions {
 export const useEventBusinessRules = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const { selectedAssociation } = useAssoStore();
   const [loading, setLoading] = useState<string | null>(null);
 
   const t_planning = useCallback((key: string): string => {
@@ -149,7 +152,42 @@ export const useEventBusinessRules = () => {
   const cancelEvent = useCallback(async (eventId: string, onSuccess?: () => void) => {
     try {
       setLoading(`cancel-${eventId}`);
+      
+      // Annuler l'événement
       await planningService.cancelEvent(eventId);
+      
+      // Gérer les itinéraires liés à cet événement
+      if (selectedAssociation?.id) {
+        try {
+          // Récupérer tous les itinéraires de l'association
+          const itineraries = await geoService.getItineraries(selectedAssociation.id);
+          
+          // Filtrer les itinéraires liés à cet événement
+          const relatedItineraries = itineraries.filter((itinerary: any) => 
+            itinerary.eventId === eventId && itinerary.isActive
+          );
+          
+          // Mettre à jour les itinéraires liés en désactivant leur statut
+          const updatePromises = relatedItineraries.map((itinerary: any) =>
+            geoService.updateItinerary(itinerary.id, { isActive: false })
+          );
+          
+          await Promise.all(updatePromises);
+          
+          if (relatedItineraries.length > 0) {
+            console.log(`✅ ${relatedItineraries.length} itinéraire(s) désactivé(s) pour l'événement ${eventId}`);
+          }
+        } catch (error) {
+          console.warn('⚠️ Erreur lors de la mise à jour des itinéraires liés:', error);
+          // On continue même si la mise à jour des itinéraires échoue
+        }
+      }
+      
+      // Émettre un événement personnalisé pour notifier les autres pages
+      window.dispatchEvent(new CustomEvent('eventCanceled', { 
+        detail: { eventId, associationId: selectedAssociation?.id } 
+      }));
+      
       toast.success(t_planning('events.actions.cancelSuccess'));
       onSuccess?.();
     } catch (error: any) {
@@ -158,7 +196,7 @@ export const useEventBusinessRules = () => {
     } finally {
       setLoading(null);
     }
-  }, [t_planning]);
+  }, [t_planning, selectedAssociation?.id]);
 
   // Obtenir le statut d'affichage d'un événement
   const getEventDisplayStatus = useCallback((event: Event): string => {

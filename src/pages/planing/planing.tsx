@@ -790,6 +790,11 @@ const Planning: React.FC = () => {
             await planningService.deleteEvent(eventToDelete.id);
             console.log('Événement supprimé avec succès');
             
+            // Émettre un événement personnalisé pour notifier les autres pages
+            window.dispatchEvent(new CustomEvent('eventDeleted', { 
+                detail: { eventId: eventToDelete.id, associationId: selectedAssociation?.id } 
+            }));
+            
             // Recharger les événements
             loadAllEvents();
             

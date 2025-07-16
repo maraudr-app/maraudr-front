@@ -181,6 +181,7 @@ const Plan: React.FC = () => {
     const [itineraries, setItineraries] = useState<any[]>([]);
     const [loadingItineraries, setLoadingItineraries] = useState(false);
     const [selectedItinerary, setSelectedItinerary] = useState<string | null>(null);
+    const [itineraryFilter, setItineraryFilter] = useState<'all' | 'active' | 'archived'>('active');
     
     // États pour l'autocomplétion d'adresse
     const [addressQuery, setAddressQuery] = useState('');
@@ -291,83 +292,116 @@ const Plan: React.FC = () => {
         };
     }, [selectedAssociation?.id]);
 
+    // Fonction pour charger les événements
+    const loadEvents = React.useCallback(async () => {
+        if (!selectedAssociation?.id) return;
+        
+        try {
+            console.log('🔄 Chargement des événements pour l\'association:', selectedAssociation.id);
+            const eventsData = await planningService.getAllEvents(selectedAssociation.id);
+            console.log('✅ Événements récupérés:', eventsData);
+            setEvents(eventsData);
+        } catch (error) {
+            console.error('❌ Erreur lors du chargement des événements:', error);
+            toast.error('Erreur lors du chargement des événements');
+        }
+    }, [selectedAssociation?.id]);
+
     // Charger les événements de l'association
     useEffect(() => {
-        const loadEvents = async () => {
-            if (!selectedAssociation?.id) return;
-            
-            try {
-                console.log('🔄 Chargement des événements pour l\'association:', selectedAssociation.id);
-                const eventsData = await planningService.getAllEvents(selectedAssociation.id);
-                console.log('✅ Événements récupérés:', eventsData);
-                setEvents(eventsData);
-            } catch (error) {
-                console.error('❌ Erreur lors du chargement des événements:', error);
-                toast.error('Erreur lors du chargement des événements');
-            }
-        };
-
         loadEvents();
+    }, [loadEvents]);
+
+    // Fonction pour charger les itinéraires
+    const loadItineraries = React.useCallback(async () => {
+        if (!selectedAssociation?.id) return;
+        
+        try {
+            setLoadingItineraries(true);
+            console.log('🔄 Chargement des itinéraires pour l\'association:', selectedAssociation.id);
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token d\'authentification non trouvé');
+            }
+            
+            const itinerariesData = await geoService.getItineraries(selectedAssociation.id);
+            console.log('✅ Itinéraires récupérés:', itinerariesData);
+            console.log('📊 Structure des données:', {
+                type: typeof itinerariesData,
+                isArray: Array.isArray(itinerariesData),
+                length: Array.isArray(itinerariesData) ? itinerariesData.length : 'N/A',
+                sample: Array.isArray(itinerariesData) && itinerariesData.length > 0 ? itinerariesData[0] : 'Aucun échantillon'
+            });
+            
+            // Vérifier que les itinéraires appartiennent à l'association
+            if (Array.isArray(itinerariesData)) {
+                const filteredItineraries = itinerariesData.filter(itinerary => {
+                    const belongsToAssociation = itinerary.associationId === selectedAssociation.id;
+                    if (!belongsToAssociation) {
+                        console.warn('⚠️ Itinéraire ignoré - associationId différent:', {
+                            itineraryId: itinerary.id,
+                            itineraryAssociationId: itinerary.associationId,
+                            currentAssociationId: selectedAssociation.id
+                        });
+                    }
+                    return belongsToAssociation;
+                });
+                
+                console.log('🔍 Filtrage par association:', {
+                    total: itinerariesData.length,
+                    filtered: filteredItineraries.length,
+                    associationId: selectedAssociation.id
+                });
+                
+                setItineraries(filteredItineraries);
+            } else {
+                console.warn('⚠️ Les données ne sont pas un tableau:', itinerariesData);
+                setItineraries([]);
+            }
+        } catch (error) {
+            console.error('❌ Erreur lors du chargement des itinéraires:', error);
+            toast.error('Erreur lors du chargement des itinéraires');
+        } finally {
+            setLoadingItineraries(false);
+        }
     }, [selectedAssociation?.id]);
 
     // Charger les itinéraires existants
     useEffect(() => {
-        const loadItineraries = async () => {
-            if (!selectedAssociation?.id) return;
-            
-            try {
-                setLoadingItineraries(true);
-                console.log('🔄 Chargement des itinéraires pour l\'association:', selectedAssociation.id);
-                
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    throw new Error('Token d\'authentification non trouvé');
-                }
-                
-                const itinerariesData = await geoService.getItineraries(selectedAssociation.id);
-                console.log('✅ Itinéraires récupérés:', itinerariesData);
-                console.log('📊 Structure des données:', {
-                    type: typeof itinerariesData,
-                    isArray: Array.isArray(itinerariesData),
-                    length: Array.isArray(itinerariesData) ? itinerariesData.length : 'N/A',
-                    sample: Array.isArray(itinerariesData) && itinerariesData.length > 0 ? itinerariesData[0] : 'Aucun échantillon'
-                });
-                
-                // Vérifier que les itinéraires appartiennent à l'association
-                if (Array.isArray(itinerariesData)) {
-                    const filteredItineraries = itinerariesData.filter(itinerary => {
-                        const belongsToAssociation = itinerary.associationId === selectedAssociation.id;
-                        if (!belongsToAssociation) {
-                            console.warn('⚠️ Itinéraire ignoré - associationId différent:', {
-                                itineraryId: itinerary.id,
-                                itineraryAssociationId: itinerary.associationId,
-                                currentAssociationId: selectedAssociation.id
-                            });
-                        }
-                        return belongsToAssociation;
-                    });
-                    
-                    console.log('🔍 Filtrage par association:', {
-                        total: itinerariesData.length,
-                        filtered: filteredItineraries.length,
-                        associationId: selectedAssociation.id
-                    });
-                    
-                    setItineraries(filteredItineraries);
-                } else {
-                    console.warn('⚠️ Les données ne sont pas un tableau:', itinerariesData);
-                    setItineraries([]);
-                }
-            } catch (error) {
-                console.error('❌ Erreur lors du chargement des itinéraires:', error);
-                toast.error('Erreur lors du chargement des itinéraires');
-            } finally {
-                setLoadingItineraries(false);
+        loadItineraries();
+    }, [loadItineraries]);
+
+    // Écouter les événements d'annulation et de suppression pour recharger les données
+    useEffect(() => {
+        const handleEventCanceled = (event: CustomEvent) => {
+            const { associationId } = event.detail;
+            if (associationId === selectedAssociation?.id) {
+                console.log('🔄 Événement annulé détecté, rechargement des données...');
+                loadEvents();
+                loadItineraries();
+                toast.success('Données mises à jour après annulation de l\'événement');
             }
         };
 
-        loadItineraries();
-    }, [selectedAssociation?.id]);
+        const handleEventDeleted = (event: CustomEvent) => {
+            const { associationId } = event.detail;
+            if (associationId === selectedAssociation?.id) {
+                console.log('🔄 Événement supprimé détecté, rechargement des données...');
+                loadEvents();
+                loadItineraries();
+                toast.success('Données mises à jour après suppression de l\'événement');
+            }
+        };
+
+        window.addEventListener('eventCanceled', handleEventCanceled as EventListener);
+        window.addEventListener('eventDeleted', handleEventDeleted as EventListener);
+        
+        return () => {
+            window.removeEventListener('eventCanceled', handleEventCanceled as EventListener);
+            window.removeEventListener('eventDeleted', handleEventDeleted as EventListener);
+        };
+    }, [selectedAssociation?.id, loadEvents, loadItineraries]);
 
     // Fonction pour calculer l'itinéraire vers un point
     const handleShowRoute = async (point: GeoPoint) => {
@@ -793,6 +827,37 @@ const Plan: React.FC = () => {
         }
     };
 
+    // Fonction pour trouver l'événement lié à un itinéraire
+    const getEventForItinerary = (eventId: string) => {
+        return events.find(event => event.id === eventId);
+    };
+
+    // Fonction pour filtrer les itinéraires selon le statut
+    const getFilteredItineraries = () => {
+        switch (itineraryFilter) {
+            case 'active':
+                // Un itinéraire est actif s'il a un eventId ET l'événement existe ET n'est pas annulé ET n'est pas explicitement désactivé
+                return itineraries.filter(itinerary => {
+                    if (!itinerary.eventId || itinerary.isActive === false) return false;
+                    const linkedEvent = getEventForItinerary(itinerary.eventId);
+                    return linkedEvent !== undefined && linkedEvent.status !== 'CANCELED';
+                });
+            case 'archived':
+                // Un itinéraire est archivé s'il n'a pas d'eventId OU l'événement n'existe plus OU l'événement est annulé OU est explicitement désactivé
+                return itineraries.filter(itinerary => {
+                    if (itinerary.isActive === false) return true;
+                    if (!itinerary.eventId) return true;
+                    const linkedEvent = getEventForItinerary(itinerary.eventId);
+                    return linkedEvent === undefined || linkedEvent.status === 'CANCELED';
+                });
+            case 'all':
+            default:
+                return itineraries;
+        }
+    };
+
+    const filteredItineraries = getFilteredItineraries();
+
     return (
         <div className="h-full bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             {/* Navbar Carte, style StockNavbar */}
@@ -1023,7 +1088,8 @@ const Plan: React.FC = () => {
                             })}
                             
                             {/* Affichage des itinéraires existants */}
-                            {itineraries.map((itinerary, index) => {
+                            
+                            {filteredItineraries.map((itinerary, index) => {
                                 console.log(`🗺️ Traitement de l'itinéraire ${index}:`, itinerary.id, 'Association:', itinerary.associationId);
                                 
                                 const geoJsonData = parseRouteGeoJson(itinerary.geoJson);
@@ -1035,37 +1101,119 @@ const Plan: React.FC = () => {
                                 const isSelected = selectedItinerary === itinerary.id;
                                 const markerColor = isSelected ? '#FF6B6B' : '#8B5CF6'; // Rouge si sélectionné, violet sinon
                                 const routeColor = isSelected ? '#FF6B6B' : '#8B5CF6';
-                                const opacity = isSelected ? 1.0 : 0.6; // Plus opaque si sélectionné
+                                const opacity = isSelected ? 1.0 : 0.6;
+                                
+                                const linkedEvent = getEventForItinerary(itinerary.eventId);
+                                
+                                // Ajuster les couleurs selon le statut de l'itinéraire
+                                let finalMarkerColor = markerColor;
+                                let finalRouteColor = routeColor;
+                                let finalOpacity = opacity;
+                                
+                                // Vérifier si l'itinéraire doit être considéré comme archivé
+                                const isArchived = itinerary.isActive === false || 
+                                                 !itinerary.eventId || 
+                                                 !linkedEvent ||
+                                                 linkedEvent.status === 'CANCELED';
+                                
+                                if (isArchived) {
+                                    // Itinéraire archivé - couleur grise et opacité réduite
+                                    finalMarkerColor = isSelected ? '#9CA3AF' : '#6B7280';
+                                    finalRouteColor = isSelected ? '#9CA3AF' : '#6B7280';
+                                    finalOpacity = isSelected ? 0.7 : 0.4;
+                                }
                                 
                                 return (
                                     <React.Fragment key={`itinerary-${itinerary.id || index}`}>
                                         {/* Marker pour le point de départ de l'itinéraire */}
                                         <Marker
                                             position={[itinerary.startLat, itinerary.startLng]}
-                                            icon={createCustomIcon(markerColor)}
+                                            icon={createCustomIcon(finalMarkerColor)}
                                         >
                                             <Popup>
                                                 <div className="p-2 min-w-[200px]">
                                                     <h3 className="font-semibold text-gray-900 mb-2">
                                                         Itinéraire #{index + 1}
+                                                        {/* Badge de statut dans le popup */}
+                                                        <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                                                            itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
+                                                                ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
+                                                                : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                                        }`}>
+                                                            {itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED' ? 'Archivé' : 'Actif'}
+                                                        </span>
                                                     </h3>
+                                                    
+                                                                                                            {/* Nom de l'événement lié dans le popup */}
+                                                    {linkedEvent && (
+                                                        <div className={`mb-3 px-2 py-1 rounded ${
+                                                            linkedEvent.status === 'CANCELED' 
+                                                                ? 'bg-red-100 dark:bg-red-900/20' 
+                                                                : 'bg-blue-100 dark:bg-blue-900/20'
+                                                        }`}>
+                                                            <span className={`text-sm font-medium ${
+                                                                linkedEvent.status === 'CANCELED'
+                                                                    ? 'text-red-700 dark:text-red-400'
+                                                                    : 'text-blue-700 dark:text-blue-400'
+                                                            }`}>
+                                                                📅 {linkedEvent.title}
+                                                                {linkedEvent.status === 'CANCELED' && ' (Annulé)'}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {/* Messages d'information supplémentaires */}
+                                                    {!linkedEvent && itinerary.eventId && (
+                                                        <div className="mb-3 px-2 py-1 bg-orange-100 dark:bg-orange-900/20 rounded">
+                                                            <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                                                                ⚠️ Événement introuvable
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {!itinerary.eventId && (
+                                                        <div className="mb-3 px-2 py-1 bg-gray-100 dark:bg-gray-900/20 rounded">
+                                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
+                                                                ❌ Aucun événement lié
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {/* Affichage si pas d'événement lié dans le popup */}
+                                                    {!itinerary.eventId && (
+                                                        <div className="mb-3 px-2 py-1 bg-gray-100 rounded">
+                                                            <span className="text-sm font-medium text-gray-600">
+                                                                ❌ Aucun événement lié
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {itinerary.eventId && !linkedEvent && (
+                                                        <div className="mb-3 px-2 py-1 bg-orange-100 rounded">
+                                                            <span className="text-sm font-medium text-orange-700">
+                                                                ⚠️ Événement introuvable
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    
                                                     <div className="text-xs text-gray-500 space-y-1 mb-3">
                                                         <div className="text-xs text-gray-400">
-                                                            Lat: {itinerary.startLat.toFixed(6)}, Lng: {itinerary.startLng.toFixed(6)}
+                                                            Départ: {itinerary.startLat.toFixed(6)}, {itinerary.startLng.toFixed(6)}
                                                         </div>
-                                                        {itinerary.associationId && (
+                                                        {itinerary.endLat && itinerary.endLng && (
                                                             <div className="text-xs text-gray-400">
-                                                                Association: {itinerary.associationId}
+                                                                Arrivée: {itinerary.endLat.toFixed(6)}, {itinerary.endLng.toFixed(6)}
                                                             </div>
                                                         )}
-                                                        {itinerary.distanceKm && (
+                                                        <div className="text-xs text-gray-400">
+                                                            Distance: {itinerary.distanceKm ? `${itinerary.distanceKm} km` : 'Non calculée'}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400">
+                                                            Durée: {itinerary.durationMinutes ? `${itinerary.durationMinutes} min` : 'Non calculée'}
+                                                        </div>
+                                                        {itinerary.createdAt && (
                                                             <div className="text-xs text-gray-400">
-                                                                Distance: {itinerary.distanceKm} km
-                                                            </div>
-                                                        )}
-                                                        {itinerary.durationMinutes && (
-                                                            <div className="text-xs text-gray-400">
-                                                                Durée: {itinerary.durationMinutes} min
+                                                                Créé: {new Date(itinerary.createdAt).toLocaleDateString('fr-FR')}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1074,7 +1222,7 @@ const Plan: React.FC = () => {
                                                             href={itinerary.googleMapsUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-lg transition-all"
+                                                            className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded transition-all"
                                                         >
                                                             <MapIcon className="w-4 h-4" />
                                                             <span>Voir sur Google Maps</span>
@@ -1094,9 +1242,9 @@ const Plan: React.FC = () => {
                                             <RouteRenderer
                                                 key={`itinerary-renderer-${itinerary.id}-${index}`}
                                                 geoJsonData={geoJsonData}
-                                                color={routeColor}
+                                                color={finalRouteColor}
                                                 routeId={`itinerary-${itinerary.id}`}
-                                                opacity={opacity}
+                                                opacity={finalOpacity}
                                             />
                                         )}
                                     </React.Fragment>
@@ -1268,6 +1416,50 @@ const Plan: React.FC = () => {
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                                 Itinéraires existants
                             </h2>
+                            
+                            {/* Filtres pour les itinéraires */}
+                            <div className="flex space-x-2 mb-3">
+                                <button
+                                    onClick={() => setItineraryFilter('all')}
+                                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                        itineraryFilter === 'all' 
+                                            ? 'bg-blue-500 text-white' 
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                    }`}
+                                >
+                                    Tous ({itineraries.length})
+                                </button>
+                                <button
+                                    onClick={() => setItineraryFilter('active')}
+                                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                        itineraryFilter === 'active' 
+                                            ? 'bg-green-500 text-white' 
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                    }`}
+                                >
+                                    Actifs ({itineraries.filter(it => {
+                                        if (!it.eventId || it.isActive === false) return false;
+                                        const linkedEvent = getEventForItinerary(it.eventId);
+                                        return linkedEvent !== undefined && linkedEvent.status !== 'CANCELED';
+                                    }).length})
+                                </button>
+                                <button
+                                    onClick={() => setItineraryFilter('archived')}
+                                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                        itineraryFilter === 'archived' 
+                                            ? 'bg-red-500 text-white' 
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                    }`}
+                                >
+                                    Archivés ({itineraries.filter(it => {
+                                        if (it.isActive === false) return true;
+                                        if (!it.eventId) return true;
+                                        const linkedEvent = getEventForItinerary(it.eventId);
+                                        return linkedEvent === undefined || linkedEvent.status === 'CANCELED';
+                                    }).length})
+                                </button>
+                            </div>
+                            
                             <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                                 {loadingItineraries ? (
                                     <div className="flex items-center space-x-2">
@@ -1275,21 +1467,31 @@ const Plan: React.FC = () => {
                                         <span>Chargement...</span>
                                     </div>
                                 ) : (
-                                    `${itineraries.length} itinéraire${itineraries.length !== 1 ? 's' : ''} trouvé${itineraries.length !== 1 ? 's' : ''}`
+                                    `${filteredItineraries.length} itinéraire${filteredItineraries.length !== 1 ? 's' : ''} trouvé${filteredItineraries.length !== 1 ? 's' : ''}`
                                 )}
                             </div>
                             
                             {/* Liste des itinéraires */}
                             <div className="max-h-64 overflow-y-auto">
                                 <div className="p-4 space-y-3">
-                                    {itineraries.length === 0 ? (
-                                        <div className="text-center text-gray-500 dark:text-gray-400">
+                                    {filteredItineraries.length === 0 ? (
+                                        <div className="text-center text-gray-500 dark:text-gray-400 py-6">
                                             <MapIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                            <p className="text-sm">Aucun itinéraire</p>
+                                            <p className="text-sm font-medium mb-1">
+                                                {itineraryFilter === 'active' ? 'Aucun itinéraire actif' :
+                                                 itineraryFilter === 'archived' ? 'Aucun itinéraire archivé' :
+                                                 'Aucun itinéraire'}
+                                            </p>
+                                            <p className="text-xs text-gray-400">
+                                                {itineraryFilter === 'active' ? 'Les itinéraires actifs sont liés à des événements existants' :
+                                                 itineraryFilter === 'archived' ? 'Les itinéraires archivés sont sans événement ou avec événements supprimés' :
+                                                 'Créez des itinéraires depuis les événements'}
+                                            </p>
                                         </div>
                                     ) : (
-                                        itineraries.map((itinerary, index) => {
+                                        filteredItineraries.map((itinerary, index) => {
                                             const isSelected = selectedItinerary === itinerary.id;
+                                            const linkedEvent = getEventForItinerary(itinerary.eventId);
                                             return (
                                             <div
                                                 key={itinerary.id || index}
@@ -1310,17 +1512,67 @@ const Plan: React.FC = () => {
                                                                 Itinéraire #{index + 1}
                                                                 {isSelected && <span className="ml-2 text-xs text-red-600 dark:text-red-400">(Sélectionné)</span>}
                                                             </h4>
+                                                            {/* Badge de statut */}
+                                                            <span className={`ml-auto px-2 py-0.5 text-xs rounded-full ${
+                                                                itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
+                                                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
+                                                                    : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                                            }`}>
+                                                                {itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED' ? 'Archivé' : 'Actif'}
+                                                            </span>
                                                         </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                            {itinerary.distanceKm && (
-                                                                <div>Distance: {itinerary.distanceKm} km</div>
-                                                            )}
-                                                            {itinerary.durationMinutes && (
-                                                                <div>Durée: {itinerary.durationMinutes} min</div>
-                                                            )}
-                                                            <div className="mt-1">
-                                                                {itinerary.startLat.toFixed(4)}, {itinerary.startLng.toFixed(4)}
+                                                        
+                                                        {/* Nom de l'événement lié */}
+                                                        {linkedEvent && (
+                                                            <div className={`mb-2 px-2 py-1 rounded ${
+                                                                linkedEvent.status === 'CANCELED' 
+                                                                    ? 'bg-red-100 dark:bg-red-900/20' 
+                                                                    : 'bg-blue-100 dark:bg-blue-900/20'
+                                                            }`}>
+                                                                <span className={`text-xs font-medium ${
+                                                                    linkedEvent.status === 'CANCELED'
+                                                                        ? 'text-red-700 dark:text-red-400'
+                                                                        : 'text-blue-700 dark:text-blue-400'
+                                                                }`}>
+                                                                    📅 {linkedEvent.title}
+                                                                    {linkedEvent.status === 'CANCELED' && ' (Annulé)'}
+                                                                </span>
                                                             </div>
+                                                        )}
+                                                        
+                                                        {/* Affichage si pas d'événement lié */}
+                                                        {!itinerary.eventId && (
+                                                            <div className="mb-2 px-2 py-1 bg-gray-100 dark:bg-gray-900/20 rounded">
+                                                                <span className="text-xs font-medium text-gray-700 dark:text-gray-400">
+                                                                    ❌ Aucun événement lié
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {itinerary.eventId && !linkedEvent && (
+                                                            <div className="mb-2 px-2 py-1 bg-orange-100 dark:bg-orange-900/20 rounded">
+                                                                <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
+                                                                    ⚠️ Événement introuvable
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                            <div>Distance: {itinerary.distanceKm ? `${itinerary.distanceKm} km` : 'Non calculée'}</div>
+                                                            <div>Durée: {itinerary.durationMinutes ? `${itinerary.durationMinutes} min` : 'Non calculée'}</div>
+                                                            <div className="mt-1">
+                                                                Départ: {itinerary.startLat.toFixed(4)}, {itinerary.startLng.toFixed(4)}
+                                                            </div>
+                                                            {itinerary.endLat && itinerary.endLng && (
+                                                                <div>
+                                                                    Arrivée: {itinerary.endLat.toFixed(4)}, {itinerary.endLng.toFixed(4)}
+                                                                </div>
+                                                            )}
+                                                            {itinerary.createdAt && (
+                                                                <div className="mt-1 text-gray-400">
+                                                                    Créé: {new Date(itinerary.createdAt).toLocaleDateString('fr-FR')}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         {itinerary.googleMapsUrl && (
                                                             <a

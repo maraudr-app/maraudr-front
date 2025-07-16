@@ -415,5 +415,15 @@ export const geoService = {
             console.error('Erreur lors de la suppression de l\'itinéraire:', error);
             throw error;
         }
+    },
+
+    // Mettre à jour un itinéraire
+    updateItinerary: async (itineraryId: string, updateData: { isActive?: boolean }): Promise<void> => {
+        try {
+            await geoApi.patch(`/itineraries/${itineraryId}`, updateData);
+        } catch (error: any) {
+            console.error('Erreur lors de la mise à jour de l\'itinéraire:', error);
+            throw error;
+        }
     }
 }; 
