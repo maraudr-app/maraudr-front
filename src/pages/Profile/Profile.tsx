@@ -651,7 +651,9 @@ const Profile: React.FC = () => {
                   {associationDetails?.members && associationDetails.members.length > 0 && (
                     <div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Nombre de membres</div>
-                      <div className="font-semibold text-gray-900 dark:text-white">{associationDetails.members.length} membre(s)</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">
+                        {associationDetails.members.filter((memberId: string) => memberId !== associationDetails.managerId).length} membre(s)
+                      </div>
                     </div>
                   )}
                 </div>

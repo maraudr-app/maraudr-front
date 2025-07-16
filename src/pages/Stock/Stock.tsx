@@ -153,7 +153,7 @@ export const Stock = () => {
         if (!selectedAssociation || !itemToDelete) return;
 
         try {
-            await stockService.deleteItem(selectedAssociation.id, itemToDelete);
+            await stockService.deleteItem(itemToDelete, selectedAssociation.id);
             toast.success(t_stock('toast_deleted'));
             await fetchItems();
         } catch (error) {

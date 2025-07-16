@@ -267,7 +267,7 @@ const Team: React.FC = () => {
                     <div className="flex items-center gap-3 pl-7">
                         <UserGroupIcon className="w-5 h-5 text-orange-500" />
                         <div className="text-gray-900 dark:text-white font-medium">
-                            {t_team('title')} ({teamMembers.length})
+                            {t_team('title')} ({teamMembers.filter(m => !m.isManager).length})
                         </div>
                     </div>
                     
@@ -294,7 +294,7 @@ const Team: React.FC = () => {
                 </div>
             </nav>
             
-            <main className="pt-4">
+            <main className="pt-24">
                 {/* Statistiques en haut */}
                 <div className="px-8 pb-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -305,7 +305,7 @@ const Team: React.FC = () => {
                             </div>
                             <div className="ml-4">
                                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t_team('stats.totalMembers')}</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.length}</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.filter(m => !m.isManager).length}</p>
                             </div>
                         </div>
                     </div>
