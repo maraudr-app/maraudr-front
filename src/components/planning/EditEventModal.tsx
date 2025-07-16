@@ -39,7 +39,13 @@ interface EventForm {
     participantsIds: string[];
 }
 
-// Interface pour les conflits de disponibilité
+// Interface pour les disponibilités d'un participant
+interface ParticipantAvailability {
+    userId: string;
+    availabilityMessage: string;
+    hasAvailability: boolean;
+}
+
 interface AvailabilityConflict {
     userId: string;
     missingDates: string[];
@@ -74,7 +80,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
     // États pour les disponibilités
     const [allAvailabilities, setAllAvailabilities] = useState<Disponibility[]>([]);
     const [loadingAvailabilities, setLoadingAvailabilities] = useState(false);
-    const [availabilityConflicts, setAvailabilityConflicts] = useState<AvailabilityConflict[]>([]);
+    const [participantAvailabilities, setParticipantAvailabilities] = useState<ParticipantAvailability[]>([]);
     
     // États pour la liste déroulante des participants
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -89,6 +95,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         endDate: '',
         participantsIds: []
     });
+
+    const [availabilityConflicts, setAvailabilityConflicts] = useState<AvailabilityConflict[]>([]);
 
     // Initialiser le formulaire avec les données de l'événement
     useEffect(() => {
@@ -153,6 +161,144 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         } finally {
             setLoadingAvailabilities(false);
         }
+    };
+
+    // Générer le message de disponibilité pour un participant
+    const getAvailabilityMessage = (userId: string, eventStart: string, eventEnd: string): string => {
+        if (!eventStart || !eventEnd) return '';
+
+        const userAvailabilities = allAvailabilities.filter(avail => avail.userId === userId);
+        
+        if (userAvailabilities.length === 0) {
+            return ''; // Pas de disponibilité
+        }
+
+        // Si une seule disponibilité
+        if (userAvailabilities.length === 1) {
+            return t_planning('availability_singleAvailability');
+        }
+
+        // Calculer la plage totale de disponibilité
+        const allAvailDates = userAvailabilities.flatMap(avail => {
+            const dates: Date[] = [];
+            const start = new Date(avail.start);
+            const end = new Date(avail.end);
+            const current = new Date(start);
+            
+            while (current <= end) {
+                dates.push(new Date(current));
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        });
+
+        // Si plus de 15 jours de disponibilité
+        if (allAvailDates.length > 15) {
+            const earliestDate = new Date(Math.min(...userAvailabilities.map(a => new Date(a.start).getTime())));
+            const latestDate = new Date(Math.max(...userAvailabilities.map(a => new Date(a.end).getTime())));
+            
+            return t_planning('availability_availableFrom')
+                .replace('{start}', earliestDate.toLocaleDateString('fr-FR'))
+                .replace('{end}', latestDate.toLocaleDateString('fr-FR'));
+        }
+
+        return t_planning('availability_singleAvailability');
+    };
+
+
+
+    // Calculer les disponibilités pour un participant
+    const calculateParticipantAvailability = (userId: string, eventStart: string, eventEnd: string): ParticipantAvailability => {
+        if (!eventStart || !eventEnd) {
+            return {
+                userId,
+                availabilityMessage: '',
+                hasAvailability: false
+            };
+        }
+
+        const eventStartDate = new Date(eventStart);
+        const eventEndDate = new Date(eventEnd);
+        
+        // Récupérer les disponibilités de l'utilisateur
+        const userAvailabilities = allAvailabilities.filter(avail => avail.userId === userId);
+        
+        if (userAvailabilities.length === 0) {
+            return {
+                userId,
+                availabilityMessage: '',
+                hasAvailability: false
+            };
+        }
+
+        // Trouver les disponibilités qui chevauchent avec la période de l'événement
+        const relevantAvailabilities = userAvailabilities.filter(avail => {
+            const availStart = new Date(avail.start);
+            const availEnd = new Date(avail.end);
+            
+            // Vérifier si la disponibilité chevauche avec l'événement
+            return availStart <= eventEndDate && availEnd >= eventStartDate;
+        });
+
+        if (relevantAvailabilities.length === 0) {
+            return {
+                userId,
+                availabilityMessage: '',
+                hasAvailability: false
+            };
+        }
+
+        // Utiliser la fonction formatAvailabilityMessage pour formater l'affichage
+        const availabilityMessage = formatAvailabilityMessage(relevantAvailabilities);
+        
+        return {
+            userId,
+            availabilityMessage,
+            hasAvailability: true
+        };
+    };
+
+    // Fonction helper pour formater le message de disponibilité
+    const formatAvailabilityMessage = (availabilities: any[]): string => {
+        if (availabilities.length === 0) return '';
+        
+        if (availabilities.length === 1) {
+            const avail = availabilities[0];
+            const start = new Date(avail.start);
+            const end = new Date(avail.end);
+            
+            // Calculer la différence en jours
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                return 'disponible';
+            } else if (diffDays >= 15) {
+                return `disponible du ${start.toLocaleDateString('fr-FR')} au ${end.toLocaleDateString('fr-FR')}`;
+            } else {
+                return 'disponible';
+            }
+        } else {
+            // Plusieurs disponibilités
+            return 'disponible';
+        }
+    };
+
+    // Mettre à jour les disponibilités des participants
+    const updateParticipantAvailabilities = () => {
+        if (!eventForm.beginningDate || !eventForm.endDate || eventForm.participantsIds.length === 0) {
+            setParticipantAvailabilities([]);
+            return;
+        }
+
+        const availabilities: ParticipantAvailability[] = [];
+        
+        for (const participantId of eventForm.participantsIds) {
+            const availability = calculateParticipantAvailability(participantId, eventForm.beginningDate, eventForm.endDate);
+            availabilities.push(availability);
+        }
+
+        setParticipantAvailabilities(availabilities);
     };
 
     // Vérifier les conflits de disponibilité pour un participant
@@ -245,6 +391,12 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
             loadAvailabilities();
         }
     }, [isOpen]);
+
+
+
+    useEffect(() => {
+        updateParticipantAvailabilities();
+    }, [eventForm.beginningDate, eventForm.endDate, eventForm.participantsIds]);
 
     useEffect(() => {
         updateAvailabilityConflicts();
@@ -344,7 +496,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
     };
 
     const filteredMembers = teamMembers.filter(member =>
-        `${member.firstname} ${member.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
+        !member.isManager && `${member.firstname} ${member.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Vérifier si les champs doivent être désactivés
@@ -478,6 +630,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                                 )}
                             </div>
                         </div>
+
+
 
                         {/* Conflits de disponibilité */}
                         {availabilityConflicts.length > 0 && (

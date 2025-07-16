@@ -812,6 +812,8 @@
     "availability_thisMonth": "this month",
     "availability_validationError": "Data validation error",
     "availability_durationError": "Availability duration must be reasonable (less than 120h)",
+    "availability_availableFrom": "available from {start} to {end}",
+    "availability_singleAvailability": "available",
     "availability_networkError": "Network connection error",
     "availability_serverError": "Server error",
     "availability_unknownError": "Unknown error",

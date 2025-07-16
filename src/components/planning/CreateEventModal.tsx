@@ -53,7 +53,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
-    // États pour la liste des membres
+    // États pour les membres de l'équipe
     const [teamMembers, setTeamMembers] = useState<User[]>([]);
     const [loadingMembers, setLoadingMembers] = useState(false);
     
@@ -75,6 +75,55 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         endDate: '',
         participantsIds: []
     });
+
+    // Fonction helper pour obtenir le message de disponibilité
+    const getAvailabilityMessage = (userId: string, eventStart: string, eventEnd: string): string => {
+        if (!eventStart || !eventEnd) return '';
+
+        const eventStartDate = new Date(eventStart);
+        const eventEndDate = new Date(eventEnd);
+        
+        // Récupérer les disponibilités de l'utilisateur
+        const userAvailabilities = allAvailabilities.filter(avail => avail.userId === userId);
+        
+        if (userAvailabilities.length === 0) {
+            return '';
+        }
+
+        // Trouver les disponibilités qui chevauchent avec la période de l'événement
+        const relevantAvailabilities = userAvailabilities.filter(avail => {
+            const availStart = new Date(avail.start);
+            const availEnd = new Date(avail.end);
+            
+            // Vérifier si la disponibilité chevauche avec l'événement
+            return availStart <= eventEndDate && availEnd >= eventStartDate;
+        });
+
+        if (relevantAvailabilities.length === 0) {
+            return '';
+        }
+
+        if (relevantAvailabilities.length === 1) {
+            const avail = relevantAvailabilities[0];
+            const start = new Date(avail.start);
+            const end = new Date(avail.end);
+            
+            // Calculer la différence en jours
+            const diffTime = Math.abs(end.getTime() - start.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                return 'disponible';
+            } else if (diffDays >= 15) {
+                return `disponible du ${start.toLocaleDateString('fr-FR')} au ${end.toLocaleDateString('fr-FR')}`;
+            } else {
+                return 'disponible';
+            }
+        } else {
+            // Plusieurs disponibilités
+            return 'disponible';
+        }
+    };
 
     // Charger les membres de l'équipe
     const loadTeamMembers = async () => {
@@ -126,6 +175,30 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             setLoadingAvailabilities(false);
         }
     };
+
+    // Gérer les changements dans le formulaire
+    const handleInputChange = (field: keyof EventForm, value: string) => {
+        setEventForm(prev => ({
+            ...prev,
+            [field]: value
+        }));
+        setError(null);
+    };
+
+    // Ajouter/retirer un participant
+    const toggleParticipant = (userId: string) => {
+        setEventForm(prev => ({
+            ...prev,
+            participantsIds: prev.participantsIds.includes(userId)
+                ? prev.participantsIds.filter(id => id !== userId)
+                : [...prev.participantsIds, userId]
+        }));
+    };
+
+    // Filtrer les membres selon la recherche (exclure les managers)
+    const filteredMembers = teamMembers.filter(member =>
+        !member.isManager && `${member.firstname} ${member.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     // Vérifier les conflits de disponibilité pour un participant
     const checkAvailabilityConflicts = (userId: string, eventStart: string, eventEnd: string): AvailabilityConflict | null => {
@@ -257,48 +330,46 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
     // Créer l'événement
     const createEvent = async () => {
-        if (!selectedAssociation?.id || !user?.sub) {
-            setError(t_planning('createEvent_associationOrUserError'));
+        if (!selectedAssociation || !user) return;
+
+        // Validation des champs requis
+        if (!eventForm.title.trim()) {
+            setError(t_planning('createEvent_titleRequired'));
             return;
         }
 
-        // Validation
-        if (!eventForm.title.trim() || !eventForm.beginningDate || !eventForm.endDate) {
-            setError(t_planning('createEvent_formError'));
+        if (!eventForm.beginningDate) {
+            setError(t_planning('createEvent_startDateRequired'));
             return;
         }
 
-        // Vérification des dates passées
-        const now = new Date();
-        const beginningDate = new Date(eventForm.beginningDate);
-        const endDate = new Date(eventForm.endDate);
-        
-        // Ajuster pour le fuseau horaire local
-        const localBeginningDate = new Date(beginningDate.getTime() - (beginningDate.getTimezoneOffset() * 60000));
-        const localEndDate = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000));
-        
-        if (localBeginningDate < now) {
-            setError(t_planning('createEvent_datePastError'));
+        if (!eventForm.endDate) {
+            setError(t_planning('createEvent_endDateRequired'));
             return;
         }
 
-        if (localBeginningDate >= localEndDate) {
-            setError(t_planning('createEvent_dateOrderError'));
+        if (new Date(eventForm.beginningDate) > new Date(eventForm.endDate)) {
+            setError(t_planning('createEvent_invalidDateRange'));
             return;
         }
+
+        if (eventForm.participantsIds.length === 0) {
+            setError(t_planning('createEvent_participantsRequired'));
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
 
         try {
-            setLoading(true);
-            setError(null);
-
             const eventData: CreateEventDto = {
-                associationId: selectedAssociation.id,
-                participantsIds: eventForm.participantsIds,
                 title: eventForm.title.trim(),
                 description: eventForm.description.trim(),
                 location: eventForm.location.trim(),
                 beginningDate: eventForm.beginningDate,
-                endDate: eventForm.endDate
+                endDate: eventForm.endDate,
+                participantsIds: eventForm.participantsIds,
+                associationId: selectedAssociation.id
             };
 
             await planningService.createEvent(eventData);
@@ -306,222 +377,240 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             toast.success(t_planning('createEvent_success'));
             onEventCreated();
             onClose();
-            
-        } catch (err: any) {
-            console.error('Erreur lors de la création de l\'événement:', err);
-            setError(err.message || t_planning('createEvent_error'));
+        } catch (error: any) {
+            console.error('Erreur lors de la création de l\'événement:', error);
+            setError(error.message || t_planning('createEvent_error'));
         } finally {
             setLoading(false);
         }
-    };
-
-    // Gérer la sélection des participants
-    const toggleParticipant = (userId: string) => {
-        setEventForm(prev => ({
-            ...prev,
-            participantsIds: prev.participantsIds.includes(userId)
-                ? prev.participantsIds.filter(id => id !== userId)
-                : [...prev.participantsIds, userId]
-        }));
-    };
-
-    // Filtrer les membres selon la recherche
-    const filteredMembers = teamMembers.filter(member => 
-        `${member.firstname} ${member.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // Obtenir les noms des participants sélectionnés
-    const getSelectedParticipantsNames = () => {
-        return teamMembers
-            .filter(member => eventForm.participantsIds.includes(member.id))
-            .map(member => `${member.firstname} ${member.lastname}`)
-            .join(', ');
-    };
-
-    const handleFormChange = (field: keyof EventForm, value: string) => {
-        setEventForm(prev => ({
-            ...prev,
-            [field]: value
-        }));
     };
 
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Créer un événement
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                        <XMarkIcon className="w-6 h-6" />
-                    </button>
-                </div>
-
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
-                    {/* Messages d'erreur */}
+                    {/* En-tête */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center">
+                            <CalendarIcon className="w-6 h-6 text-blue-600 mr-2" />
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                {t_planning('createEvent_title')}
+                            </h2>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        >
+                            <XMarkIcon className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    {/* Message d'erreur */}
                     {error && (
-                        <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-md">
-                            {error}
+                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                         </div>
                     )}
 
+                    {/* Formulaire */}
                     <div className="space-y-6">
-                        {/* Informations de base */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Titre de l'événement */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {t_planning('createEvent_eventTitle')} *
+                            </label>
                             <Input
                                 type="text"
-                                placeholder={`${t_planning('createEvent_eventTitle')} *`}
                                 value={eventForm.title}
-                                onChange={(e) => handleFormChange('title', e.target.value)}
-                                className="w-full"
-                            />
-                            <Input
-                                type="text"
-                                placeholder={t_planning('createEvent_location')}
-                                value={eventForm.location}
-                                onChange={(e) => handleFormChange('location', e.target.value)}
+                                onChange={(e) => handleInputChange('title', e.target.value)}
+                                placeholder={t_planning('createEvent_titlePlaceholder')}
                                 className="w-full"
                             />
                         </div>
 
-                        <Input
-                            type="text"
-                            placeholder={t_planning('createEvent_description')}
-                            value={eventForm.description}
-                            onChange={(e) => handleFormChange('description', e.target.value)}
-                            className="w-full"
-                        />
+                        {/* Description */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {t_planning('createEvent_description')}
+                            </label>
+                            <textarea
+                                value={eventForm.description}
+                                onChange={(e) => handleInputChange('description', e.target.value)}
+                                placeholder={t_planning('createEvent_descriptionPlaceholder')}
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                        </div>
+
+                        {/* Lieu */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {t_planning('createEvent_location')}
+                            </label>
+                            <div className="relative">
+                                <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                    type="text"
+                                    value={eventForm.location}
+                                    onChange={(e) => handleInputChange('location', e.target.value)}
+                                    placeholder={t_planning('createEvent_locationPlaceholder')}
+                                    className="w-full pl-10"
+                                />
+                            </div>
+                        </div>
 
                         {/* Dates */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input
-                                type="datetime-local"
-                                value={eventForm.beginningDate}
-                                onChange={(e) => handleFormChange('beginningDate', e.target.value)}
-                                min={new Date().toISOString().slice(0, 16)}
-                                className="w-full"
-                                placeholder=""
-                            />
-                            <Input
-                                type="datetime-local"
-                                value={eventForm.endDate}
-                                onChange={(e) => handleFormChange('endDate', e.target.value)}
-                                min={eventForm.beginningDate || new Date().toISOString().slice(0, 16)}
-                                className="w-full"
-                                placeholder=""
-                            />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t_planning('createEvent_startDate')} *
+                                </label>
+                                <div className="relative">
+                                    <ClockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Input
+                                        type="datetime-local"
+                                        value={eventForm.beginningDate}
+                                        onChange={(e) => handleInputChange('beginningDate', e.target.value)}
+                                        className="w-full pl-10"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t_planning('createEvent_endDate')} *
+                                </label>
+                                <div className="relative">
+                                    <ClockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Input
+                                        type="datetime-local"
+                                        value={eventForm.endDate}
+                                        onChange={(e) => handleInputChange('endDate', e.target.value)}
+                                        className="w-full pl-10"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Sélection des participants */}
-                        <div className="relative participants-dropdown">
+                        {/* Participants */}
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t_planning('createEvent_participants')}
+                                {t_planning('createEvent_participants')} *
                             </label>
                             
-                            {/* Champ de sélection principal */}
-                            <div
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer flex justify-between items-center min-h-[42px]"
-                            >
-                                                                <span className={eventForm.participantsIds.length === 0 ? "text-gray-400" : ""}>
-                                    {eventForm.participantsIds.length === 0
-                                                                            ? t_planning('createEvent_selectParticipants')
-                                    : t_planning('createEvent_participantsSelected').replace('{count}', eventForm.participantsIds.length.toString())
-                                    }
-                                </span>
-                                <ChevronDownIcon 
-                                    className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
-                                />
-                            </div>
-
-                            {/* Liste déroulante */}
-                            {isDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-64 overflow-hidden">
-                                    {/* Champ de recherche */}
-                                    <div className="p-3 border-b border-gray-200 dark:border-gray-600">
-                                        <Input
-                                            type="text"
-                                            placeholder={t_planning('createEvent_searchMembers')}
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full"
-                                        />
+                            {/* Sélecteur de participants */}
+                            <div className="relative participants-dropdown">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                    className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    <div className="flex items-center">
+                                        <UserGroupIcon className="w-4 h-4 text-gray-400 mr-2" />
+                                        <span className="text-sm">
+                                            {eventForm.participantsIds.length === 0 
+                                                ? t_planning('createEvent_selectParticipants')
+                                                : `${eventForm.participantsIds.length} ${t_planning('createEvent_selectedParticipants')}`
+                                            }
+                                        </span>
                                     </div>
+                                    <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                </button>
 
-                                    {/* Liste des membres */}
-                                    <div className="max-h-48 overflow-y-auto">
-                                        {loadingMembers ? (
-                                            <div className="text-center py-4">
-                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                                            </div>
-                                        ) : filteredMembers.length === 0 ? (
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                                                {searchTerm ? t_planning('createEvent_noMembersFound') : t_planning('createEvent_noMembersAvailable')}
-                                            </p>
-                                        ) : (
-                                            <div className="py-2">
-                                                {filteredMembers.map((member) => (
-                                                    <label 
-                                                        key={member.id} 
-                                                        className="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
-                                                    >
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={eventForm.participantsIds.includes(member.id)}
-                                                            onChange={() => toggleParticipant(member.id)}
-                                                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                        />
-                                                        <div className="ml-3 flex items-center">
-                                                            <img
-                                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstname + ' ' + member.lastname)}&background=random`}
-                                                                alt={`${member.firstname} ${member.lastname}`}
-                                                                className="w-6 h-6 rounded-full mr-2"
+                                {/* Liste déroulante */}
+                                {isDropdownOpen && (
+                                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                                        {/* Barre de recherche */}
+                                        <div className="p-3 border-b border-gray-200 dark:border-gray-600">
+                                            <Input
+                                                type="text"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                placeholder={t_planning('createEvent_searchMembers')}
+                                                className="w-full text-sm"
+                                            />
+                                        </div>
+
+                                        {/* Liste des membres */}
+                                        <div className="max-h-48 overflow-y-auto">
+                                            {loadingMembers ? (
+                                                <div className="text-center py-4">
+                                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                                                </div>
+                                            ) : filteredMembers.length === 0 ? (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                                                    {searchTerm ? t_planning('createEvent_noMembersFound') : t_planning('createEvent_noMembersAvailable')}
+                                                </p>
+                                            ) : (
+                                                <div className="py-2">
+                                                    {filteredMembers.map((member) => (
+                                                        <label 
+                                                            key={member.id} 
+                                                            className="flex items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={eventForm.participantsIds.includes(member.id)}
+                                                                onChange={() => toggleParticipant(member.id)}
+                                                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                                             />
-                                                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                            <div className="ml-3 flex items-center">
+                                                                <img
+                                                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstname + ' ' + member.lastname)}&background=random`}
+                                                                    alt={`${member.firstname} ${member.lastname}`}
+                                                                    className="w-6 h-6 rounded-full mr-2"
+                                                                />
+                                                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                                    {member.firstname} {member.lastname}
+                                                                </span>
+                                                                {member.isManager && (
+                                                                    <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                                                                        {t_planning('team_manager')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Affichage des participants sélectionnés */}
+                                {eventForm.participantsIds.length > 0 && (
+                                    <div className="mt-2 space-y-2">
+                                        {teamMembers
+                                            .filter(member => eventForm.participantsIds.includes(member.id))
+                                            .map(member => {
+                                                const availabilityMsg = getAvailabilityMessage(member.id, eventForm.beginningDate, eventForm.endDate);
+                                                return (
+                                                    <div key={member.id} className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-md p-2">
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                                                                 {member.firstname} {member.lastname}
                                                             </span>
-                                                            {member.isManager && (
-                                                                <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-                                                                    {t_planning('team_manager')}
+                                                            {availabilityMsg && (
+                                                                <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                                                                    {availabilityMsg}
                                                                 </span>
                                                             )}
                                                         </div>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => toggleParticipant(member.id)}
+                                                            className="inline-flex items-center justify-center w-6 h-6 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-300"
+                                                        >
+                                                            <XMarkIcon className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })
+                                        }
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Affichage des participants sélectionnés */}
-                            {eventForm.participantsIds.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {teamMembers
-                                        .filter(member => eventForm.participantsIds.includes(member.id))
-                                        .map(member => (
-                                            <span
-                                                key={member.id}
-                                                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-                                            >
-                                                {member.firstname} {member.lastname}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => toggleParticipant(member.id)}
-                                                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800"
-                                                >
-                                                    <XMarkIcon className="w-3 h-3" />
-                                                </button>
-                                            </span>
-                                        ))
-                                    }
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
 
                         {/* Avertissements de disponibilité */}
@@ -537,15 +626,10 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                                             {availabilityConflicts.map((conflict) => {
                                                 const member = teamMembers.find(m => m.id === conflict.userId);
                                                 if (!member) return null;
-                                                
+
                                                 return (
-                                                    <div key={conflict.userId} className="bg-white dark:bg-gray-800 rounded-md p-3 border border-orange-200 dark:border-orange-700">
+                                                    <div key={conflict.userId} className="bg-white dark:bg-gray-800 p-3 rounded border border-orange-200 dark:border-orange-700">
                                                         <div className="flex items-center mb-2">
-                                                            <img
-                                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstname + ' ' + member.lastname)}&background=random`}
-                                                                alt={`${member.firstname} ${member.lastname}`}
-                                                                className="w-6 h-6 rounded-full mr-2"
-                                                            />
                                                             <span className="font-medium text-gray-900 dark:text-white">
                                                                 {member.firstname} {member.lastname}
                                                             </span>
