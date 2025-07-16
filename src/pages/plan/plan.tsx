@@ -758,6 +758,59 @@ const Plan: React.FC = () => {
         }
     };
 
+    // Fonction pour regrouper les points proches (clustering)
+    const clusterPoints = (points: GeoPoint[], threshold = 0.0001) => {
+        const clusters: { points: GeoPoint[]; center: { lat: number; lng: number }; }[] = [];
+        const processed = new Set<number>();
+
+        points.forEach((point, index) => {
+            if (processed.has(index)) return;
+
+            const cluster = {
+                points: [point],
+                center: { lat: point.latitude, lng: point.longitude }
+            };
+
+            // Trouver tous les points proches de ce point
+            points.forEach((otherPoint, otherIndex) => {
+                if (otherIndex <= index || processed.has(otherIndex)) return;
+
+                const distance = Math.sqrt(
+                    Math.pow(point.latitude - otherPoint.latitude, 2) +
+                    Math.pow(point.longitude - otherPoint.longitude, 2)
+                );
+
+                if (distance <= threshold) {
+                    cluster.points.push(otherPoint);
+                    processed.add(otherIndex);
+                }
+            });
+
+            processed.add(index);
+            clusters.push(cluster);
+        });
+
+        return clusters;
+    };
+
+    // Créer une icône avec compteur pour les clusters
+    const createClusterIcon = (count: number, color: string) => {
+        if (count === 1) {
+            return createCustomIcon(color);
+        }
+
+        return L.divIcon({
+            html: `
+                <div style="background-color: ${color}; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; position: relative;">
+                    <span style="color: white; font-weight: bold; font-size: 12px;">${count}</span>
+                </div>
+            `,
+            iconSize: [35, 35],
+            iconAnchor: [17, 17],
+            className: 'cluster-marker'
+        });
+    };
+
     return (
         <div className="h-full bg-gradient-to-br from-orange-50/30 via-blue-50/30 to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             {/* Navbar Carte, style StockNavbar */}
@@ -825,41 +878,93 @@ const Plan: React.FC = () => {
                                 />
                             )}
                             
-                            {/* Affichage des points existants (masqués si heatmap active) */}
-                            {!showHeatmap && geoPoints.map((point, index) => (
-                                <Marker
-                                    key={point.id || index}
-                                    position={[point.latitude, point.longitude]}
-                                    icon={createCustomIcon(getPointColor(point.observedAt || point.timestamp))}
-                                >
-                                    <Popup>
-                                        <div className="p-2 min-w-[200px]">
-                                            <h3 className="font-semibold text-gray-900 mb-2">
-                                                {point.name || 'Point de géolocalisation'}
-                                            </h3>
-                                            {point.address && (
-                                                <p className="text-xs text-gray-500 mb-2">
-                                                    📍 {point.address}
-                                                </p>
-                                            )}
-                                            <p className="text-sm text-gray-600 mb-2">{point.notes}</p>
-                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                <div>{formatDate(point.timestamp, point.observedAt)}</div>
-                                                <div className="mt-1">
-                                                    {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
-                                                </div>
+                            {/* Affichage des points existants avec clustering (masqués si heatmap active) */}
+                            {!showHeatmap && clusterPoints(geoPoints).map((cluster, clusterIndex) => {
+                                const clusterColor = cluster.points.length === 1 
+                                    ? getPointColor(cluster.points[0].observedAt || cluster.points[0].timestamp)
+                                    : '#6366F1'; // Couleur violette pour les clusters multiples
+                                
+                                return (
+                                    <Marker
+                                        key={`cluster-${clusterIndex}`}
+                                        position={[cluster.center.lat, cluster.center.lng]}
+                                        icon={createClusterIcon(cluster.points.length, clusterColor)}
+                                    >
+                                        <Popup>
+                                            <div className="p-2 min-w-[250px] max-w-[300px]">
+                                                {cluster.points.length === 1 ? (
+                                                    // Un seul point
+                                                    <>
+                                                        <h3 className="font-semibold text-gray-900 mb-2">
+                                                            {cluster.points[0].name || 'Point de géolocalisation'}
+                                                        </h3>
+                                                        {cluster.points[0].address && (
+                                                            <p className="text-xs text-gray-500 mb-2">
+                                                                📍 {cluster.points[0].address}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-sm text-gray-600 mb-2">{cluster.points[0].notes}</p>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                            <div>{formatDate(cluster.points[0].timestamp, cluster.points[0].observedAt)}</div>
+                                                            <div className="mt-1">
+                                                                {cluster.points[0].latitude.toFixed(4)}, {cluster.points[0].longitude.toFixed(4)}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleShowRoute(cluster.points[0])}
+                                                            className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                        >
+                                                            <MapIcon className="w-3 h-3" />
+                                                            <span>Itinéraire</span>
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    // Plusieurs points groupés
+                                                    <>
+                                                        <h3 className="font-semibold text-gray-900 mb-2">
+                                                            {cluster.points.length} points groupés
+                                                        </h3>
+                                                        <div className="max-h-40 overflow-y-auto space-y-2 mb-3">
+                                                            {cluster.points.map((point, pointIndex) => (
+                                                                <div key={point.id || pointIndex} className="p-2 bg-gray-50 dark:bg-gray-700 rounded-md">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="flex-1">
+                                                                            <div className="font-medium text-xs text-gray-900 dark:text-white">
+                                                                                {point.name || `Point #${pointIndex + 1}`}
+                                                                            </div>
+                                                                            {point.address && (
+                                                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                                    📍 {point.address}
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                                                                                {point.notes}
+                                                                            </div>
+                                                                            <div className="text-xs text-gray-500 dark:text-gray-500">
+                                                                                {formatDate(point.timestamp, point.observedAt)}
+                                                                            </div>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => handleShowRoute(point)}
+                                                                            className="ml-2 p-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white rounded transition-all"
+                                                                            title="Voir itinéraire"
+                                                                        >
+                                                                            <MapIcon className="w-3 h-3" />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-500 text-center">
+                                                            📍 {cluster.center.lat.toFixed(4)}, {cluster.center.lng.toFixed(4)}
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
-                                            <button
-                                                onClick={() => handleShowRoute(point)}
-                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                            >
-                                                <MapIcon className="w-3 h-3" />
-                                                <span>Itinéraire</span>
-                                            </button>
-                                        </div>
-                                    </Popup>
-                                </Marker>
-                            ))}
+                                        </Popup>
+                                    </Marker>
+                                );
+                            })}
 
                             {/* Affichage des routes d'événements */}
                             {!routesDisabled && routes.map((route, index) => {
@@ -1073,45 +1178,98 @@ const Plan: React.FC = () => {
                             </div>
                         ) : (
                             <div className="p-4 space-y-3">
-                                {geoPoints.map((point, index) => (
+                                {clusterPoints(geoPoints).map((cluster, clusterIndex) => (
                                     <div
-                                        key={point.id || index}
+                                        key={`cluster-list-${clusterIndex}`}
                                         className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center mb-2">
-                                                    <div 
-                                                        className="w-3 h-3 rounded-full mr-2"
-                                                        style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
-                                                    ></div>
+                                        {cluster.points.length === 1 ? (
+                                            // Un seul point
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center mb-2">
+                                                        <div 
+                                                            className="w-3 h-3 rounded-full mr-2"
+                                                            style={{ backgroundColor: getPointColor(cluster.points[0].observedAt || cluster.points[0].timestamp) }}
+                                                        ></div>
+                                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            {cluster.points[0].name || `Point #${clusterIndex + 1}`}
+                                                        </h4>
+                                                    </div>
+                                                    {cluster.points[0].address && (
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                            📍 {cluster.points[0].address}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                                        {cluster.points[0].notes || 'Aucune description'}
+                                                    </p>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                                                        <div>{formatDate(cluster.points[0].timestamp, cluster.points[0].observedAt)}</div>
+                                                        <div className="mt-1">
+                                                            {cluster.points[0].latitude.toFixed(4)}, {cluster.points[0].longitude.toFixed(4)}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleShowRoute(cluster.points[0])}
+                                                        className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                    >
+                                                        <MapIcon className="w-3 h-3" />
+                                                        <span>Itinéraire</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // Cluster de plusieurs points
+                                            <div>
+                                                <div className="flex items-center mb-3">
+                                                    <div className="w-4 h-4 bg-purple-500 rounded-full mr-2 flex items-center justify-center">
+                                                        <span className="text-white font-bold text-xs">{cluster.points.length}</span>
+                                                    </div>
                                                     <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                        {point.name || `Point #${index + 1}`}
+                                                        {cluster.points.length} points groupés
                                                     </h4>
                                                 </div>
-                                                {point.address && (
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                                        📍 {point.address}
-                                                    </p>
-                                                )}
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                    {point.notes || 'Aucune description'}
-                                                </p>
-                                                <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                    <div>{formatDate(point.timestamp, point.observedAt)}</div>
-                                                    <div className="mt-1">
-                                                        {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
-                                                    </div>
+                                                <div className="space-y-2 mb-3">
+                                                    {cluster.points.map((point, pointIndex) => (
+                                                        <div key={point.id || pointIndex} className="flex items-start justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-md">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center mb-1">
+                                                                    <div 
+                                                                        className="w-2 h-2 rounded-full mr-2"
+                                                                        style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
+                                                                    ></div>
+                                                                    <div className="text-xs font-medium text-gray-900 dark:text-white">
+                                                                        {point.name || `Point #${pointIndex + 1}`}
+                                                                    </div>
+                                                                </div>
+                                                                {point.address && (
+                                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                                        📍 {point.address}
+                                                                    </div>
+                                                                )}
+                                                                <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                                    {point.notes || 'Aucune description'}
+                                                                </div>
+                                                                <div className="text-xs text-gray-500 dark:text-gray-500">
+                                                                    {formatDate(point.timestamp, point.observedAt)}
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => handleShowRoute(point)}
+                                                                className="ml-2 p-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white rounded transition-all"
+                                                                title="Voir itinéraire"
+                                                            >
+                                                                <MapIcon className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <button
-                                                    onClick={() => handleShowRoute(point)}
-                                                    className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                >
-                                                    <MapIcon className="w-3 h-3" />
-                                                    <span>Itinéraire</span>
-                                                </button>
+                                                <div className="text-xs text-gray-500 dark:text-gray-500 text-center">
+                                                    📍 Centre: {cluster.center.lat.toFixed(4)}, {cluster.center.lng.toFixed(4)}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
