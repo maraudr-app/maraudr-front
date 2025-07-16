@@ -24,6 +24,7 @@ import { teamService } from '../../services/teamService';
 import { stockService } from '../../services/stockService';
 import { userService } from '../../services/userService';
 import { planningService } from '../../services/planningService';
+import { geoService, type GeoPoint } from '../../services/geoService';
 import type { Event } from '../../types/planning/event';
 import { Disponibility } from '../../types/disponibility/disponibility';
 import { MembershipStatusAlert } from '../../components/common/alert/MembershipStatusAlert';
@@ -31,7 +32,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar } from 'recharts';
 
 // Interfaces pour TypeScript
 interface DashboardData {
@@ -46,6 +47,8 @@ interface DashboardData {
   userEvents: Event[];
   currentEvents?: number; // Nombre d'événements d'aujourd'hui pour les managers
   todayEvents: Event[]; // Événements en cours aujourd'hui pour l'affichage
+  geoPoints: GeoPoint[]; // Points d'intérêt de l'association
+  weeklyGeoActivity: { day: string; count: number }[]; // Activité par jour de la semaine
 }
 
 // Ajout de la fonction utilitaire pour regrouper les événements par mois (similaire à planning)
@@ -101,6 +104,11 @@ const DashBoard = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [allDisponibilities, setAllDisponibilities] = useState<Disponibility[]>([]);
+  
+  // États pour les points d'intérêt
+  const [poiSelectedYear, setPoiSelectedYear] = useState(new Date().getFullYear());
+  const [poiSelectedMonth, setPoiSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
+  const [poiSelectedWeek, setPoiSelectedWeek] = useState(1); // Sera mis à jour dans useEffect
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     stockItems: 0,
     lowStockItems: 0,
@@ -111,7 +119,9 @@ const DashBoard = () => {
     isUserInAssociation: true,
     stockItemsData: [],
     userEvents: [],
-    todayEvents: []
+    todayEvents: [],
+    geoPoints: [],
+    weeklyGeoActivity: []
   });
 
   const isManager = user?.userType === 'Manager';
@@ -230,6 +240,167 @@ const DashBoard = () => {
     }
   };
 
+  // Calculer l'activité par jour de la semaine pour les points d'intérêt
+  const calculateWeeklyActivity = (geoPoints: GeoPoint[]): { day: string; count: number }[] => {
+    const days = [
+      t_dashboard('monday'),
+      t_dashboard('tuesday'), 
+      t_dashboard('wednesday'),
+      t_dashboard('thursday'),
+      t_dashboard('friday'),
+      t_dashboard('saturday'),
+      t_dashboard('sunday')
+    ];
+
+    const weeklyData = days.map((day, index) => ({ day, count: 0 }));
+
+    geoPoints.forEach(point => {
+      if (point.observedAt) {
+        const date = new Date(point.observedAt);
+        const dayOfWeek = date.getDay(); // 0 = dimanche, 1 = lundi, etc.
+        const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Ajuster pour que lundi = 0
+        if (adjustedDay >= 0 && adjustedDay < 7) {
+          weeklyData[adjustedDay].count++;
+        }
+      }
+    });
+
+    return weeklyData;
+  };
+
+  // Fonctions utilitaires pour les points d'intérêt
+  const getWeeksInMonth = (year: number, month: number): Array<{number: number, start: Date, end: Date}> => {
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const weeks: Array<{number: number, start: Date, end: Date}> = [];
+    
+    let currentWeek = 1;
+    let currentDate = new Date(firstDay);
+    
+    // Aller au premier lundi
+    while (currentDate.getDay() !== 1) {
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+    
+    while (currentDate <= lastDay) {
+      const weekStart = new Date(currentDate);
+      const weekEnd = new Date(currentDate);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      // Si cette semaine contient des jours du mois
+      if (weekEnd >= firstDay) {
+        weeks.push({
+          number: currentWeek,
+          start: new Date(Math.max(weekStart.getTime(), firstDay.getTime())),
+          end: new Date(Math.min(weekEnd.getTime(), lastDay.getTime()))
+        });
+        currentWeek++;
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 7);
+    }
+    
+    return weeks;
+  };
+
+  const getSelectedWeekData = () => {
+    const weeks = getWeeksInMonth(poiSelectedYear, poiSelectedMonth);
+    const selectedWeekInfo = weeks[poiSelectedWeek - 1];
+    
+    if (!selectedWeekInfo) return [];
+
+    return dashboardData.geoPoints.filter(point => {
+      if (!point.observedAt) return false;
+      
+      const pointDate = new Date(point.observedAt);
+      const pointDateOnly = new Date(pointDate.getFullYear(), pointDate.getMonth(), pointDate.getDate());
+      const weekStart = new Date(selectedWeekInfo.start.getFullYear(), selectedWeekInfo.start.getMonth(), selectedWeekInfo.start.getDate());
+      const weekEnd = new Date(selectedWeekInfo.end.getFullYear(), selectedWeekInfo.end.getMonth(), selectedWeekInfo.end.getDate());
+      
+      return pointDateOnly >= weekStart && pointDateOnly <= weekEnd;
+    });
+  };
+
+  const calculateWeekdayActivity = () => {
+    const filteredPoints = getSelectedWeekData();
+    
+    // Seulement lundi à vendredi
+    const weekdays = [
+      t_dashboard('monday'),
+      t_dashboard('tuesday'), 
+      t_dashboard('wednesday'),
+      t_dashboard('thursday'),
+      t_dashboard('friday')
+    ];
+
+    const weekdayData = weekdays.map((day, index) => ({ day, count: 0 }));
+
+    filteredPoints.forEach(point => {
+      if (point.observedAt) {
+        const date = new Date(point.observedAt);
+        const dayOfWeek = date.getDay(); // 0 = dimanche, 1 = lundi, etc.
+        
+        // Seulement les jours de semaine (1-5 = lundi-vendredi)
+        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+          const adjustedDay = dayOfWeek - 1; // Convertir en index 0-4
+          weekdayData[adjustedDay].count++;
+        }
+      }
+    });
+
+    return weekdayData;
+  };
+
+  const getPoiAvailableYears = (): number[] => {
+    const currentYear = new Date().getFullYear();
+    const years: number[] = [];
+    for (let year = currentYear - 2; year <= currentYear + 1; year++) {
+      years.push(year);
+    }
+    return years;
+  };
+
+  const getAvailableWeeks = () => {
+    return getWeeksInMonth(poiSelectedYear, poiSelectedMonth);
+  };
+
+  // Fonction pour calculer la semaine courante
+  const getCurrentWeekInMonth = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    
+    const weeks = getWeeksInMonth(year, month);
+    
+    // Trouver dans quelle semaine se trouve aujourd'hui
+    for (let i = 0; i < weeks.length; i++) {
+      const week = weeks[i];
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const weekStart = new Date(week.start.getFullYear(), week.start.getMonth(), week.start.getDate());
+      const weekEnd = new Date(week.end.getFullYear(), week.end.getMonth(), week.end.getDate());
+      
+      if (todayDate >= weekStart && todayDate <= weekEnd) {
+        return week.number;
+      }
+    }
+    
+    return 1; // Par défaut si aucune semaine trouvée
+  };
+
+  // Effet pour initialiser la semaine courante au chargement
+  useEffect(() => {
+    const currentWeek = getCurrentWeekInMonth();
+    setPoiSelectedWeek(currentWeek);
+  }, []);
+
+  // Effet pour réinitialiser la semaine sélectionnée quand on change de mois/année
+  useEffect(() => {
+    const availableWeeks = getWeeksInMonth(poiSelectedYear, poiSelectedMonth);
+    if (poiSelectedWeek > availableWeeks.length) {
+      setPoiSelectedWeek(1);
+    }
+  }, [poiSelectedYear, poiSelectedMonth, poiSelectedWeek]);
+
   // Charger les données du dashboard
   useEffect(() => {
     console.log('🔍 ===== DÉBUT DEBUG DASHBOARD =====');
@@ -281,7 +452,9 @@ const DashBoard = () => {
           isUserInAssociation: true,
           stockItemsData: stockItems || [],
           userEvents: [],
-          todayEvents: []
+          todayEvents: [],
+          geoPoints: [],
+          weeklyGeoActivity: []
         };
         
         console.log('📋 Données initiales:', initialData);
@@ -407,16 +580,38 @@ const DashBoard = () => {
         const eventsToCheck = user?.userType === 'Manager' ? allAssociationEvents : userEvents;
         const upcomingEvents = eventsToCheck.filter(event => new Date(event.beginningDate) > now);
         
-        console.log('🔮 Événements à venir:', upcomingEvents);
-        console.log('🔮 Nombre d\'événements à venir:', upcomingEvents.length);
-        
-        // ===== 7. MISE À JOUR FINALE =====
-        const finalData = {
-          upcomingEvents: upcomingEvents.length,
-          userEvents: user?.userType === 'Manager' ? allAssociationEvents : userEvents,
-          currentEvents: user?.userType === 'Manager' ? todayEvents.length : 0,
-          todayEvents: user?.userType === 'Manager' ? todayEvents : []
-        };
+                 console.log('🔮 Événements à venir:', upcomingEvents);
+         console.log('🔮 Nombre d\'événements à venir:', upcomingEvents.length);
+         
+         // ===== 7. VÉRIFICATION POINTS D'INTÉRÊT =====
+         console.log('📍 Chargement des points d\'intérêt...');
+         let geoPoints: GeoPoint[] = [];
+         let weeklyGeoActivity: { day: string; count: number }[] = [];
+         
+         try {
+           geoPoints = await geoService.getGeoPoints(selectedAssociation.id, 7); // Derniers 7 jours
+           console.log('📍 Points d\'intérêt reçus:', geoPoints);
+           console.log('📍 Nombre de points:', geoPoints?.length || 0);
+           
+           // Calculer l'activité par jour de la semaine
+           weeklyGeoActivity = calculateWeeklyActivity(geoPoints);
+           console.log('📊 Activité hebdomadaire:', weeklyGeoActivity);
+           
+         } catch (geoError) {
+           console.error('❌ Erreur chargement points d\'intérêt:', geoError);
+           geoPoints = [];
+           weeklyGeoActivity = [];
+         }
+         
+                  // ===== 8. MISE À JOUR FINALE =====
+         const finalData = {
+           upcomingEvents: upcomingEvents.length,
+           userEvents: user?.userType === 'Manager' ? allAssociationEvents : userEvents,
+           currentEvents: user?.userType === 'Manager' ? todayEvents.length : 0,
+           todayEvents: user?.userType === 'Manager' ? todayEvents : [],
+           geoPoints: geoPoints,
+           weeklyGeoActivity: weeklyGeoActivity
+         };
         
         console.log('🏁 Données finales à appliquer:', finalData);
         
@@ -755,14 +950,6 @@ const DashBoard = () => {
         )}
       </div>
 
-      {/* Alerte de statut d'adhésion pour les utilisateurs simples */}
-      {!isManager && (
-        <MembershipStatusAlert 
-          isInAssociation={dashboardData.isUserInAssociation}
-          associationName={selectedAssociation?.name}
-        />
-      )}
-
       {/* Cartes de statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((card, index) => (
@@ -790,19 +977,6 @@ const DashBoard = () => {
                     </span>
                   ) : null}
                 </div>
-                {card.variation === 0 && card.title === t_dashboard('stockItems') ? (
-                  <span className="text-xs text-gray-400">
-                    {t_dashboard('noNewItems')}
-                  </span>
-                ) : card.variation === 0 && card.title === t_dashboard('upcomingEvents') ? (
-                  <span className="text-xs text-gray-400">
-                    {t_dashboard('noNewEvents')}
-                  </span>
-                ) : card.variation === 0 && card.title === t_dashboard('nextMissions') ? (
-                  <span className="text-xs text-gray-400">
-                    {t_dashboard('noNewMissions')}
-                  </span>
-                ) : null}
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                   {card.description}
                 </p>
@@ -818,113 +992,177 @@ const DashBoard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendrier d'activité - 1/3 de la largeur */}
+        {/* Graphique points d'intérêt - 1/3 de la largeur */}
         <div className="lg:col-span-1">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {isManager ? t_dashboard('associationActivity') : t_dashboard('myActivity')}
-            </h3>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => navigateMonth('prev')}
-                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ChevronLeftIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              </button>
-              <div className="text-sm text-gray-500 dark:text-gray-400 min-w-[120px] text-center">
-                {getMonthName(selectedMonth)}
-              </div>
-              <button
-                onClick={() => navigateMonth('next')}
-                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              </button>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {t_dashboard('interestPoints')}
+              </h3>
+              <MapPinIcon className="w-5 h-5 text-blue-500" />
             </div>
+            
+            {/* Sélecteurs année/mois/semaine */}
+            <div className="flex items-center gap-1.5">
+              {/* Année */}
+              <select
+                value={poiSelectedYear}
+                onChange={(e) => setPoiSelectedYear(Number(e.target.value))}
+                className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                {getPoiAvailableYears().map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              
+              {/* Mois */}
+              <select
+                value={poiSelectedMonth}
+                onChange={(e) => setPoiSelectedMonth(Number(e.target.value))}
+                className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                {Array.from({length: 12}, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(2024, i, 1).toLocaleDateString('fr-FR', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Semaine */}
+              <select
+                value={poiSelectedWeek}
+                onChange={(e) => setPoiSelectedWeek(Number(e.target.value))}
+                className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                {getAvailableWeeks().map(week => (
+                  <option key={week.number} value={week.number}>
+                    {t_dashboard('weekNumber')} {week.number}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+                    {/* Titre de la semaine sélectionnée */}
+          <div className="text-center mb-4">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+              {t_dashboard('weekNumber')} {poiSelectedWeek} - {new Date(poiSelectedYear, poiSelectedMonth - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+            </h4>
           </div>
           
           <div className="space-y-4">
-            {/* Légende */}
-            <div className="flex items-center space-x-4 text-xs">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
-                <span className="text-gray-600 dark:text-gray-400">{t_dashboard('low')}</span>
+            {/* Graphique en barres par période */}
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={calculateWeekdayActivity()}>
+                  <Bar 
+                    dataKey="count" 
+                    fill="#3b82f6" 
+                    radius={[2, 2, 0, 0]}
+                  />
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: '#6b7280' }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#6b7280' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                    labelFormatter={(label) => label}
+                    formatter={(value, name) => {
+                      const weekData = getSelectedWeekData();
+                      const totalPoints = value as number;
+                      
+                      const mostActiveZone = weekData.length > 0 ? 
+                        weekData[0]?.address?.split(',')[1]?.trim() || 'Zone non définie' : 
+                        'Aucune zone';
+                      
+                      const lastActivity = weekData.length > 0 ? 
+                        new Date(weekData[weekData.length - 1]?.observedAt || '').toLocaleDateString() : 
+                        'Aucune';
+
+                      return [
+                        <div key="tooltip" className="space-y-1">
+                          <div className="font-medium">{value} {t_dashboard('pointsCount')}</div>
+                          <div className="text-xs text-gray-600">
+                            <div>{t_dashboard('zone')}: {mostActiveZone}</div>
+                            <div>{t_dashboard('lastActivity')}: {lastActivity}</div>
+                          </div>
+                        </div>,
+                        ''
+                      ];
+                    }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Métriques rapides */}
+            <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-center">
+                <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {getSelectedWeekData().length}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{t_dashboard('totalForPeriod')}</div>
               </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-orange-500 rounded-full mr-1"></div>
-                <span className="text-gray-600 dark:text-gray-400">{t_dashboard('medium')}</span>
+              <div className="text-center">
+                <div className="text-xl font-bold text-green-600 dark:text-green-400">
+                  {getSelectedWeekData().filter(point => point.isActive).length}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{t_dashboard('activePoints')}</div>
               </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
-                <span className="text-gray-600 dark:text-gray-400">{t_dashboard('high')}</span>
+              <div className="text-center">
+                <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
+                  {(getSelectedWeekData().length / 5).toFixed(1)}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{t_dashboard('averagePerDay')}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                  {dashboardData.geoPoints.length}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
               </div>
             </div>
 
-            {/* Calendrier mini */}
-            <div className="grid grid-cols-7 gap-1">
-              {/* En-têtes des jours */}
-              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, index) => (
-                <div key={index} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 p-1">
-                  {day}
+            {/* Zone la plus active */}
+            {getSelectedWeekData().length > 0 && (
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      {t_dashboard('mostActiveZone')} :
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {getSelectedWeekData()[0]?.address?.split(',')[1]?.trim() || 'Zone non définie'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      {t_dashboard('lastActivity')} :
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {getSelectedWeekData().length > 0 ? 
+                        new Date(getSelectedWeekData()[getSelectedWeekData().length - 1]?.observedAt || '').toLocaleDateString() : 
+                        'Aucune'
+                      }
+                    </p>
+                  </div>
                 </div>
-              ))}
-              
-                             {/* Jours du mois avec activité */}
-               {(() => {
-                 const daysInMonth = getDaysInMonth(selectedMonth);
-                 const monthActivities = generateRealMonthActivities(selectedMonth);
-                 const today = new Date();
-                 const isCurrentMonth = selectedMonth.getMonth() === today.getMonth() && 
-                                       selectedMonth.getFullYear() === today.getFullYear();
-                 
-                 return Array.from({ length: daysInMonth }, (_, i) => {
-                   const dayNumber = i + 1;
-                   const activities = monthActivities[i];
-                   const intensity = activities === 0 ? 'bg-gray-100 dark:bg-gray-700' :
-                                   activities <= 2 ? 'bg-green-200 dark:bg-green-800' :
-                                   activities <= 5 ? 'bg-orange-200 dark:bg-orange-800' :
-                                   'bg-red-200 dark:bg-red-800';
-                   
-                   const isToday = isCurrentMonth && dayNumber === today.getDate();
-                   
-                   return (
-                     <div
-                       key={dayNumber}
-                       className={`aspect-square flex items-center justify-center text-xs rounded cursor-pointer transition-all hover:scale-110 ${intensity} ${
-                         isToday ? 'ring-2 ring-blue-500 font-bold' : ''
-                       }`}
-                       title={`${dayNumber} ${getMonthName(selectedMonth).split(' ')[0]} - ${activities} activités`}
-                       onClick={() => handleDayClick(selectedMonth, dayNumber)}
-                     >
-                       {dayNumber}
-                     </div>
-                   );
-                 });
-               })()}
-            </div>
-
-            {/* Statistiques rapides */}
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-center">
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {dashboardData.userEvents.length}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{t_dashboard('myMissions')}</div>
               </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                  {dashboardData.userEvents.filter(event => new Date(event.beginningDate) > new Date()).length}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{t_dashboard('upcoming')}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                  {dashboardData.userEvents.filter(event => new Date(event.endDate) < new Date()).length}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{t_dashboard('completed')}</div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
         </div>
@@ -958,10 +1196,10 @@ const DashBoard = () => {
                 
                 <div className="w-full h-96">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart 
-                      data={getEventsAndParticipantsPerMonth(dashboardData.userEvents, selectedYear)} 
-                      margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                    >
+                                          <LineChart 
+                        data={getEventsAndParticipantsPerMonth(dashboardData.userEvents, selectedYear)} 
+                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                      >
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(156, 163, 175, 0.2)" />
                       <XAxis 
                         dataKey="month" 
