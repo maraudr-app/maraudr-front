@@ -8,6 +8,20 @@
     "search": "Search...",
     "createAssociation": "Create Association"
   },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "media": "Media",
+    "team": "Team",
+    "map": "Map",
+    "planning": "Planning",
+    "mcp": "AI Assistant",
+    "profile": "Profile",
+    "settings": "Settings",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "logout": "Logout"
+  },
   "auth": {
     "welcome": "Hey, welcome to maraudr.",
     "login": "Login to your account",
@@ -63,11 +77,62 @@
     "feature_rates": "Best rates available",
     "feature_convenience": "Convenience"
   },
+  "dashboard": {
+    "eventsToday": "Today's Events",
+    "today": "Today"
+  },
   "stock": {
     "createStock": "Create Stock",
     "title": "Stock Management"
   },
   "map": {
     "name_placeholder": "Name of the reporting point..."
+  },
+  "media": {
+    "noAssociation": "No association selected",
+    "noAssociationMessage": "Please select an association to access media.",
+    "noAssociationDocuments": "Please select an association to manage its documents.",
+    "noAssociationPhotos": "Please select an association to manage its photos.",
+    "title": "Media",
+    "photos": "Photos",
+    "documents": "Documents",
+    "uploadInProgress": "Upload in progress...",
+    "dragDropOrClick": "Drag and drop a document here or click to select",
+    "dragDropOrClickPhoto": "Drag and drop a photo here or click to select",
+    "fileTypesDocuments": "PDF, DOC, XLS, TXT (max 10MB)",
+    "fileTypesPhotos": "JPG, PNG, GIF, WEBP (max 10MB)",
+    "searchDocument": "Search a document...",
+    "associationDocuments": "Association documents",
+    "associationPhotos": "Association photos",
+    "loading": "Loading...",
+    "loadingPhotos": "Loading photos...",
+    "noDocuments": "No documents",
+    "noDocumentsFound": "No documents found",
+    "noDocumentsMessage": "Start by uploading a document.",
+    "noDocumentsSearchMessage": "No documents match your search.",
+    "noPhotos": "No photos found",
+    "noPhotosMessage": "No photos have been shared in this association yet.",
+    "uploadedOn": "Uploaded on",
+    "uploadedBy": "Uploaded by",
+    "download": "Download",
+    "downloadStarted": "Download started",
+    "delete": "Delete",
+    "preview": "Preview",
+    "addPhoto": "Add photo",
+    "close": "Close",
+    "fileTypeNotAllowed": "File type not allowed",
+    "fileTypeNotAllowedPhotos": "File type not allowed. Only images are accepted.",
+    "fileTooLarge": "File too large (max 10MB)",
+    "uploadSuccess": "Document uploaded successfully!",
+    "uploadSuccessPhoto": "Photo uploaded successfully!",
+    "deleteSuccess": "Document deleted successfully",
+    "deleteSuccessPhoto": "Photo deleted successfully",
+    "confirmDelete": "Are you sure you want to delete",
+    "errorLoading": "Error loading",
+    "errorLoadingDocuments": "Error loading documents",
+    "errorLoadingPhotos": "Error loading photos",
+    "errorUpload": "Error during upload",
+    "errorDownload": "Error during download",
+    "errorDelete": "Error during deletion"
   }
 } 

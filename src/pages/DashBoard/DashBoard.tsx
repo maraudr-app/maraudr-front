@@ -44,6 +44,7 @@ interface DashboardData {
   isUserInAssociation: boolean;
   stockItemsData: any[];
   userEvents: Event[];
+  currentEvents?: number; // Nombre d'événements d'aujourd'hui pour les managers
 }
 
 // Ajout de la fonction utilitaire pour regrouper les événements par mois (similaire à planning)
@@ -249,7 +250,8 @@ const DashBoard = () => {
           activeDisponibilities: 0,
           isUserInAssociation: true,
           stockItemsData: stockItems,
-          userEvents: []
+          userEvents: [],
+          currentEvents: 0
         });
 
         // Charger les données d'équipe si l'utilisateur est manager
@@ -269,8 +271,30 @@ const DashBoard = () => {
           setAllDisponibilities(allAvailabilities || []);
         }
 
-        // Charger les événements de l'utilisateur (pour tous les utilisateurs)
-        const userEvents = await planningService.getMyEventsByAssociation(selectedAssociation.id);
+        // Charger les événements selon le rôle de l'utilisateur
+        let userEvents: Event[] = [];
+        let allAssociationEvents: Event[] = []; // Pour le graphique des managers
+        
+        if (user?.userType === 'Manager') {
+          // Pour les managers : récupérer TOUS les événements de l'association
+          allAssociationEvents = await planningService.getAllEvents(selectedAssociation.id);
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+          
+          // Pour les cartes : ne garder que les événements d'aujourd'hui
+          userEvents = allAssociationEvents.filter(event => {
+            const eventStart = new Date(event.beginningDate);
+            const eventStartDate = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
+            return eventStartDate.getTime() === today.getTime(); // Événements qui commencent aujourd'hui
+          });
+          
+          console.log(`🎯 Manager Dashboard: ${userEvents.length} événements aujourd'hui sur ${allAssociationEvents.length} total`);
+        } else {
+          // Pour les membres : récupérer seulement les événements auxquels je participe
+          userEvents = await planningService.getMyEventsByAssociation(selectedAssociation.id);
+          console.log(`👤 Membre Dashboard: ${userEvents.length} événements auxquels je participe`);
+        }
         
         // Calculer les prochaines missions (événements futurs)
         const now = new Date();
@@ -279,7 +303,8 @@ const DashBoard = () => {
         setDashboardData(prev => ({ 
           ...prev, 
           upcomingEvents: upcomingEvents.length,
-          userEvents: userEvents 
+          userEvents: user?.userType === 'Manager' ? allAssociationEvents : userEvents, // Utiliser tous les événements pour le graphique des managers
+          currentEvents: userEvents.length // Nombre d'événements d'aujourd'hui pour les managers
         }));
 
       } catch (error) {
@@ -407,12 +432,12 @@ const DashBoard = () => {
           link: "/maraudApp/stock"
         },
         {
-          title: t_dashboard('upcomingEvents'),
-          value: dashboardData.upcomingEvents.toString(),
+          title: t_dashboard('eventsToday'),
+          value: (dashboardData.currentEvents || 0).toString(),
           variation: eventsThisMonth,
           icon: <CalendarDaysIcon className="w-6 h-6 text-green-500" />,
           iconBg: 'bg-green-100 dark:bg-green-900/30',
-          description: t_dashboard('upcoming'),
+          description: t_dashboard('today'),
           action: (
             <Link
               to="/maraudApp/planing"

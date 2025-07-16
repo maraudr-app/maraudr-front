@@ -102,53 +102,58 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
     }
   };
 
+  // Fonction pour les traductions de la sidebar
+  const t_sidebar = (key: string): string => {
+    return t(`sidebar.${key}` as any);
+  };
+
   const navigationItems = [
     {
       to: '/maraudApp/dashboard',
       icon: <ChartBarIcon className="w-5 h-5" />,
-      label: t('sidebar.dashboard', 'Dashboard'),
+      label: t_sidebar('dashboard'),
       key: 'dashboard',
       showForManager: false
     },
     {
       to: '/maraudApp/stock',
       icon: <CubeIcon className="w-5 h-5" />,
-      label: t('sidebar.stock', 'Stock'),
+      label: t_sidebar('stock'),
       key: 'stock',
       showForManager: false
     },
     {
       to: '/maraudApp/gallery',
       icon: <InformationCircleIcon className="w-5 h-5" />,
-      label: t('sidebar.media', 'Médias'),
+      label: t_sidebar('media'),
       key: 'gallery',
       showForManager: false
     },
     {
       to: '/maraudApp/team',
       icon: <UsersIcon className="w-5 h-5" />,
-      label: t('sidebar.team', 'Équipe'),
+      label: t_sidebar('team'),
       key: 'team',
       showForManager: false
     },
     {
       to: '/maraudApp/map',
       icon: <CiMap className="w-5 h-5" />,
-      label: t('sidebar.map', 'Carte'),
+      label: t_sidebar('map'),
       key: 'map',
       showForManager: false
     },
     {
       to: '/maraudApp/planing',
       icon: <FiCalendar className="w-5 h-5" />,
-      label: t('sidebar.planing', 'Planing'),
-      key: 'planing',
+      label: t_sidebar('planning'),
+      key: 'planning',
       showForManager: false
     },
     {
       to: '/maraudApp/mcp-server',
       icon: <Cog6ToothIcon className="w-5 h-5" />,
-      label: t('sidebar.mcp', 'Assistance IA'),
+      label: t_sidebar('mcp'),
       key: 'mcp-server',
       showForManager: false
     },
@@ -164,13 +169,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
     { 
       to: '/maraudApp/profile',
       icon: <UserCircleIcon className="w-5 h-5" />, 
-      label: t('sidebar.profile', 'Profile'), 
+      label: t_sidebar('profile'), 
       key: 'profile' 
     },
     { 
       to: '/maraudApp/setting',
       icon: <Cog6ToothIcon className="w-5 h-5" />, 
-      label: t('sidebar.settings', 'Settings'), 
+      label: t_sidebar('settings'), 
       key: 'settings' 
     }
   ];

@@ -563,7 +563,7 @@
       },
       "languages": "Languages",
       "joinedOn": "Joined on {date}",
-      "lastActive": "Last active: {date}",
+      "lastActive": "Last active",
       "status": {
         "active": "Active"
       },

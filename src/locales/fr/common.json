@@ -12,8 +12,13 @@
   "sidebar": {
     "dashboard": "Tableau de bord",
     "stock": "Stock",
-    "settings": "Paramètres",
+    "media": "Médias",
+    "team": "Équipe",
+    "map": "Carte",
+    "planning": "Planning",
+    "mcp": "Assistance IA",
     "profile": "Profil",
+    "settings": "Paramètres",
     "expand": "Développer",
     "collapse": "Réduire",
     "logout": "Déconnexion"
@@ -240,6 +245,7 @@
     "stockItems": "Articles en stock",
     "lowStock": "Stock faible",
     "upcomingEvents": "Événements prévus",
+    "eventsToday": "Événements du jour",
     "myAvailabilities": "Mes disponibilités",
     "nextMissions": "Prochaines missions",
     "completedMissions": "Missions complétées",
@@ -398,7 +404,7 @@
       },
       "languages": "Langues",
       "joinedOn": "Rejoint le {date}",
-      "lastActive": "Dernière activité : {date}",
+      "lastActive": "Dernière activité",
       "status": {
         "active": "Actif"
       },
