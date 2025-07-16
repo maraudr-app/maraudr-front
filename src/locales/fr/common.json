@@ -843,6 +843,19 @@
     "delete_itinerary": "Supprimer l'itinéraire",
     "confirm_point_add": "Confirmer l'ajout du point",
     "position": "Position",
-    "point_description": "Description du point"
+    "point_description": "Description du point",
+    "address_departure": "Adresse de départ",
+    "search_radius": "Rayon de recherche",
+    "radius_km": "km",
+    "select_event": "Sélectionner un événement",
+    "choose_event": "Choisir un événement...",
+    "event_selected": "Événement sélectionné",
+    "departure_address": "Adresse de départ",
+    "coordinates": "Coordonnées",
+    "create_route_button": "Créer la route",
+    "no_points_in_radius": "Aucun point d'intérêt trouvé dans un rayon de",
+    "increase_radius_or_change_address": "Essayez d'augmenter le rayon ou choisir une autre adresse",
+    "select_event_and_address": "Veuillez sélectionner un événement et une adresse de départ",
+    "close": "Fermer"
   }
 } 
