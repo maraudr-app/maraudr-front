@@ -390,7 +390,7 @@ const Team: React.FC = () => {
                                             <div className="flex items-center mb-2">
                                                 <CalendarIcon className="h-4 w-4 text-green-600 dark:text-green-400 mr-2" />
                                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {t_team('modal.disponibilities.title')}
+                                                    Période {index + 1}
                                                 </span>
                                             </div>
                                             <div className="space-y-1">
