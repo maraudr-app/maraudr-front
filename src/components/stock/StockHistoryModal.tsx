@@ -5,6 +5,7 @@ import { stockService } from '../../services/stockService';
 import { useAssoStore } from '../../store/assoStore';
 import { StockItem, getCategoryName } from '../../types/stock/StockItem';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface StockHistoryModalProps {
     isOpen: boolean;
@@ -12,9 +13,15 @@ interface StockHistoryModalProps {
 }
 
 export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) => {
+    const { t } = useTranslation();
     const [history, setHistory] = useState<StockItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
+
+    // Fonction pour les traductions du stock
+    const t_stock = (key: string): string => {
+        return t(`stock.${key}` as any);
+    };
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -54,7 +61,7 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
                     {/* En-tête */}
                     <div className="flex justify-between items-center mb-4">
                         <Dialog.Title className="text-lg font-semibold text-maraudr-darkText dark:text-maraudr-lightText">
-                            Historique du stock
+                            {t_stock('historyTitle')}
                         </Dialog.Title>
                         <button
                             onClick={onClose}
@@ -72,7 +79,7 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
                             </div>
                         ) : history.length === 0 ? (
                             <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                                Aucun historique disponible
+                                {t_stock('noHistoryAvailable')}
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
@@ -80,16 +87,16 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Date
+                                                {t_stock('date')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Item
+                                                {t_stock('item')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Catégorie
+                                                {t_stock('category')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Quantité
+                                                {t_stock('quantity')}
                                             </th>
                                         </tr>
                                     </thead>

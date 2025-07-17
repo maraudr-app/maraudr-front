@@ -7,6 +7,7 @@ import { Select } from '../common/select/select';
 import { QRScanner } from '../common/qr/QRScanner';
 import { Category, getAllCategories, StockItem } from '../../types/stock/StockItem';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface EditItemModalProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ interface EditItemModalProps {
 }
 
 export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItemModalProps) => {
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
     const [showQRScanner, setShowQRScanner] = useState(false);
     const [formData, setFormData] = useState({
@@ -25,6 +27,11 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
         category: Category.Food,
         quantity: 1
     });
+
+    // Fonction pour les traductions du stock
+    const t_stock = (key: string): string => {
+        return t(`stock.${key}` as any);
+    };
 
     // Initialiser le formulaire avec les données de l'item
     useEffect(() => {
@@ -48,7 +55,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
         e.preventDefault();
         
         if (!item) {
-            toast.error('Aucun item à modifier');
+            toast.error(t_stock('noItemToModify'));
             return;
         }
 
@@ -63,8 +70,8 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
             onClose();
         } catch (error) {
             console.error('Erreur lors de la modification:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-            toast.error(`Erreur lors de la modification: ${errorMessage}`);
+            const errorMessage = error instanceof Error ? error.message : t_stock('unknownError');
+            toast.error(`${t_stock('modificationError')}: ${errorMessage}`);
         } finally {
             setIsLoading(false);
         }
@@ -102,7 +109,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                     <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-auto p-6 space-y-6">
                         <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
                             <Dialog.Title className="text-xl font-semibold text-maraudr-darkText dark:text-maraudr-lightText">
-                                Modifier l'item
+                                {t_stock('editItemTitle')}
                             </Dialog.Title>
                             <button
                                 onClick={onClose}
@@ -120,7 +127,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                                         value={formData.name}
                                         onChange={handleChange}
                                         required
-                                        placeholder="Entrez le nom de l'item"
+                                        placeholder={t_stock('enterItemName')}
                                     />
                                 </div>
 
@@ -129,7 +136,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                                         name="description"
                                         value={formData.description}
                                         onChange={handleChange}
-                                        placeholder="Entrez une description (optionnel)"
+                                        placeholder={t_stock('enterDescription')}
                                     />
                                 </div>
 
@@ -156,7 +163,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                                         onChange={handleChange}
                                         required
                                         min="0"
-                                        placeholder="Entrez la quantité"
+                                        placeholder={t_stock('enterQuantity')}
                                     />
                                 </div>
 
@@ -167,7 +174,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                                                 name="barCode"
                                                 value={formData.barCode}
                                                 onChange={handleChange}
-                                                placeholder="Entrez le code-barres (optionnel)"
+                                                placeholder={t_stock('enterBarcode')}
                                             />
                                         </div>
                                         <Button
@@ -179,7 +186,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                                         </Button>
                                     </div>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        Cliquez sur l'icône QR pour scanner avec votre caméra
+                                        {t_stock('scanBarcodeHelp')}
                                     </p>
                                 </div>
                             </div>
@@ -190,14 +197,14 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                                     onClick={onClose}
                                     className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
                                 >
-                                    Annuler
+                                    {t_stock('cancel')}
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={isLoading}
                                     className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
                                 >
-                                    {isLoading ? 'Modification...' : 'Modifier'}
+                                    {isLoading ? t_stock('modifying') : t_stock('modify')}
                                 </Button>
                             </div>
                         </form>
@@ -210,7 +217,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                 isOpen={showQRScanner}
                 onClose={() => setShowQRScanner(false)}
                 onScan={handleQRScan}
-                title="Scanner le code-barres"
+                title={t_stock('scanBarcode')}
             />
         </>
     );

@@ -15,6 +15,7 @@ import {
     MapIcon,
     FireIcon
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
 import { useAssoStore } from '../../store/assoStore';
 import { useAuthStore } from '../../store/authStore';
 import { geoService, GeoPoint, TravelTimes, RouteResponse } from '../../services/geoService';
@@ -82,8 +83,9 @@ const RouteRenderer: React.FC<{
     geoJsonData: any,
     color: string,
     routeId: string,
-    opacity?: number
-}> = ({geoJsonData, color, routeId, opacity = 0.8}) => {
+    opacity?: number,
+    t_plan: (key: string) => string
+}> = ({geoJsonData, color, routeId, opacity = 0.8, t_plan}) => {
     const [hasError, setHasError] = React.useState(false);
     
     if (hasError || !geoJsonData || !geoJsonData.features) {
@@ -120,7 +122,7 @@ const RouteRenderer: React.FC<{
                                         <Popup>
                                             <div className="p-2">
                                                 <h4 className="font-semibold">
-                                                    {routeId === 'example-route' ? 'Route d\'exemple' : 'Informations de route'}
+                                                    {routeId === 'example-route' ? t_plan('exampleRoute') : t_plan('routeInformation')}
                                                 </h4>
                                                 <p>Distance: {feature.properties.summary.distance} m</p>
                                                 <p>Durée: {feature.properties.summary.duration} s</p>
@@ -143,9 +145,15 @@ const RouteRenderer: React.FC<{
 };
 
 const Plan: React.FC = () => {
+    const { t } = useTranslation();
     const { selectedAssociation } = useAssoStore();
     const { user } = useAuthStore();
     const { toasts, removeToast, toast } = useToast();
+    
+    // Fonction de traduction pour la section plan
+    const t_plan = (key: string): string => {
+        return t(`planning.${key}` as any);
+    };
     
     // États
     const [geoPoints, setGeoPoints] = useState<GeoPoint[]>([]);
@@ -239,7 +247,7 @@ const Plan: React.FC = () => {
                 setGeoPoints(points);
             } catch (error) {
                 console.error('Erreur lors du chargement des points:', error);
-                toast.error('Erreur lors du chargement des points de géolocalisation');
+                toast.error(t_plan('errorLoadingGeoPoints'));
             } finally {
                 setLoading(false);
             }
@@ -303,7 +311,7 @@ const Plan: React.FC = () => {
             setEvents(eventsData);
         } catch (error) {
             console.error('❌ Erreur lors du chargement des événements:', error);
-            toast.error('Erreur lors du chargement des événements');
+            toast.error(t_plan('errorLoadingEvents'));
         }
     }, [selectedAssociation?.id]);
 
@@ -361,7 +369,7 @@ const Plan: React.FC = () => {
             }
         } catch (error) {
             console.error('❌ Erreur lors du chargement des itinéraires:', error);
-            toast.error('Erreur lors du chargement des itinéraires');
+            toast.error(t_plan('errorLoadingItineraries'));
         } finally {
             setLoadingItineraries(false);
         }
@@ -380,7 +388,7 @@ const Plan: React.FC = () => {
                 console.log('🔄 Événement annulé détecté, rechargement des données...');
                 loadEvents();
                 loadItineraries();
-                toast.success('Données mises à jour après annulation de l\'événement');
+                toast.success(t_plan('dataUpdatedEventCanceled'));
             }
         };
 
@@ -390,7 +398,7 @@ const Plan: React.FC = () => {
                 console.log('🔄 Événement supprimé détecté, rechargement des données...');
                 loadEvents();
                 loadItineraries();
-                toast.success('Données mises à jour après suppression de l\'événement');
+                toast.success(t_plan('dataUpdatedEventDeleted'));
             }
         };
 
@@ -425,7 +433,7 @@ const Plan: React.FC = () => {
             setRouteInfo(travelTimes);
         } catch (error) {
             console.error('Erreur calcul itinéraire:', error);
-            toast.error('Erreur lors du calcul de l\'itinéraire');
+            toast.error(t_plan('errorCalculatingRoute'));
         } finally {
             setRouteLoading(false);
         }
@@ -495,7 +503,7 @@ const Plan: React.FC = () => {
             setSelectedPoint(null);
         } catch (error) {
             console.error('Erreur lors de l\'ajout du point:', error);
-            toast.error('Erreur lors de l\'ajout du point');
+            toast.error(t_plan('errorAddingPoint'));
         }
     };
 
@@ -667,7 +675,7 @@ const Plan: React.FC = () => {
             setAddressSuggestions([]);
         } catch (error) {
             console.error('❌ Erreur lors de la création de la route:', error);
-            toast.error('Erreur lors de la création de la route');
+            toast.error(t_plan('errorCreatingRoute'));
         }
     };
 
@@ -821,7 +829,7 @@ const Plan: React.FC = () => {
             const data = await geoService.getItineraries(selectedAssociation.id);
             setItineraries(data.filter((it: any) => it.associationId === selectedAssociation.id));
         } catch (error) {
-            toast.error('Erreur lors de la suppression de l\'itinéraire');
+            toast.error(t_plan('errorDeletingItinerary'));
         } finally {
             setDeletingItinerary(false);
         }
@@ -894,7 +902,7 @@ const Plan: React.FC = () => {
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
                             <div className="text-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                                <p className="text-gray-600 dark:text-gray-400">Chargement de la carte...</p>
+                                <p className="text-gray-600 dark:text-gray-400">{t_plan('loadingMap')}</p>
                             </div>
                         </div>
                     ) : (
@@ -954,13 +962,13 @@ const Plan: React.FC = () => {
                                                     // Affichage pour un cluster de plusieurs points
                                                     <div>
                                                         <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                                                            📍 {cluster.points.length} points à proximité
+                                                            📍 {cluster.points.length} {t_plan('pointsNearby')}
                                                         </h3>
                                                         <div className="max-h-48 overflow-y-auto space-y-3">
                                                             {cluster.points.map((point, pointIndex) => (
                                                                 <div key={`cluster-point-${pointIndex}`} className="border-l-4 pl-3 py-2" style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}>
                                                                     <h4 className="font-medium text-sm text-gray-800 dark:text-white mb-1">
-                                                                        {point.name || `Point #${pointIndex + 1}`}
+                                                                        {point.name || `${t_plan('pointNumber')}${pointIndex + 1}`}
                                                                     </h4>
                                                                     {point.address && (
                                                                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -968,7 +976,7 @@ const Plan: React.FC = () => {
                                                                         </p>
                                                                     )}
                                                                     <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                                        {point.notes || 'Aucune description'}
+                                                                        {point.notes || t_plan('noDescription')}
                                                                     </p>
                                                                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                                                                         <div>{formatDate(point.timestamp, point.observedAt)}</div>
@@ -981,7 +989,7 @@ const Plan: React.FC = () => {
                                                                         className="w-full flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
                                                                     >
                                                                         <MapIcon className="w-3 h-3" />
-                                                                        <span>Itinéraire</span>
+                                                                        <span>{t_plan('itinerary')}</span>
                                                                     </button>
                                                                 </div>
                                                             ))}
@@ -991,7 +999,7 @@ const Plan: React.FC = () => {
                                                     // Affichage pour un point isolé (comportement normal)
                                                     <div className="min-w-[200px]">
                                                         <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                                                            {mainPoint.name || 'Point de géolocalisation'}
+                                                            {mainPoint.name || t_plan('geoLocationPoint')}
                                                         </h3>
                                                         {mainPoint.address && (
                                                             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -1010,7 +1018,7 @@ const Plan: React.FC = () => {
                                                             className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
                                                         >
                                                             <MapIcon className="w-3 h-3" />
-                                                            <span>Itinéraire</span>
+                                                            <span>{t_plan('itinerary')}</span>
                                                         </button>
                                                     </div>
                                                 )}
@@ -1048,17 +1056,17 @@ const Plan: React.FC = () => {
                                             <Popup>
                                                 <div className="p-2 min-w-[200px]">
                                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                                                        {route.id === 'example-route' ? 'Route d\'exemple' : 'Point de départ'}
+                                                        {route.id === 'example-route' ? t_plan('sampleRoute') : t_plan('startingPoint')}
                                                     </h3>
                                                     <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-3">
                                                         <div className="text-xs text-gray-400 dark:text-gray-300">
                                                             Lat: {route.startLat.toFixed(6)}, Lng: {route.startLng.toFixed(6)}
                                                         </div>
                                                         <div className="text-xs text-gray-400 dark:text-gray-300">
-                                                            Distance: {route.distanceKm} km
+                                                            {t_plan('distance')} {route.distanceKm} km
                                                         </div>
                                                         <div className="text-xs text-gray-400 dark:text-gray-300">
-                                                            Durée: {route.durationMinutes} min
+                                                            {t_plan('duration')} {route.durationMinutes} min
                                                         </div>
                                                     </div>
                                                     <a
@@ -1068,7 +1076,7 @@ const Plan: React.FC = () => {
                                                         className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-all"
                                                     >
                                                         <MapIcon className="w-4 h-4" />
-                                                        <span>Voir sur Google Maps</span>
+                                                        <span>{t_plan('seeOnGoogleMaps')}</span>
                                                     </a>
                                                 </div>
                                             </Popup>
@@ -1081,6 +1089,7 @@ const Plan: React.FC = () => {
                                                 geoJsonData={geoJsonData}
                                                 color={route.id === 'example-route' ? '#10B981' : '#3B82F6'}
                                                 routeId={route.id}
+                                                t_plan={t_plan}
                                             />
                                         )}
                                     </React.Fragment>
@@ -1225,12 +1234,12 @@ const Plan: React.FC = () => {
                                                             className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded transition-all"
                                                         >
                                                             <MapIcon className="w-4 h-4" />
-                                                            <span>Voir sur Google Maps</span>
+                                                            <span>{t_plan('seeOnGoogleMaps')}</span>
                                                         </a>
                                                     )}
                                                     <button onClick={e => { e.stopPropagation(); setItineraryToDelete(itinerary); setShowDeleteItineraryModal(true); }}
                                                         className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors ml-2"
-                                                        title="Supprimer l'itinéraire">
+                                                        title={t_plan('deleteItinerary')}>
                                                         <TrashIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -1245,6 +1254,7 @@ const Plan: React.FC = () => {
                                                 color={finalRouteColor}
                                                 routeId={`itinerary-${itinerary.id}`}
                                                 opacity={finalOpacity}
+                                                t_plan={t_plan}
                                             />
                                         )}
                                     </React.Fragment>
@@ -1267,10 +1277,10 @@ const Plan: React.FC = () => {
                                     textAlign: 'center'
                                 }}>
                                     <div style={{marginBottom: '10px'}}>
-                                        ⚠️ Affichage des routes désactivé
+                                        ⚠️ {t_plan('routesDisabled')}
                                     </div>
                                     <div style={{fontSize: '12px', marginBottom: '10px'}}>
-                                        Un GeoJSON invalide a été détecté
+                                        {t_plan('invalidGeoJSON')}
                                     </div>
                                     <button
                                         onClick={() => setRoutesDisabled(false)}
@@ -1283,7 +1293,7 @@ const Plan: React.FC = () => {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        Réactiver
+                                        {t_plan('reactivate')}
                                     </button>
                                 </div>
                             )}
@@ -1296,10 +1306,10 @@ const Plan: React.FC = () => {
                     {/* En-tête du panneau */}
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                            Points d'interet
+                            {t_plan('pointsOfInterest')}
                         </h2>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {geoPoints.length} point{geoPoints.length !== 1 ? 's' : ''} trouvé{geoPoints.length !== 1 ? 's' : ''}
+                            {geoPoints.length} {geoPoints.length === 1 ? t_plan('pointFound') : t_plan('pointsFound')}
                         </div>
                     </div>
 
@@ -1310,8 +1320,8 @@ const Plan: React.FC = () => {
                         {pointClusters.length === 0 ? (
                             <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                                 <MapPinIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                <p>Aucun point de géolocalisation</p>
-                                <p className="text-xs mt-1">Ajoutez un point en cliquant sur la carte</p>
+                                <p>{t_plan('noGeoLocationPoints')}</p>
+                                <p className="text-xs mt-1">{t_plan('addPointClickMap')}</p>
                             </div>
                         ) : (
                             <div className="p-4 space-y-3">
@@ -1329,11 +1339,11 @@ const Plan: React.FC = () => {
                                                             {cluster.points.length}
                                                         </div>
                                                         <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            Cluster de {cluster.points.length} points
+                                                            {t_plan('clusterOf')} {cluster.points.length} {t_plan('points')}
                                                         </h4>
                                                     </div>
                                                     <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                                                        Points regroupés dans un rayon de 50 mètres
+                                                        {t_plan('groupedWithinRadius')}
                                                     </p>
                                                     <div className="space-y-2 max-h-40 overflow-y-auto">
                                                         {cluster.points.map((point, pointIndex) => (
@@ -1344,7 +1354,7 @@ const Plan: React.FC = () => {
                                                                         style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
                                                                     ></div>
                                                                     <h5 className="text-xs font-medium text-gray-800 dark:text-white">
-                                                                        {point.name || `Point #${pointIndex + 1}`}
+                                                                        {point.name || `${t_plan('pointNumber')}${pointIndex + 1}`}
                                                                     </h5>
                                                                 </div>
                                                                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
@@ -1414,7 +1424,7 @@ const Plan: React.FC = () => {
                     <div className="border-t border-gray-200 dark:border-gray-700">
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                                Itinéraires existants
+                                {t_plan('existingItineraries')}
                             </h2>
                             
                             {/* Filtres pour les itinéraires */}
@@ -1427,7 +1437,7 @@ const Plan: React.FC = () => {
                                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
-                                    Tous ({itineraries.length})
+                                    {t_plan('all')} ({itineraries.length})
                                 </button>
                                 <button
                                     onClick={() => setItineraryFilter('active')}
@@ -1437,7 +1447,7 @@ const Plan: React.FC = () => {
                                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
-                                    Actifs ({itineraries.filter(it => {
+                                    {t_plan('active')} ({itineraries.filter(it => {
                                         if (!it.eventId || it.isActive === false) return false;
                                         const linkedEvent = getEventForItinerary(it.eventId);
                                         return linkedEvent !== undefined && linkedEvent.status !== 'CANCELED';
@@ -1451,7 +1461,7 @@ const Plan: React.FC = () => {
                                             : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
-                                    Archivés ({itineraries.filter(it => {
+                                    {t_plan('archived')} ({itineraries.filter(it => {
                                         if (it.isActive === false) return true;
                                         if (!it.eventId) return true;
                                         const linkedEvent = getEventForItinerary(it.eventId);
@@ -1464,10 +1474,10 @@ const Plan: React.FC = () => {
                                 {loadingItineraries ? (
                                     <div className="flex items-center space-x-2">
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
-                                        <span>Chargement...</span>
+                                        <span>{t_plan('loading')}</span>
                                     </div>
                                 ) : (
-                                    `${filteredItineraries.length} itinéraire${filteredItineraries.length !== 1 ? 's' : ''} trouvé${filteredItineraries.length !== 1 ? 's' : ''}`
+                                    `${filteredItineraries.length} ${filteredItineraries.length === 1 ? t_plan('itineraryFound') : t_plan('itinerariesFound')}`
                                 )}
                             </div>
                             
@@ -1478,14 +1488,14 @@ const Plan: React.FC = () => {
                                         <div className="text-center text-gray-500 dark:text-gray-400 py-6">
                                             <MapIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                             <p className="text-sm font-medium mb-1">
-                                                {itineraryFilter === 'active' ? 'Aucun itinéraire actif' :
-                                                 itineraryFilter === 'archived' ? 'Aucun itinéraire archivé' :
-                                                 'Aucun itinéraire'}
+                                                {itineraryFilter === 'active' ? t_plan('noActiveItinerary') :
+                                                 itineraryFilter === 'archived' ? t_plan('noArchivedItinerary') :
+                                                 t_plan('noItinerary')}
                                             </p>
                                             <p className="text-xs text-gray-400">
-                                                {itineraryFilter === 'active' ? 'Les itinéraires actifs sont liés à des événements existants' :
-                                                 itineraryFilter === 'archived' ? 'Les itinéraires archivés sont sans événement ou avec événements supprimés' :
-                                                 'Créez des itinéraires depuis les événements'}
+                                                {itineraryFilter === 'active' ? t_plan('activeItinerariesDescription') :
+                                                 itineraryFilter === 'archived' ? t_plan('archivedItinerariesDescription') :
+                                                 t_plan('createItinerariesDescription')}
                                             </p>
                                         </div>
                                     ) : (
@@ -1509,8 +1519,8 @@ const Plan: React.FC = () => {
                                                                 isSelected ? 'bg-red-500' : 'bg-purple-500'
                                                             }`}></div>
                                                             <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                Itinéraire #{index + 1}
-                                                                {isSelected && <span className="ml-2 text-xs text-red-600 dark:text-red-400">(Sélectionné)</span>}
+                                                                {t_plan('itineraryNumber')}{index + 1}
+                                                                {isSelected && <span className="ml-2 text-xs text-red-600 dark:text-red-400">{t_plan('selected')}</span>}
                                                             </h4>
                                                             {/* Badge de statut */}
                                                             <span className={`ml-auto px-2 py-0.5 text-xs rounded-full ${
@@ -1518,7 +1528,7 @@ const Plan: React.FC = () => {
                                                                     ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
                                                                     : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                                                             }`}>
-                                                                {itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED' ? 'Archivé' : 'Actif'}
+                                                                {itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED' ? t_plan('archived') : t_plan('active')}
                                                             </span>
                                                         </div>
                                                         
@@ -1535,7 +1545,7 @@ const Plan: React.FC = () => {
                                                                         : 'text-blue-700 dark:text-blue-400'
                                                                 }`}>
                                                                     📅 {linkedEvent.title}
-                                                                    {linkedEvent.status === 'CANCELED' && ' (Annulé)'}
+                                                                    {linkedEvent.status === 'CANCELED' && ` ${t_plan('canceled')}`}
                                                                 </span>
                                                             </div>
                                                         )}
@@ -1544,7 +1554,7 @@ const Plan: React.FC = () => {
                                                         {!itinerary.eventId && (
                                                             <div className="mb-2 px-2 py-1 bg-gray-100 dark:bg-gray-900/20 rounded">
                                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-400">
-                                                                    ❌ Aucun événement lié
+                                                                    ❌ {t_plan('noLinkedEvent')}
                                                                 </span>
                                                             </div>
                                                         )}
@@ -1552,25 +1562,25 @@ const Plan: React.FC = () => {
                                                         {itinerary.eventId && !linkedEvent && (
                                                             <div className="mb-2 px-2 py-1 bg-orange-100 dark:bg-orange-900/20 rounded">
                                                                 <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
-                                                                    ⚠️ Événement introuvable
+                                                                    ⚠️ {t_plan('eventNotFound')}
                                                                 </span>
                                                             </div>
                                                         )}
                                                         
                                                         <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                            <div>Distance: {itinerary.distanceKm ? `${itinerary.distanceKm} km` : 'Non calculée'}</div>
-                                                            <div>Durée: {itinerary.durationMinutes ? `${itinerary.durationMinutes} min` : 'Non calculée'}</div>
+                                                            <div>{t_plan('distanceLabel')} {itinerary.distanceKm ? `${itinerary.distanceKm} km` : t_plan('notCalculated')}</div>
+                                                            <div>{t_plan('durationLabel')} {itinerary.durationMinutes ? `${itinerary.durationMinutes} min` : t_plan('notCalculated')}</div>
                                                             <div className="mt-1">
-                                                                Départ: {itinerary.startLat.toFixed(4)}, {itinerary.startLng.toFixed(4)}
+                                                                {t_plan('departure')} {itinerary.startLat.toFixed(4)}, {itinerary.startLng.toFixed(4)}
                                                             </div>
                                                             {itinerary.endLat && itinerary.endLng && (
                                                                 <div>
-                                                                    Arrivée: {itinerary.endLat.toFixed(4)}, {itinerary.endLng.toFixed(4)}
+                                                                    {t_plan('arrival')} {itinerary.endLat.toFixed(4)}, {itinerary.endLng.toFixed(4)}
                                                                 </div>
                                                             )}
                                                             {itinerary.createdAt && (
                                                                 <div className="mt-1 text-gray-400">
-                                                                    Créé: {new Date(itinerary.createdAt).toLocaleDateString('fr-FR')}
+                                                                    {t_plan('created')} {new Date(itinerary.createdAt).toLocaleDateString('fr-FR')}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1582,13 +1592,13 @@ const Plan: React.FC = () => {
                                                                 className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded transition-all"
                                                             >
                                                                 <MapIcon className="w-3 h-3" />
-                                                                <span>Google Maps</span>
+                                                                <span>{t_plan('googleMaps')}</span>
                                                             </a>
                                                         )}
                                                     </div>
                                                     <button onClick={e => { e.stopPropagation(); setItineraryToDelete(itinerary); setShowDeleteItineraryModal(true); }}
                                                         className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors ml-2"
-                                                        title="Supprimer l'itinéraire">
+                                                        title={t_plan('deleteItinerary')}>
                                                         <TrashIcon className="w-4 h-4" />
                                                     </button>
                                                 </div>
@@ -1674,7 +1684,7 @@ const Plan: React.FC = () => {
                                     {/* Mode de sélection */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Mode de sélection du point
+                                            {t_plan('selectionMode')}
                                         </label>
                                         <div className="flex space-x-2">
                                             <button
@@ -1697,7 +1707,7 @@ const Plan: React.FC = () => {
                                                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                                                 }`}
                                             >
-                                                🗺️ Sur la carte
+                                                {t_plan('seeOnMap')}
                                             </button>
                                         </div>
                                     </div>
@@ -1706,14 +1716,14 @@ const Plan: React.FC = () => {
                                     {selectionMode === 'address' && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Rechercher une adresse
+                                                {t_plan('searchByAddress')}
                                             </label>
                                             <div className="relative">
                                                 <input
                                                     type="text"
                                                     value={addressQuery}
                                                     onChange={(e) => handleAddressInput(e.target.value)}
-                                                    placeholder="Tapez une adresse..."
+                                                    placeholder={t_plan('typeAddress')}
                                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm pr-10"
                                                 />
                                                 {isLoadingAddresses && (
@@ -1742,7 +1752,7 @@ const Plan: React.FC = () => {
                                     {/* Rayon de recherche */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Rayon de recherche: {radiusKm} km
+                                            {t_plan('searchRadius')} {radiusKm} km
                                         </label>
                                         <input
                                             type="range"
@@ -1762,12 +1772,12 @@ const Plan: React.FC = () => {
                                     <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
                                         <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-400 mb-2">
                                             <MapPinIcon className="w-5 h-5" />
-                                            <span className="font-medium">Étape suivante</span>
+                                            <span className="font-medium">{t_plan('nextStep')}</span>
                                         </div>
                                         <p className="text-sm text-orange-700 dark:text-orange-300">
                                             {selectionMode === 'address' ? 
-                                                'Recherchez une adresse ci-dessus ou cliquez sur "Commencer" puis sélectionnez un point sur la carte.' :
-                                                'Cliquez sur "Commencer" puis sélectionnez un point sur la carte pour créer la route.'
+                                                t_plan('searchAddressOrStart') :
+                                                t_plan('clickStartThenSelect')
                                             }
                                         </p>
                                     </div>
@@ -1786,17 +1796,17 @@ const Plan: React.FC = () => {
                                                 setIsCreatingRoute(true);
                                                 setShowRouteCreationModal(false);
                                                 console.log('✅ Mode création activé, modal fermé');
-                                                toast.success('Cliquez maintenant sur la carte pour sélectionner le point de départ');
+                                                toast.success(t_plan('clickToSelectPoint'));
                                             } else {
-                                                toast.error('Veuillez d\'abord sélectionner une adresse ou passer en mode carte');
+                                                toast.error(t_plan('selectAddressFirst'));
                                             }
                                         }}
                                         disabled={selectionMode === 'address' && !selectedRoutePoint}
                                         className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {selectionMode === 'address' ? 
-                                            (selectedRoutePoint ? 'Continuer' : 'Sélectionner une adresse') : 
-                                            'Commencer'
+                                            (selectedRoutePoint ? t_plan('continue') : t_plan('selectAddress')) : 
+                                            t_plan('start')
                                         }
                                     </button>
                                     <button
@@ -1811,7 +1821,7 @@ const Plan: React.FC = () => {
                                         }}
                                         className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                                     >
-                                        Annuler
+                                        {t_plan('cancel')}
                                     </button>
                                 </>
                             ) : (
@@ -1822,7 +1832,7 @@ const Plan: React.FC = () => {
                                     }}
                                     className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                                 >
-                                    Fermer
+                                    {t_plan('close')}
                                 </button>
                             )}
                         </div>
@@ -1835,13 +1845,13 @@ const Plan: React.FC = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Confirmer la création de route
+                            {t_plan('confirmRouteCreation')}
                         </h3>
                         
                         <div className="space-y-4 mb-6">
                             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                                 <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                                    Événement
+                                    {t_plan('event')}
                                 </h4>
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
                                     <div><strong>{selectedEvent.title}</strong></div>
@@ -1851,19 +1861,19 @@ const Plan: React.FC = () => {
                             
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Point de départ sélectionné
+                                    {t_plan('selectedStartingPoint')}
                                 </label>
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
                                     {selectedAddress ? (
                                         <>
-                                            <div className="mb-2"><strong>Adresse:</strong> {addressQuery}</div>
-                                            <div>Latitude: {selectedRoutePoint.lat.toFixed(6)}<br/>
-                                            Longitude: {selectedRoutePoint.lng.toFixed(6)}</div>
+                                            <div className="mb-2"><strong>{t_plan('address')}</strong> {addressQuery}</div>
+                                            <div>{t_plan('latitude')} {selectedRoutePoint.lat.toFixed(6)}<br/>
+                                            {t_plan('longitude')} {selectedRoutePoint.lng.toFixed(6)}</div>
                                         </>
                                     ) : (
                                         <>
-                                            Latitude: {selectedRoutePoint.lat.toFixed(6)}<br/>
-                                            Longitude: {selectedRoutePoint.lng.toFixed(6)}
+                                            {t_plan('latitude')} {selectedRoutePoint.lat.toFixed(6)}<br/>
+                                            {t_plan('longitude')} {selectedRoutePoint.lng.toFixed(6)}
                                         </>
                                     )}
                                 </div>
@@ -1871,10 +1881,10 @@ const Plan: React.FC = () => {
                             
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Rayon de recherche
+                                    {t_plan('searchRadius').replace(':', '')}
                                 </label>
                                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    {radiusKm} km autour du point de départ
+                                    {radiusKm} km {t_plan('searchRadiusInfo')}
                                 </div>
                             </div>
                         </div>
@@ -1913,7 +1923,7 @@ const Plan: React.FC = () => {
                         setSelectedPointForRoute(null);
                         setRouteInfo(null);
                     }}
-                    pointName={selectedPointForRoute.notes || `Point de géolocalisation`}
+                    pointName={selectedPointForRoute.notes || t_plan('defaultGeoPoint')}
                     coordinates={{
                         lat: selectedPointForRoute.latitude,
                         lng: selectedPointForRoute.longitude
@@ -1943,7 +1953,7 @@ const Plan: React.FC = () => {
                             Supprimer l'itinéraire
                         </h3>
                         <p className="text-gray-700 dark:text-gray-300 mb-6">
-                            Êtes-vous sûr de vouloir supprimer cet itinéraire ? Cette action est irréversible.
+                            {t_plan('confirmDeleteItinerary')}
                         </p>
                         <div className="flex space-x-3">
                             <button

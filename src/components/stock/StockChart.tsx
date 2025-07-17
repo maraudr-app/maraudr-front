@@ -15,6 +15,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Select } from '../common/select/select';
 import { RecentStockHistory } from './RecentStockHistory';
 import { MultiSelectDropdown } from '../common/multiSelectDropdown/multiSelectDropdown';
+import { useTranslation } from 'react-i18next';
 
 // Enregistrer les composants nécessaires de Chart.js
 ChartJS.register(
@@ -36,8 +37,8 @@ type ChartType = 'bar' | 'line';
 type ViewMode = 'byCategory' | 'byItem';
 
 const chartTypes = [
-    { value: 'line', label: 'Courbe' },
-    { value: 'bar', label: 'Barres' }
+    { value: 'line', label: 'Line' },
+    { value: 'bar', label: 'Bar' }
 ] as const;
 
 // Couleurs Maraudr
@@ -49,15 +50,27 @@ const maraudrColors = {
 };
 
 export const StockChart = ({ items }: StockChartProps) => {
+    const { t } = useTranslation();
     const [chartType, setChartType] = useState<ChartType>('line');
     const [viewMode, setViewMode] = useState<ViewMode>('byCategory');
     const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
     const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
+    // Fonction pour les traductions du stock
+    const t_stock = (key: string): string => {
+        return t(`stock.${key}` as any);
+    };
+
+    // Types de graphiques traduits
+    const chartTypesTranslated = useMemo(() => [
+        { value: 'line', label: t_stock('line') },
+        { value: 'bar', label: t_stock('bar') }
+    ], [t_stock]);
+
     const categories = useMemo(() => [
-        { value: 'all', label: 'Toutes les catégories' },
+        { value: 'all', label: t_stock('allCategories') },
         ...getAllCategories().map(cat => ({ value: cat.value.toString(), label: cat.label }))
-    ], []);
+    ], [t_stock]);
 
     // Initialiser les items sélectionnés en fonction du mode de vue et de la catégorie
     useEffect(() => {
@@ -143,8 +156,8 @@ export const StockChart = ({ items }: StockChartProps) => {
             title: {
                 display: true,
                 text: viewMode === 'byCategory' 
-                    ? 'Quantité des items par catégorie' 
-                    : `Quantité en stock (${dataForChart.labels.join(', ')})`,
+                    ? t_stock('quantityByCategory') 
+                    : `${t_stock('stockQuantity')} (${dataForChart.labels.join(', ')})`,
                 color: 'rgb(17, 24, 39)', // text-gray-900
                 font: {
                     size: 16,
@@ -225,9 +238,9 @@ export const StockChart = ({ items }: StockChartProps) => {
                         <Select
                             value={chartType}
                             onChange={(e) => setChartType(e.target.value as ChartType)}
-                            placeholder="Type de graphique"
+                            placeholder={t_stock('chartType')}
                         >
-                            {chartTypes.map(type => (
+                            {chartTypesTranslated.map(type => (
                                 <option key={type.value} value={type.value}>
                                     {type.label}
                                 </option>
@@ -238,7 +251,7 @@ export const StockChart = ({ items }: StockChartProps) => {
                         <Select
                             value={selectedCategory}
                             onChange={handleCategoryChange}
-                            placeholder="Toutes les catégories"
+                            placeholder={t_stock('allCategories')}
                         >
                             {categories.map(cat => (
                                 <option key={cat.value} value={cat.value}>
@@ -253,7 +266,7 @@ export const StockChart = ({ items }: StockChartProps) => {
                                 options={itemsForMultiSelect}
                                 selectedValues={selectedItemIds}
                                 onChange={handleItemSelectChange}
-                                placeholder="Sélectionner des items"
+                                placeholder={t_stock('selectItems')}
                             />
                         </div>
                     )}

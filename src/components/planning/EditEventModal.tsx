@@ -46,12 +46,6 @@ interface ParticipantAvailability {
     hasAvailability: boolean;
 }
 
-interface AvailabilityConflict {
-    userId: string;
-    missingDates: string[];
-    hasPartialAvailability: boolean;
-}
-
 const EditEventModal: React.FC<EditEventModalProps> = ({
     isOpen,
     onClose,
@@ -95,8 +89,6 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         endDate: '',
         participantsIds: []
     });
-
-    const [availabilityConflicts, setAvailabilityConflicts] = useState<AvailabilityConflict[]>([]);
 
     // Initialiser le formulaire avec les données de l'événement
     useEffect(() => {
@@ -301,90 +293,6 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
         setParticipantAvailabilities(availabilities);
     };
 
-    // Vérifier les conflits de disponibilité pour un participant
-    const checkAvailabilityConflicts = (userId: string, eventStart: string, eventEnd: string): AvailabilityConflict | null => {
-        if (!eventStart || !eventEnd) return null;
-
-        const eventStartDate = new Date(eventStart);
-        const eventEndDate = new Date(eventEnd);
-        
-        // Récupérer les disponibilités de l'utilisateur
-        const userAvailabilities = allAvailabilities.filter(avail => avail.userId === userId);
-        
-        if (userAvailabilities.length === 0) {
-            // Aucune disponibilité enregistrée
-            return {
-                userId,
-                missingDates: [`Du ${eventStartDate.toLocaleDateString('fr-FR')} au ${eventEndDate.toLocaleDateString('fr-FR')}`],
-                hasPartialAvailability: false
-            };
-        }
-
-        // Vérifier si l'événement est entièrement couvert par les disponibilités
-        const missingDates: string[] = [];
-        let hasPartialAvailability = false;
-
-        // Générer tous les jours de l'événement
-        const eventDays: Date[] = [];
-        const currentDate = new Date(eventStartDate);
-        while (currentDate <= eventEndDate) {
-            eventDays.push(new Date(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-
-        // Vérifier chaque jour de l'événement
-        for (const day of eventDays) {
-            const dayStart = new Date(day);
-            dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(day);
-            dayEnd.setHours(23, 59, 59, 999);
-
-            // Chercher une disponibilité qui couvre ce jour
-            const isAvailable = userAvailabilities.some(avail => {
-                const availStart = new Date(avail.start);
-                const availEnd = new Date(avail.end);
-                
-                // Vérifier si la disponibilité couvre au moins une partie de ce jour
-                return availStart <= dayEnd && availEnd >= dayStart;
-            });
-
-            if (!isAvailable) {
-                missingDates.push(day.toLocaleDateString('fr-FR'));
-            } else {
-                hasPartialAvailability = true;
-            }
-        }
-
-        if (missingDates.length > 0) {
-            return {
-                userId,
-                missingDates,
-                hasPartialAvailability
-            };
-        }
-
-        return null; // Aucun conflit
-    };
-
-    // Mettre à jour les conflits de disponibilité
-    const updateAvailabilityConflicts = () => {
-        if (!eventForm.beginningDate || !eventForm.endDate || eventForm.participantsIds.length === 0) {
-            setAvailabilityConflicts([]);
-            return;
-        }
-
-        const conflicts: AvailabilityConflict[] = [];
-        
-        for (const participantId of eventForm.participantsIds) {
-            const conflict = checkAvailabilityConflicts(participantId, eventForm.beginningDate, eventForm.endDate);
-            if (conflict) {
-                conflicts.push(conflict);
-            }
-        }
-
-        setAvailabilityConflicts(conflicts);
-    };
-
     useEffect(() => {
         if (isOpen) {
             loadTeamMembers();
@@ -396,10 +304,6 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
 
     useEffect(() => {
         updateParticipantAvailabilities();
-    }, [eventForm.beginningDate, eventForm.endDate, eventForm.participantsIds]);
-
-    useEffect(() => {
-        updateAvailabilityConflicts();
     }, [eventForm.beginningDate, eventForm.endDate, eventForm.participantsIds]);
 
     useEffect(() => {
@@ -632,30 +536,6 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
                         </div>
 
 
-
-                        {/* Conflits de disponibilité */}
-                        {availabilityConflicts.length > 0 && (
-                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
-                                <div className="flex items-start">
-                                    <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 mr-3 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">
-                                            {t_planning('editEvent_availabilityConflicts')}
-                                        </h4>
-                                        <div className="space-y-1">
-                                            {availabilityConflicts.map((conflict, index) => {
-                                                const member = teamMembers.find(m => m.id === conflict.userId);
-                                                return (
-                                                    <div key={index} className="text-sm text-amber-700 dark:text-amber-300">
-                                                        <span className="font-medium">{member ? `${member.firstname} ${member.lastname}` : t_planning('editEvent_unknownMember')}</span>: {conflict.missingDates.join(', ')}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Message d'erreur */}
                         {error && (

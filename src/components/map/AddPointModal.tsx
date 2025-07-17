@@ -52,7 +52,7 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
   const [success, setSuccess] = useState<string | null>(null);
 
   // Mode de saisie (coordonnées directes ou adresse)
-  const [inputMode, setInputMode] = useState<'coordinates' | 'address'>('address');
+  const [inputMode, setInputMode] = useState<'coordinates' | 'address'>('coordinates');
 
   // Initialiser les coordonnées si fournies
   useEffect(() => {
@@ -75,7 +75,7 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
       setShowAddressSuggestions(false);
       setError(null);
       setSuccess(null);
-      setInputMode('address');
+      setInputMode('coordinates');
     }
   }, [isOpen]);
 

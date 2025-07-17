@@ -1,10 +1,17 @@
 import { StockItem, getCategoryName } from '../../types/stock/StockItem';
+import { useTranslation } from 'react-i18next';
 
 interface RecentStockHistoryProps {
     items: StockItem[];
 }
 
 export const RecentStockHistory = ({ items }: RecentStockHistoryProps) => {
+    const { t } = useTranslation();
+
+    // Fonction pour les traductions du stock
+    const t_stock = (key: string): string => {
+        return t(`stock.${key}` as any);
+    };
     // Trier les items par date d'entrée (les plus récents d'abord)
     const sortedItems = [...items].sort((a, b) => 
         new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime()
@@ -25,7 +32,7 @@ export const RecentStockHistory = ({ items }: RecentStockHistoryProps) => {
     return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow h-full">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                Historique récent
+                {t_stock('recentHistory')}
             </h3>
             <div className="space-y-3">
                 {sortedItems.map((item, index) => (
@@ -43,7 +50,7 @@ export const RecentStockHistory = ({ items }: RecentStockHistoryProps) => {
                         </div>
                         <div className="text-right">
                             <p className="font-medium text-gray-900 dark:text-gray-100">
-                                {item.quantity} unités
+                                {item.quantity} {t_stock('units')}
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(item.entryDate).toLocaleDateString()}
