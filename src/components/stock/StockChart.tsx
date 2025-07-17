@@ -79,7 +79,12 @@ export const StockChart = ({ items }: StockChartProps) => {
 
     const dataForChart = useMemo(() => {
         if (viewMode === 'byCategory') {
-            const categoryQuantities = items.reduce((acc, item) => {
+            // Filtrer les items par catégorie si une catégorie spécifique est sélectionnée
+            const filteredItems = selectedCategory === 'all' 
+                ? items 
+                : items.filter(item => item.category === selectedCategory);
+            
+            const categoryQuantities = filteredItems.reduce((acc, item) => {
                 const categoryName = Object.keys(Category)[Object.values(Category).indexOf(item.category)];
                 acc[categoryName] = (acc[categoryName] || 0) + item.quantity;
                 return acc;
@@ -133,7 +138,7 @@ export const StockChart = ({ items }: StockChartProps) => {
                 ],
             };
         }
-    }, [items, viewMode, selectedCategory, selectedItemIds]);
+    }, [items, viewMode, selectedCategory, selectedItemIds, t_stock]);
 
     const options = useMemo(() => ({
         responsive: true,
@@ -207,11 +212,20 @@ export const StockChart = ({ items }: StockChartProps) => {
         const value = e.target.value;
         if (value === 'all') {
             setSelectedCategory('all');
-            setViewMode('byCategory');
         } else {
             const categoryValue = parseInt(value) as Category;
             setSelectedCategory(categoryValue);
-            setViewMode('byItem');
+        }
+    };
+
+    const handleViewModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const mode = e.target.value as ViewMode;
+        setViewMode(mode);
+        
+        // Si on passe en mode byItem et qu'aucune catégorie n'est sélectionnée, sélectionner la première
+        if (mode === 'byItem' && selectedCategory === 'all' && items.length > 0) {
+            const firstCategory = items[0].category;
+            setSelectedCategory(firstCategory);
         }
     };
 
@@ -223,6 +237,12 @@ export const StockChart = ({ items }: StockChartProps) => {
             .filter(item => item.category === selectedCategory)
             .map(item => ({ value: item.id, label: item.name }));
     }, [items, selectedCategory]);
+
+    // Modes de vue traduits
+    const viewModesTranslated = useMemo(() => [
+        { value: 'byCategory', label: t_stock('quantityByCategory') },
+        { value: 'byItem', label: t_stock('stockQuantity') }
+    ], [t_stock]);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -238,6 +258,19 @@ export const StockChart = ({ items }: StockChartProps) => {
                             {chartTypesTranslated.map(type => (
                                 <option key={type.value} value={type.value}>
                                     {type.label}
+                                </option>
+                            ))}
+                        </Select>
+                    </div>
+                    <div className="w-48">
+                        <Select
+                            value={viewMode}
+                            onChange={handleViewModeChange}
+                            placeholder="Mode de vue"
+                        >
+                            {viewModesTranslated.map(mode => (
+                                <option key={mode.value} value={mode.value}>
+                                    {mode.label}
                                 </option>
                             ))}
                         </Select>

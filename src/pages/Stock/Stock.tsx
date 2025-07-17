@@ -210,7 +210,6 @@ export const Stock = () => {
     const handleFilterSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setCurrentPage(1);
-        fetchItems();
     };
 
     const handleResetFilters = () => {
@@ -220,14 +219,38 @@ export const Stock = () => {
             minQuantity: '',
             maxQuantity: ''
         });
-        fetchItems();
     };
+
+    // Appliquer les filtres aux items
+    const filteredItems = items.filter(item => {
+        // Filtre par nom
+        if (filter.name && !item.name.toLowerCase().includes(filter.name.toLowerCase())) {
+            return false;
+        }
+        
+        // Filtre par catégorie
+        if (filter.category && item.category !== parseInt(filter.category)) {
+            return false;
+        }
+        
+        // Filtre par quantité minimum
+        if (filter.minQuantity && item.quantity < parseInt(filter.minQuantity)) {
+            return false;
+        }
+        
+        // Filtre par quantité maximum
+        if (filter.maxQuantity && item.quantity > parseInt(filter.maxQuantity)) {
+            return false;
+        }
+        
+        return true;
+    });
 
     // Calcul des items pour la page courante
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(items.length / itemsPerPage);
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
     useEffect(() => {
         if (currentPage > totalPages && totalPages > 0) {
@@ -268,10 +291,10 @@ export const Stock = () => {
                             </h2>
                             
                             {(() => {
-                                const criticalItems = items.filter(item => item.quantity <= 10);
+                                const criticalItems = filteredItems.filter(item => item.quantity <= 10);
                                 // Trier par quantité croissante puis prendre les 3 plus bas
                                 const lowestCritical = [...criticalItems].sort((a, b) => a.quantity - b.quantity).slice(0, 3);
-                                const lowStockItems = items.filter(item => item.quantity > 10 && item.quantity <= 20);
+                                const lowStockItems = filteredItems.filter(item => item.quantity > 10 && item.quantity <= 20);
                                 
                                 return (
                                     <div className="space-y-4">
@@ -372,7 +395,7 @@ export const Stock = () => {
                                         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                                 <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{items.length}</div>
+                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{filteredItems.length}</div>
                                                     <div className="text-sm text-gray-600 dark:text-gray-400">{t_stock('total_items')}</div>
                                                 </div>
                                                 <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
@@ -393,23 +416,23 @@ export const Stock = () => {
                 )}
 
                 {/* Graphique et Historique */}
-                {!isLoading && items.length > 0 && (
+                {!isLoading && filteredItems.length > 0 && (
                     <div className="mb-8">
-                        <StockChart items={items} />
+                        <StockChart items={filteredItems} />
                     </div>
                 )}
 
                 {/* Message d'état vide */}
-                {!isLoading && items.length === 0 && (
+                {!isLoading && filteredItems.length === 0 && (
                     <div className="text-center p-8">
                         <p className="text-gray-500 dark:text-gray-400">
-                            {t_stock('empty')}
+                            {items.length === 0 ? t_stock('empty') : 'Aucun item ne correspond aux filtres'}
                         </p>
                     </div>
                 )}
 
                 {/* Section Tableau avec Filtres - Affichée uniquement s'il y a des items */}
-                {!isLoading && items.length > 0 && (
+                {!isLoading && filteredItems.length > 0 && (
                     <div className="bg-white dark:bg-gray-800 shadow">
                         {/* Filtres */}
                         <form onSubmit={handleFilterSubmit} className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -624,7 +647,7 @@ export const Stock = () => {
                                         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                             <div>
                                                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                    {`${indexOfFirstItem + 1} - ${Math.min(indexOfLastItem, items.length)} / ${items.length} ${t_stock('total_items')}`}
+                                                    {`${indexOfFirstItem + 1} - ${Math.min(indexOfLastItem, filteredItems.length)} / ${filteredItems.length} ${t_stock('total_items')}`}
                                                 </p>
             </div>
                                             <div>
