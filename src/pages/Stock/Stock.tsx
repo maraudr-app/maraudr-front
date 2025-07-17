@@ -299,7 +299,11 @@ export const Stock = () => {
                                                                     {t_stock('restock_urgent')}
                                                                 </span>
                                                                 <Button
-                                                                    onClick={() => handleEditClick(item)}
+                                                                    onClick={() => {
+                                                                        setItemToReduce(item);
+                                                                        setShowReduceModal(true);
+                                                                        setReduceQuantity('');
+                                                                    }}
                                                                     className="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
                                                                 >
                                                                     {t_stock('restock')}
@@ -335,7 +339,11 @@ export const Stock = () => {
                                                                     {t_stock('monitoring_recommended')}
                                                                 </span>
                                                                 <Button
-                                                                    onClick={() => handleEditClick(item)}
+                                                                    onClick={() => {
+                                                                        setItemToReduce(item);
+                                                                        setShowReduceModal(true);
+                                                                        setReduceQuantity('');
+                                                                    }}
                                                                     className="text-xs px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
                                                                 >
                                                                     {t_stock('manage')}
@@ -754,7 +762,7 @@ export const Stock = () => {
             {showReduceModal && itemToReduce && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
-                        <h2 className="text-xl font-bold mb-4">{t_stock('update_stock')}</h2>
+                        <h2 className="text-xl font-bold mb-4">{t_stock('update_quantity')}</h2>
                         <div className="mb-4">
                             <div className="mb-2 text-gray-700 dark:text-gray-200">
                                 <strong>{t_stock('item')}:</strong> {itemToReduce.name}
@@ -770,7 +778,7 @@ export const Stock = () => {
                                 className="w-full"
                             />
                             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {t_stock('quantity_hint')}
+                                {t_stock('quantity_restock_hint')}
                             </div>
                         </div>
                         <div className="flex justify-end gap-2">

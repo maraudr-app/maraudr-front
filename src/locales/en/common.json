@@ -389,7 +389,15 @@
     "high": "High",
     "veryHigh": "Very high",
     "stockLevel": "Stock level",
-    "total": "Total"
+    "total": "Total",
+    "toast_stock_increased": "Stock increased successfully",
+    "error_update_stock": "Error updating stock",
+    "update_quantity": "Update quantity",
+    "update_stock": "Update stock",
+    "quantity_hint": "Enter a positive number to increase or negative to decrease",
+    "quantity_restock_hint": "Enter a positive number to restock or negative to decrease",
+    "navbar_title": "Stock Management",
+    "modal_history_title": "Stock History"
   },
   "team": {
     "title": "Team management",

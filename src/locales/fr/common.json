@@ -655,7 +655,15 @@
   "article": "article",
   "article_plural": "articles",
   "toast_stock_reduced": "Stock réduit avec succès",
-  "error_reduce_stock": "Erreur lors de la réduction du stock"
+  "toast_stock_increased": "Stock augmenté avec succès",
+  "error_reduce_stock": "Erreur lors de la réduction du stock",
+  "error_update_stock": "Erreur lors de la mise à jour du stock",
+  "update_quantity": "Modifier la quantité",
+  "update_stock": "Modifier le stock",
+  "quantity_hint": "Entrez un nombre positif pour augmenter ou négatif pour diminuer",
+  "quantity_restock_hint": "Entrez un nombre positif pour réapprovisionner ou négatif pour diminuer",
+  "navbar_title": "Gestion du Stock",
+  "modal_history_title": "Historique du Stock"
 },
   "planning": {
     "errors_loadAvailabilities": "Erreur lors du chargement des disponibilités",
