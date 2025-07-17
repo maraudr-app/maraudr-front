@@ -1155,18 +1155,12 @@ const Plan: React.FC = () => {
                                 const isCluster = cluster.points.length > 1;
                                 const mainPoint = cluster.center;
                                 
-                                // Filtrer les points actifs pour l'affichage sur la carte
-                                const activeClusterPoints = cluster.points.filter(point => point.isActive !== false);
-                                
-                                // Ne pas afficher le cluster s'il n'y a pas de points actifs
-                                if (activeClusterPoints.length === 0) return null;
-                                
                                 // Déterminer la couleur du cluster basée sur le point le plus récent
-                                const mostRecentColor = activeClusterPoints.reduce((latest, point) => {
+                                const mostRecentColor = cluster.points.reduce((latest, point) => {
                                     const pointTime = new Date(point.observedAt || point.timestamp || 0);
                                     const latestTime = new Date(latest.observedAt || latest.timestamp || 0);
                                     return pointTime > latestTime ? point : latest;
-                                }, activeClusterPoints[0]);
+                                }, cluster.points[0]);
                                 
                                 const clusterColor = getPointColor(mostRecentColor.observedAt || mostRecentColor.timestamp);
                                 
@@ -1175,7 +1169,7 @@ const Plan: React.FC = () => {
                                         key={`cluster-${clusterIndex}`}
                                         position={[mainPoint.latitude, mainPoint.longitude]}
                                         icon={isCluster 
-                                            ? createClusterIcon(activeClusterPoints.length, clusterColor)
+                                            ? createClusterIcon(cluster.points.length, clusterColor)
                                             : createCustomIcon(clusterColor)
                                         }
                                         ref={(ref) => {
@@ -1194,7 +1188,7 @@ const Plan: React.FC = () => {
                                                     // Affichage pour un cluster de plusieurs points
                                                     <div>
                                                         <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                                                            📍 {activeClusterPoints.length} {t_plan('pointsNearby')}
+                                                            📍 {cluster.points.length} {t_plan('pointsNearby')}
                                                         </h3>
                                                         <div className="mb-3">
                                                             <button
@@ -1217,7 +1211,7 @@ const Plan: React.FC = () => {
                                                             </button>
                                                         </div>
                                                         <div className="max-h-48 overflow-y-auto space-y-3">
-                                                            {activeClusterPoints.map((point, pointIndex) => (
+                                                            {cluster.points.map((point, pointIndex) => (
                                                                 <div key={`cluster-point-${pointIndex}`} className="border-l-4 pl-3 py-2" style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}>
                                                                     <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-1">
                                                                         {point.name || `${t_plan('pointNumber')}${pointIndex + 1}`}
