@@ -260,7 +260,7 @@ const Plan: React.FC = () => {
         loadGeoPoints();
     }, [selectedAssociation?.id, daysFilter]);
 
-    // Fonction utilitaire pour filtrer par date
+    // Fonction utilitaire pour filtrer par date basée sur createdAt
     const filterByDate = React.useCallback((items: any[], daysFilter: number) => {
         if (!Array.isArray(items) || items.length === 0) {
             return items;
@@ -269,7 +269,7 @@ const Plan: React.FC = () => {
         const now = new Date();
         const cutoffDate = new Date(now.getTime() - (daysFilter * 24 * 60 * 60 * 1000));
         
-        console.log('🗓️ Application du filtre temporel:', {
+        console.log('🗓️ Application du filtre temporel basé sur createdAt:', {
             totalItems: items.length,
             daysFilter,
             cutoffDate: cutoffDate.toISOString(),
@@ -277,22 +277,49 @@ const Plan: React.FC = () => {
         });
         
         const filtered = items.filter(item => {
-            const itemDate = new Date(item.createdAt || item.timestamp || item.observedAt);
-            const isValid = !isNaN(itemDate.getTime()) && itemDate >= cutoffDate;
+            // Se baser uniquement sur createdAt
+            if (!item.createdAt) {
+                console.log('🚫 Item ignoré - pas de createdAt:', {
+                    id: item.id || 'unknown',
+                    availableFields: Object.keys(item)
+                });
+                return false;
+            }
+            
+            const itemDate = new Date(item.createdAt);
+            
+            // Vérifier que la date est valide
+            if (isNaN(itemDate.getTime())) {
+                console.log('🚫 Item filtré - createdAt invalide:', {
+                    id: item.id || 'unknown',
+                    createdAt: item.createdAt
+                });
+                return false;
+            }
+            
+            // Calculer la différence en millisecondes par rapport à la date courante
+            const diffInMs = now.getTime() - itemDate.getTime();
+            const diffInDays = diffInMs / (24 * 60 * 60 * 1000);
+            
+            // L'item est affiché si sa date de création est dans la plage de jours spécifiée
+            const isValid = diffInDays >= 0 && diffInDays <= daysFilter;
             
             if (!isValid && item.id) {
                 console.log('🚫 Item filtré:', {
                     id: item.id,
+                    createdAt: item.createdAt,
                     itemDate: itemDate.toISOString(),
                     cutoffDate: cutoffDate.toISOString(),
-                    reason: isNaN(itemDate.getTime()) ? 'Date invalide' : 'Trop ancien'
+                    diffInDays: diffInDays.toFixed(2),
+                    daysFilter,
+                    reason: diffInDays < 0 ? 'Date future' : 'Trop ancien'
                 });
             }
             
             return isValid;
         });
         
-        console.log('✅ Résultat du filtrage temporel:', {
+        console.log('✅ Résultat du filtrage temporel par createdAt:', {
             avant: items.length,
             après: filtered.length,
             filtrés: items.length - filtered.length
