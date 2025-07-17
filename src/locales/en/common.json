@@ -1321,7 +1321,18 @@
   "arrival": "Arrival:",
   "created": "Created:",
   "googleMaps": "Google Maps",
-  "deleteItinerary": "Delete itinerary"
+  "deleteItinerary": "Delete itinerary",
+  "lat": "Lat:",
+  "lng": "Lng:",
+  "createdColon": "Created:",
+  "createEventRoute": "Create event route",
+  "selectAnEvent": "Select an event",
+  "chooseAnEvent": "Choose an event...",
+  "selectedEvent": "Selected event",
+  "title": "Title:",
+  "date": "Date:",
+  "time": "Time:",
+  "location": "Location:"
 },
 "mcp": {
   "title": "AI Assistant",

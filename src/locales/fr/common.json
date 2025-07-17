@@ -935,7 +935,18 @@
   "arrival": "Arrivée:",
   "created": "Créé:",
   "googleMaps": "Google Maps",
-  "deleteItinerary": "Supprimer l'itinéraire"
+  "deleteItinerary": "Supprimer l'itinéraire",
+  "lat": "Lat:",
+  "lng": "Lng:",
+  "createdColon": "Créé:",
+  "createEventRoute": "Créer une route d'événement",
+  "selectAnEvent": "Sélectionner un événement",
+  "chooseAnEvent": "Choisir un événement...",
+  "selectedEvent": "Événement sélectionné",
+  "title": "Titre:",
+  "date": "Date:",
+  "time": "Heure:",
+  "location": "Lieu:"
 },
   "map": {
     "title": "Plan & Géolocalisation",
