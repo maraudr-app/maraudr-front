@@ -17,6 +17,7 @@ const McpServer: React.FC = () => {
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingResponse, setStreamingResponse] = useState('');
     const [loading, setLoading] = useState(false);
+    const [forceUpdate, setForceUpdate] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { sidebarCollapsed, selectedAssociation } = useAssoStore();
@@ -62,7 +63,16 @@ const McpServer: React.FC = () => {
                         conversationHistory: updatedHistory
                     },
                     (chunk: string) => {
-                        setStreamingResponse(prev => prev + chunk);
+                        console.log('📤 Chunk affiché:', chunk); // Debug log
+                        setStreamingResponse(prev => {
+                            const newResponse = prev + chunk;
+                            console.log('📝 Réponse totale:', newResponse.length, 'caractères'); // Debug log
+                            return newResponse;
+                        });
+                        // Forcer React à recalculer le rendu
+                        setForceUpdate(prev => prev + 1);
+                        // Forcer le scroll à chaque chunk
+                        setTimeout(scrollToBottom, 10);
                     },
                     (fullResponse: string) => {
                         const assistantMessage: ChatMessage = {
@@ -200,9 +210,9 @@ const McpServer: React.FC = () => {
                                 {isStreaming && (
                                     <div className="flex justify-start">
                                         <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
-                                            <p className="text-sm whitespace-pre-wrap">
+                                            <p className="text-sm whitespace-pre-wrap animate-pulse">
                                                 {streamingResponse}
-                                                <span className="inline-block w-2 h-4 bg-gray-900 dark:bg-white ml-1 animate-pulse">|</span>
+                                                <span className="inline-block w-1 h-4 bg-maraudr-blue dark:bg-maraudr-orange ml-1 animate-bounce">▎</span>
                                             </p>
                                         </div>
                                     </div>

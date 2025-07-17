@@ -79,6 +79,7 @@ export const chatService = {
 
                 const decoder = new TextDecoder();
                 let fullResponse = '';
+                let buffer = ''; // Buffer pour les chunks partiels
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -88,15 +89,56 @@ export const chatService = {
                         break;
                     }
 
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
+                    // Décoder le chunk et l'ajouter au buffer
+                    const chunk = decoder.decode(value, { stream: true });
+                    buffer += chunk;
+                    
+                    // Traiter les lignes complètes du buffer
+                    const lines = buffer.split('\n');
+                    // Garder la dernière ligne (possiblement incomplète) dans le buffer
+                    buffer = lines.pop() || '';
 
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
                             const data = line.slice(6); // Enlever 'data: '
                             if (data.trim()) {
-                                onChunk(data);
-                                fullResponse += data;
+                                // Convertir les \n littéraux en vrais sauts de ligne
+                                const processedData = data.replace(/\\n/g, '\n');
+                                console.log('📤 Chunk reçu (longueur: ' + processedData.length + '):', processedData.substring(0, 100) + '...'); // Debug log
+                                
+                                // Simuler un streaming plus fluide pour les gros chunks
+                                if (processedData.length > 100) {
+                                    // Diviser le texte en mots et les envoyer progressivement
+                                    const words = processedData.split(' ');
+                                    let currentChunk = '';
+                                    let wordIndex = 0;
+                                    
+                                    const sendNextChunk = () => {
+                                        if (wordIndex < words.length) {
+                                            currentChunk += (currentChunk ? ' ' : '') + words[wordIndex];
+                                            wordIndex++;
+                                            
+                                            // Envoyer tous les 3-4 mots ou si c'est le dernier
+                                            if (wordIndex % 4 === 0 || wordIndex === words.length) {
+                                                onChunk(currentChunk);
+                                                currentChunk = '';
+                                                
+                                                // Continuer avec un délai
+                                                if (wordIndex < words.length) {
+                                                    setTimeout(sendNextChunk, 30);
+                                                }
+                                            } else {
+                                                // Continuer immédiatement pour accumuler les mots
+                                                sendNextChunk();
+                                            }
+                                        }
+                                    };
+                                    
+                                    sendNextChunk();
+                                } else {
+                                    onChunk(processedData);
+                                }
+                                fullResponse += processedData;
                             }
                         }
                     }
