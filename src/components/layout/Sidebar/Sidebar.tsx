@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,6 +13,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   DocumentIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline';
 import { FiCalendar } from "react-icons/fi";
 import {ArrowRightOnRectangleIcon} from "@heroicons/react/20/solid";
@@ -50,7 +51,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, is
 
 const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   const { pathname } = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { sidebarCollapsed, setSidebarCollapsed, selectedAssociation } = useAssoStore();
   const [associationDetails, setAssociationDetails] = useState<any>(null);
   const user = useAuthStore((state: any) => state.user);
@@ -107,7 +108,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
     return t(`sidebar.${key}` as any);
   };
 
-  const navigationItems = [
+  // Créer les éléments de navigation avec useMemo pour recharger quand la langue change
+  const navigationItems = useMemo(() => [
     {
       to: '/maraudApp/dashboard',
       icon: <ChartBarIcon className="w-5 h-5" />,
@@ -158,14 +160,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
       showForManager: false
     },
 
-  ];
+  ], [i18n.language]);
 
   // Filtrer les éléments selon le rôle
-  const filteredNavigationItems = navigationItems.filter(item => 
-    !item.showForManager || isManager()
+  const filteredNavigationItems = useMemo(() => 
+    navigationItems.filter(item => 
+      !item.showForManager || isManager()
+    ), [navigationItems, user?.userType]
   );
 
-  const bottomItems = [
+  const bottomItems = useMemo(() => [
     { 
       to: '/maraudApp/profile',
       icon: <UserCircleIcon className="w-5 h-5" />, 
@@ -174,11 +178,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
     },
     { 
       to: '/maraudApp/setting',
-      icon: <Cog6ToothIcon className="w-5 h-5" />, 
+      icon: <EnvelopeIcon className="w-5 h-5" />, 
       label: t_sidebar('settings'), 
       key: 'settings' 
     }
-  ];
+  ], [i18n.language]);
 
   // Fonction pour vérifier si un élément est actif
   const checkIsActive = (path: string) => {

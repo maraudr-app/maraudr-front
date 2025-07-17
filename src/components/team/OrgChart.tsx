@@ -30,24 +30,24 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
     const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
     const [selectedMemberDetails, setSelectedMemberDetails] = useState<TeamMember | null>(null);
     
-    // Mapping pour les langues - gère les nombres, strings et énumérations
+    // Mapping pour les langues - correspondance avec l'enum backend
     const getLanguageLabel = (language: Language | string | number): string => {
-        // Si c'est un nombre, on le convertit selon l'index
+        // Si c'est un nombre, on le convertit selon l'index de l'enum backend
         if (typeof language === 'number') {
             const languagesByIndex: Record<number, string> = {
-                0: t_team('modal.userDetails.languages.english'),
-                1: t_team('modal.userDetails.languages.french'), 
-                2: t_team('modal.userDetails.languages.spanish'),
-                3: t_team('modal.userDetails.languages.german'),
-                4: t_team('modal.userDetails.languages.italian')
+                0: t_team('modal.userDetails.languages.english'), // English
+                1: t_team('modal.userDetails.languages.french'),  // French
+                2: t_team('modal.userDetails.languages.spanish'), // Spanish
+                3: t_team('modal.userDetails.languages.german'),  // German
+                4: t_team('modal.userDetails.languages.italian')  // Italian
             };
             return languagesByIndex[language] || `${t_team('modal.userDetails.languages.language')} ${language}`;
         }
         
         // Si c'est une string ou énumération
         const languageMap: Record<string, string> = {
-            'French': t_team('modal.userDetails.languages.french'),
             'English': t_team('modal.userDetails.languages.english'),
+            'French': t_team('modal.userDetails.languages.french'),
             'Spanish': t_team('modal.userDetails.languages.spanish'),
             'German': t_team('modal.userDetails.languages.german'),
             'Italian': t_team('modal.userDetails.languages.italian')
@@ -187,7 +187,7 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
         const isCurrentUserCard = isCurrentUser(member.id);
         
         return (
-            <div className="relative">
+            <div className={`relative ${isTopLevel ? 'mt-12' : 'mt-10'}`}>
                 {/* Photo de profil positionnée sur la bordure supérieure */}
                 <div className={`absolute left-6 z-10 ${isTopLevel ? '-top-10' : '-top-8'}`}>
                     <div className={`${photoSize} rounded-full border-4 ${
@@ -413,19 +413,19 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
             />
 
             {/* Modal de détails utilisateur - visible seulement pour les managers */}
-            {showUserDetailsModal && selectedMemberDetails && isCurrentUserManager() && (
+            {showUserDetailsModal && selectedMemberDetails && isCurrentUserManager() && selectedMemberDetails.id && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
                     <div className="relative top-10 mx-auto p-6 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-orange-200/50 dark:border-gray-700 mb-10">
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center">
                                 <div className="w-16 h-16 rounded-full border-4 border-orange-500 shadow-lg overflow-hidden bg-white dark:bg-gray-700 mr-4 flex items-center justify-center">
                                     <span className="text-gray-700 dark:text-gray-300 font-bold text-lg">
-                                        {selectedMemberDetails.firstname.charAt(0).toUpperCase()}{selectedMemberDetails.lastname.charAt(0).toUpperCase()}
+                                        {(selectedMemberDetails.firstname?.charAt(0) || '').toUpperCase()}{(selectedMemberDetails.lastname?.charAt(0) || '').toUpperCase()}
                                     </span>
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {selectedMemberDetails.firstname} {selectedMemberDetails.lastname}
+                                        {selectedMemberDetails.firstname || ''} {selectedMemberDetails.lastname || ''}
                                     </h2>
                                     <div className="flex items-center mt-1">
                                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -462,7 +462,9 @@ export const OrgChart: React.FC<OrgChartProps> = ({ members, onViewDisponibiliti
                                         <EnvelopeIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-3 flex-shrink-0" />
                                         <div>
                                             <p className="text-sm font-medium text-gray-900 dark:text-white">{t_team('member.contact.email')}</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-300">{selectedMemberDetails.email}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                                                {selectedMemberDetails?.email || t_team('member.notSpecified')}
+                                            </p>
                                         </div>
                                     </div>
 

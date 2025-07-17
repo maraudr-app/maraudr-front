@@ -380,12 +380,7 @@ const Header: React.FC<HeaderProps> = ({ noSidebar = false }) => {
                                         >
                                             {t('sidebar.profile', 'Profil')}
                                         </Link>
-                                        <Link
-                                            to="/settings"
-                                                className="block px-4 py-2 text-sm text-maraudr-darkText dark:text-maraudr-lightText hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"
-                                        >
-                                            {t('sidebar.settings', 'Paramètres')}
-                                        </Link>
+                                       
                                         <button
                                             onClick={handleLogout}
                                                 className="block w-full text-left px-4 py-2 text-sm text-maraudr-red hover:bg-maraudr-blue/10 dark:hover:bg-maraudr-orange/10 hover:font-semibold"

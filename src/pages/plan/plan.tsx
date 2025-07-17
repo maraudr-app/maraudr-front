@@ -192,6 +192,9 @@ const Plan: React.FC = () => {
     const [selectedItinerary, setSelectedItinerary] = useState<string | null>(null);
     const [itineraryFilter, setItineraryFilter] = useState<'all' | 'active' | 'archived'>('active');
     
+    // État pour gérer le popup ouvert d'un point
+    const [openPopupPoint, setOpenPopupPoint] = useState<GeoPoint | null>(null);
+    
     // États pour l'autocomplétion d'adresse
     const [addressQuery, setAddressQuery] = useState('');
     const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
@@ -209,6 +212,9 @@ const Plan: React.FC = () => {
     
     // Référence WebSocket
     const socketRef = useRef<{ close: () => void } | null>(null);
+    
+    // Références pour les markers des points
+    const markerRefs = useRef<{ [key: string]: any }>({});
 
     const { sidebarCollapsed } = useAssoStore();
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
@@ -520,6 +526,30 @@ const Plan: React.FC = () => {
         } finally {
             setRouteLoading(false);
         }
+    };
+
+    // Fonction pour ouvrir le popup d'un point sur la carte
+    const handleOpenPointPopup = (point: GeoPoint) => {
+        setOpenPopupPoint(point);
+        
+        // Créer une clé unique pour le point
+        const pointKey = `${point.latitude}-${point.longitude}-${point.timestamp}`;
+        
+        // Ouvrir le popup du marker correspondant et centrer la carte
+        setTimeout(() => {
+            const markerRef = markerRefs.current[pointKey];
+            if (markerRef && markerRef.openPopup) {
+                // Centrer la carte sur le point
+                const map = markerRef._map;
+                if (map) {
+                    map.setView([point.latitude, point.longitude], map.getZoom());
+                }
+                // Ouvrir le popup
+                markerRef.openPopup();
+            } else {
+                console.log('Marker ref non trouvé pour:', pointKey, 'Refs disponibles:', Object.keys(markerRefs.current));
+            }
+        }, 200);
     };
 
     // Gérer le clic sur la carte pour ajouter un point
@@ -937,6 +967,27 @@ const Plan: React.FC = () => {
         }
     };
 
+    // Fonction pour basculer le statut d'un itinéraire
+    const handleToggleItineraryStatus = async (itinerary: any, e: React.MouseEvent) => {
+        e.stopPropagation(); // Empêcher la sélection de l'itinéraire
+        
+        try {
+            await geoService.toggleItineraryStatus(itinerary.id);
+            toast.success(itinerary.isActive ? 'Itinéraire désactivé' : 'Itinéraire activé');
+            
+            // Recharger les itinéraires
+            if (selectedAssociation?.id) {
+                const data = await geoService.getItineraries(selectedAssociation.id);
+                let filteredData = data.filter((it: any) => it.associationId === selectedAssociation.id);
+                filteredData = filterByDate(filteredData, daysFilter);
+                setItineraries(filteredData);
+            }
+        } catch (error: any) {
+            console.error('Erreur lors du basculement du statut:', error);
+            toast.error('Erreur lors du basculement du statut');
+        }
+    };
+
     // Fonction pour trouver l'événement lié à un itinéraire
     const getEventForItinerary = (eventId: string) => {
         return events.find(event => event.id === eventId);
@@ -1057,6 +1108,15 @@ const Plan: React.FC = () => {
                                             ? createClusterIcon(cluster.points.length, clusterColor)
                                             : createCustomIcon(clusterColor)
                                         }
+                                        ref={(ref) => {
+                                            if (ref) {
+                                                // Pour les clusters, on ne stocke pas de ref car on ne peut pas ouvrir le popup d'un point spécifique
+                                                if (!isCluster) {
+                                                    const pointKey = `${mainPoint.latitude}-${mainPoint.longitude}-${mainPoint.timestamp}`;
+                                                    markerRefs.current[pointKey] = ref;
+                                                }
+                                            }
+                                        }}
                                     >
                                         <Popup maxWidth={300}>
                                             <div className="p-2">
@@ -1209,29 +1269,12 @@ const Plan: React.FC = () => {
                                 console.log(`🚀 RouteRenderer sera rendu pour itinéraire ${itinerary.id}:`, !!geoJsonData);
                                 
                                 const isSelected = selectedItinerary === itinerary.id;
-                                const markerColor = isSelected ? '#FF6B6B' : '#8B5CF6'; // Rouge si sélectionné, violet sinon
-                                const routeColor = isSelected ? '#FF6B6B' : '#8B5CF6';
-                                const opacity = isSelected ? 1.0 : 0.6;
-                                
                                 const linkedEvent = getEventForItinerary(itinerary.eventId);
                                 
-                                // Ajuster les couleurs selon le statut de l'itinéraire
-                                let finalMarkerColor = markerColor;
-                                let finalRouteColor = routeColor;
-                                let finalOpacity = opacity;
-                                
-                                // Vérifier si l'itinéraire doit être considéré comme archivé
-                                const isArchived = itinerary.isActive === false || 
-                                                 !itinerary.eventId || 
-                                                 !linkedEvent ||
-                                                 linkedEvent.status === 'CANCELED';
-                                
-                                if (isArchived) {
-                                    // Itinéraire archivé - couleur grise et opacité réduite
-                                    finalMarkerColor = isSelected ? '#9CA3AF' : '#6B7280';
-                                    finalRouteColor = isSelected ? '#9CA3AF' : '#6B7280';
-                                    finalOpacity = isSelected ? 0.7 : 0.4;
-                                }
+                                // Couleurs simples : rouge si sélectionné, violet sinon
+                                const finalRouteColor = isSelected ? '#FF6B6B' : '#8B5CF6';
+                                const finalMarkerColor = isSelected ? '#FF6B6B' : '#8B5CF6';
+                                const finalOpacity = isSelected ? 1.0 : 0.6;
                                 
                                 return (
                                     <React.Fragment key={`itinerary-${itinerary.id || index}`}>
@@ -1241,17 +1284,36 @@ const Plan: React.FC = () => {
                                             icon={createCustomIcon(finalMarkerColor)}
                                         >
                                             <Popup>
-                                                <div className="p-2 min-w-[200px]">
+                                                <div 
+                                                    className={`p-2 min-w-[200px] cursor-pointer rounded-lg transition-colors ${
+                                                        isSelected 
+                                                            ? 'bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-600' 
+                                                            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                    }`}
+                                                    onClick={() => setSelectedItinerary(isSelected ? null : itinerary.id)}
+                                                >
                                                     <h3 className="font-semibold text-gray-900 mb-2">
                                                         {t_plan('itineraryNumber')}{index + 1}
-                                                        {/* Badge de statut dans le popup */}
-                                                        <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
-                                                            itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
-                                                                ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
-                                                                : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                                                        }`}>
+                                                        {isSelected && (
+                                                            <span className="ml-2 text-red-600 dark:text-red-400 font-bold">
+                                                                {t_plan('selected')}
+                                                            </span>
+                                                        )}
+                                                        {/* Badge de statut cliquable dans le popup */}
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleItineraryStatus(itinerary, e);
+                                                            }}
+                                                            className={`ml-2 px-2 py-0.5 text-xs rounded-full cursor-pointer hover:opacity-80 transition-opacity ${
+                                                                itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
+                                                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
+                                                                    : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                                            }`}
+                                                            title="Cliquer pour basculer le statut"
+                                                        >
                                                             {itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED' ? t_plan('archived') : t_plan('active')}
-                                                        </span>
+                                                        </button>
                                                     </h3>
                                                     
                                                                                                             {/* Nom de l'événement lié dans le popup */}
@@ -1338,11 +1400,6 @@ const Plan: React.FC = () => {
                                                             <span>{t_plan('seeOnGoogleMaps')}</span>
                                                         </a>
                                                     )}
-                                                    <button onClick={e => { e.stopPropagation(); setItineraryToDelete(itinerary); setShowDeleteItineraryModal(true); }}
-                                                        className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors ml-2"
-                                                        title={t_plan('deleteItinerary')}>
-                                                        <TrashIcon className="w-4 h-4" />
-                                                    </button>
                                                 </div>
                                             </Popup>
                                         </Marker>
@@ -1448,7 +1505,12 @@ const Plan: React.FC = () => {
                                                     </p>
                                                     <div className="space-y-2 max-h-40 overflow-y-auto">
                                                         {cluster.points.map((point, pointIndex) => (
-                                                            <div key={`sidebar-point-${pointIndex}`} className="p-2 bg-white dark:bg-gray-800 rounded border-l-4" style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}>
+                                                            <div 
+                                                                key={`sidebar-point-${pointIndex}`} 
+                                                                className="p-2 bg-white dark:bg-gray-800 rounded border-l-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" 
+                                                                style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}
+                                                                onClick={() => handleOpenPointPopup(point)}
+                                                            >
                                                                 <div className="flex items-center mb-1">
                                                                     <div 
                                                                         className="w-2 h-2 rounded-full mr-2"
@@ -1465,7 +1527,10 @@ const Plan: React.FC = () => {
                                                                     {formatDate(point.timestamp, point.observedAt)}
                                                                 </div>
                                                                 <button
-                                                                    onClick={() => handleShowRoute(point)}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleShowRoute(point);
+                                                                    }}
                                                                     className="w-full flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
                                                                 >
                                                                     <MapIcon className="w-2 h-2" />
@@ -1477,7 +1542,10 @@ const Plan: React.FC = () => {
                                                 </div>
                                             ) : (
                                                 // Affichage point isolé dans la sidebar (comportement normal)
-                                                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                <div 
+                                                    className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                                    onClick={() => handleOpenPointPopup(mainPoint)}
+                                                >
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex-1">
                                                             <div className="flex items-center mb-2">
@@ -1506,7 +1574,10 @@ const Plan: React.FC = () => {
                                                                 </div>
                                                             </div>
                                                             <button
-                                                                onClick={() => handleShowRoute(mainPoint)}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleShowRoute(mainPoint);
+                                                                }}
                                                                 className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
                                                             >
                                                                 <MapIcon className="w-3 h-3" />
@@ -1625,14 +1696,18 @@ const Plan: React.FC = () => {
                                                                 {t_plan('itineraryNumber')}{index + 1}
                                                                 {isSelected && <span className="ml-2 text-xs text-red-600 dark:text-red-400">{t_plan('selected')}</span>}
                                                             </h4>
-                                                            {/* Badge de statut */}
-                                                            <span className={`ml-auto px-2 py-0.5 text-xs rounded-full ${
-                                                                itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
-                                                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
-                                                                    : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                                                            }`}>
+                                                            {/* Badge de statut cliquable */}
+                                                            <button
+                                                                onClick={(e) => handleToggleItineraryStatus(itinerary, e)}
+                                                                className={`ml-auto px-2 py-0.5 text-xs rounded-full cursor-pointer hover:opacity-80 transition-opacity ${
+                                                                    itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
+                                                                        ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
+                                                                        : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                                                }`}
+                                                                title="Cliquer pour basculer le statut"
+                                                            >
                                                                 {itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED' ? t_plan('archived') : t_plan('active')}
-                                                            </span>
+                                                            </button>
                                                         </div>
                                                         
                                                         {/* Nom de l'événement lié */}
@@ -1699,11 +1774,6 @@ const Plan: React.FC = () => {
                                                             </a>
                                                         )}
                                                     </div>
-                                                    <button onClick={e => { e.stopPropagation(); setItineraryToDelete(itinerary); setShowDeleteItineraryModal(true); }}
-                                                        className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded transition-colors ml-2"
-                                                        title={t_plan('deleteItinerary')}>
-                                                        <TrashIcon className="w-4 h-4" />
-                                                    </button>
                                                 </div>
                                             </div>
                                         );

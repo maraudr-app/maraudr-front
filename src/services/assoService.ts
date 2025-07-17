@@ -234,7 +234,7 @@ export const assoService = {
                         id: userDetails.id,
                         firstname: userDetails.firstname,
                         lastname: userDetails.lastname,
-                        email: userDetails.email,
+                        email: userDetails.email || userDetails.contactInfo?.email,
                         phoneNumber: userDetails.phoneNumber || userDetails.contactInfo?.phoneNumber,
                         street: userDetails.street || userDetails.address?.street,
                         city: userDetails.city || userDetails.address?.city,

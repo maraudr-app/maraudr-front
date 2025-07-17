@@ -11,7 +11,7 @@ import { useAssoStore } from './store/assoStore';
 import MaraudrApp from "./pages/MaraudrApp.tsx";
 import Profile from "./pages/Profile/Profile.tsx";
 import Plan from "./pages/plan/plan.tsx";
-import Setting from "./pages/setting/setting.tsx";
+import Setting from "./pages/Settings/Settings";
 import Team from "./pages/team/team.tsx";
 import Planning from "./pages/planing/planing.tsx";
 import CreateAccount from './pages/Register/createAccount.tsx';

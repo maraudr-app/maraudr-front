@@ -33,7 +33,7 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
         description: '',
         barCode: '',
         category: Category.Food,
-        quantity: 1
+        quantity: 1 // Toujours 1 lors de la création
     });
 
     const selectedAssociation = useAssoStore(state => state.selectedAssociation);
@@ -65,7 +65,7 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
                 description: '',
                 barCode: '',
                 category: Category.Food,
-                quantity: 1
+                quantity: 1 // Toujours 1 lors de la création
             });
             setSuccess(null);
             setError(null);
@@ -134,17 +134,20 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
             return;
         }
 
-        if (formData.quantity <= 0) {
-            setError(t_stock('quantityInvalid'));
-            return;
-        }
+        // Pas de validation de quantité car elle est toujours 1 lors de la création
 
         setIsLoading(true);
         setError(null);
         setSuccess(null);
 
         try {
-            await stockService.createItem(formData, selectedAssociation.id);
+            // S'assurer que la quantité est toujours 1 lors de la création
+            const itemData = {
+                ...formData,
+                quantity: 1
+            };
+            
+            await stockService.createItem(itemData, selectedAssociation.id);
             setSuccess(t_stock('itemAddedSuccess'));
             
             if (onItemHighlight) {
@@ -165,8 +168,8 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'quantity' ? parseInt(value) || 0 : 
-                    name === 'category' ? parseInt(value) as Category : value
+            [name]: name === 'category' ? parseInt(value) as Category : value
+            // Suppression de la gestion de quantity car elle est toujours 1
         }));
     };
 
@@ -336,17 +339,7 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
                                     </Select>
                                 </div>
 
-                                <div>
-                                    <Input
-                                        type="number"
-                                        name="quantity"
-                                        value={formData.quantity}
-                                        onChange={handleChange}
-                                        required
-                                        min="1"
-                                        placeholder={t_stock('quantityPlaceholder')}
-                                    />
-                                </div>
+                                {/* Champ quantité supprimé - toujours 1 lors de la création */}
 
                                 <div>
                                     <Input

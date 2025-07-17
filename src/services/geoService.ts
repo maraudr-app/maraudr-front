@@ -425,5 +425,15 @@ export const geoService = {
             console.error('Erreur lors de la mise à jour de l\'itinéraire:', error);
             throw error;
         }
+    },
+
+    // Basculer le statut d'un itinéraire (actif/inactif)
+    toggleItineraryStatus: async (itineraryId: string): Promise<void> => {
+        try {
+            await geoApi.patch(`/itinerary/${itineraryId}/status`);
+        } catch (error: any) {
+            console.error('Erreur lors du basculement du statut de l\'itinéraire:', error);
+            throw error;
+        }
     }
 }; 

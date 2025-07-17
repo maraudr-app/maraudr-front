@@ -65,10 +65,14 @@ export const userService = {
 
   updateUser: async (userSub: string, userData: any) => {
     try {
+      console.log('📡 Mise à jour utilisateur:', { userSub, userData });
       const response = await api.put(`/users/${userSub}`, userData);
+      console.log('✅ Réponse mise à jour:', response.data);
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
+      console.error('❌ Erreur mise à jour utilisateur:', error);
+      console.error('❌ Détails erreur:', error.response?.data);
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
   },
