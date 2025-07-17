@@ -1,4 +1,4 @@
-import { StockItem, getCategoryName } from '../../types/stock/StockItem';
+import { StockItem, getCategoryName, getTranslatedCategoryName } from '../../types/stock/StockItem';
 import { useTranslation } from 'react-i18next';
 
 interface RecentStockHistoryProps {
@@ -45,7 +45,7 @@ export const RecentStockHistory = ({ items }: RecentStockHistoryProps) => {
                                 {item.name}
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {getCategoryName(item.category)}
+                                {getTranslatedCategoryName(item.category, t)}
                             </p>
                         </div>
                         <div className="text-right">

@@ -323,7 +323,7 @@ const DocumentManager: React.FC = () => {
                                             </p>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
                                                 {formatFileSize(doc.size) && `${formatFileSize(doc.size)} • `}
-                                                {t_media('uploadedOn')} {formatDate(doc.uploadedAt)}
+                                                {formatDate(doc.uploadedAt)}
                                             </p>
                                         </div>
                                     </div>

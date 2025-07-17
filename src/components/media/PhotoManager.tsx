@@ -328,8 +328,6 @@ const PhotoManager: React.FC = () => {
                         <div className="w-full px-8 py-4 flex flex-col items-center">
                             <h3 className="text-gray-900 dark:text-white text-base font-semibold mb-1 text-center truncate w-full">{selectedPhoto.name}</h3>
                             <div className="flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs w-full mb-4 gap-2">
-                                <span>{t_media('uploadedBy')} {selectedPhoto.uploadedBy}</span>
-                                <span className="mx-1">•</span>
                                 <span>{new Date(selectedPhoto.uploadedAt).toLocaleDateString()}</span>
                             </div>
                             <div className="flex items-center justify-center space-x-6 mt-2 w-full">

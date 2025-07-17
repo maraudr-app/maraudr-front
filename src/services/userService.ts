@@ -65,13 +65,46 @@ export const userService = {
 
   updateUser: async (userSub: string, userData: any) => {
     try {
-      console.log('📡 Mise à jour utilisateur:', { userSub, userData });
+      console.log('📡 [userService] Début mise à jour utilisateur:', { 
+        userSub, 
+        userData,
+        allFields: {
+          firstname: userData.firstname,
+          lastname: userData.lastname,
+          email: userData.email,
+          phoneNumber: userData.phoneNumber,
+          street: userData.street,
+          city: userData.city,
+          state: userData.state,
+          postalCode: userData.postalCode,
+          country: userData.country,
+          languages: userData.languages
+        },
+        languages: userData.languages,
+        languagesType: typeof userData.languages,
+        languagesLength: userData.languages?.length,
+        dataType: typeof userData,
+        isArray: Array.isArray(userData)
+      });
+      
       const response = await api.put(`/users/${userSub}`, userData);
-      console.log('✅ Réponse mise à jour:', response.data);
+      
+      console.log('✅ [userService] Réponse mise à jour reçue:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers
+      });
+      
       return response.data;
     } catch (error: any) {
-      console.error('❌ Erreur mise à jour utilisateur:', error);
-      console.error('❌ Détails erreur:', error.response?.data);
+      console.error('❌ [userService] Erreur mise à jour utilisateur:', {
+        error: error,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers
+      });
+      
       const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }

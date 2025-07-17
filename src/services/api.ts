@@ -21,6 +21,29 @@ api.interceptors.request.use(async (config) => {
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        
+        // Log des requêtes PUT (mise à jour utilisateur)
+        if (config.method === 'put' && config.url?.includes('/users/')) {
+            console.log('🌐 [API] Requête PUT envoyée:', {
+                url: config.url,
+                method: config.method,
+                headers: config.headers,
+                data: config.data,
+                baseURL: config.baseURL,
+                dataFields: {
+                    firstname: config.data?.firstname,
+                    lastname: config.data?.lastname,
+                    email: config.data?.email,
+                    phoneNumber: config.data?.phoneNumber,
+                    street: config.data?.street,
+                    city: config.data?.city,
+                    state: config.data?.state,
+                    postalCode: config.data?.postalCode,
+                    country: config.data?.country,
+                    languages: config.data?.languages
+                }
+            });
+        }
     } catch (error) {
         console.error('Erreur lors de la vérification du token:', error);
         // Continue sans token si erreur

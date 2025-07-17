@@ -51,11 +51,13 @@ export const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = (
         if (selectedValues.length === 0) {
             return '';
         } else if (selectedValues.length === options.length) {
-            return 'Tous les items';
+            return options.map(opt => opt.label).join(', ');
         } else if (selectedValues.length === 1) {
             return options.find(opt => opt.value === selectedValues[0])?.label;
         } else {
-            return `${selectedValues.length} items sélectionnés`;
+            return selectedValues.map(value => 
+                options.find(opt => opt.value === value)?.label
+            ).filter(Boolean).join(', ');
         }
     }, [selectedValues, options]);
 

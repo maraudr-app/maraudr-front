@@ -5,7 +5,7 @@ import { StockChart } from '../../components/stock/StockChart';
 import { EditItemModal } from '../../components/stock/EditItemModal';
 import { stockService } from '../../services/stockService';
 import { useAssoStore } from '../../store/assoStore';
-import { StockItem, Category, getAllCategories, getCategoryName } from '../../types/stock/StockItem';
+import { StockItem, Category, getAllCategories, getCategoryName, getTranslatedCategories, getTranslatedCategoryName } from '../../types/stock/StockItem';
 import { toast } from 'react-hot-toast';
 import { FaTrash, FaPencilAlt } from 'react-icons/fa';
 import { Button } from '../../components/common/button/button';
@@ -292,7 +292,7 @@ export const Stock = () => {
                                                                 </span>
                                                             </div>
                                                             <p className="text-sm text-red-600 dark:text-red-300 mb-2">
-                                                                {t_stock('category')}: {getCategoryName(item.category)}
+                                                                {t_stock('category')}: {getTranslatedCategoryName(item.category, t)}
                                                             </p>
                                                             <div className="flex items-center justify-between">
                                                                 <span className="text-xs text-red-500 dark:text-red-400">
@@ -332,7 +332,7 @@ export const Stock = () => {
                                                                 </span>
                                                             </div>
                                                             <p className="text-sm text-orange-600 dark:text-orange-300 mb-2">
-                                                                {t_stock('category')}: {getCategoryName(item.category)}
+                                                                {t_stock('category')}: {getTranslatedCategoryName(item.category, t)}
                                                             </p>
                                                             <div className="flex items-center justify-between">
                                                                 <span className="text-xs text-orange-500 dark:text-orange-400">
@@ -430,7 +430,7 @@ export const Stock = () => {
                                         className="w-full"
                                     >
                                         <option value="">{t_stock('all_categories')}</option>
-                                        {getAllCategories().map(category => (
+                                        {getTranslatedCategories(t).map(category => (
                                             <option key={category.value} value={category.value}>
                                                 {category.label}
                                             </option>
@@ -531,10 +531,10 @@ export const Stock = () => {
                                                         {item.description || '-'}
       </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                                                <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {getCategoryName(item.category)}
-              </div>
+                                                        {getTranslatedCategoryName(item.category, t)}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -634,7 +634,7 @@ export const Stock = () => {
                                                         disabled={currentPage === 1}
                                                         className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        <span className="sr-only">Précédent</span>
+                                                        <span className="sr-only">{t_stock('previous')}</span>
                                                         &laquo;
                                                     </Button>
                                                     {[...Array(totalPages)].map((_, index) => {
@@ -670,7 +670,7 @@ export const Stock = () => {
                                                         disabled={currentPage === totalPages}
                                                         className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        <span className="sr-only">Suivant</span>
+                                                        <span className="sr-only">{t_stock('next')}</span>
                                                         &raquo;
                                                     </Button>
                                                 </nav>

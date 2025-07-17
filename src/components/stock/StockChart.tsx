@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { StockItem, Category, getAllCategories, getCategoryName } from '../../types/stock/StockItem';
+import { StockItem, Category, getAllCategories, getCategoryName, getTranslatedCategories } from '../../types/stock/StockItem';
 import { useState, useEffect, useMemo } from 'react';
 import { Select } from '../common/select/select';
 import { RecentStockHistory } from './RecentStockHistory';
@@ -35,11 +35,6 @@ interface StockChartProps {
 
 type ChartType = 'bar' | 'line';
 type ViewMode = 'byCategory' | 'byItem';
-
-const chartTypes = [
-    { value: 'line', label: 'Line' },
-    { value: 'bar', label: 'Bar' }
-] as const;
 
 // Couleurs Maraudr
 const maraudrColors = {
@@ -69,8 +64,8 @@ export const StockChart = ({ items }: StockChartProps) => {
 
     const categories = useMemo(() => [
         { value: 'all', label: t_stock('allCategories') },
-        ...getAllCategories().map(cat => ({ value: cat.value.toString(), label: cat.label }))
-    ], [t_stock]);
+        ...getTranslatedCategories(t).map(cat => ({ value: cat.value.toString(), label: cat.label }))
+    ], [t_stock, t]);
 
     // Initialiser les items sélectionnés en fonction du mode de vue et de la catégorie
     useEffect(() => {
@@ -97,7 +92,7 @@ export const StockChart = ({ items }: StockChartProps) => {
                 labels,
                 datasets: [
                     {
-                        label: 'Quantité totale par catégorie',
+                        label: t_stock('totalQuantityByCategory'),
                         data,
                         backgroundColor: maraudrColors.orangeTransparent,
                         borderColor: maraudrColors.orange,
@@ -122,7 +117,7 @@ export const StockChart = ({ items }: StockChartProps) => {
                 labels: filteredItems.map(item => item.name),
                 datasets: [
                     {
-                        label: 'Quantité en stock',
+                        label: t_stock('stockQuantity'),
                         data: filteredItems.map(item => item.quantity),
                         backgroundColor: maraudrColors.orangeTransparent,
                         borderColor: maraudrColors.orange,
@@ -170,7 +165,7 @@ export const StockChart = ({ items }: StockChartProps) => {
                 beginAtZero: true,
                 title: {
                     display: true,
-                    text: 'Quantité',
+                    text: t_stock('quantity'),
                     color: 'rgb(17, 24, 39)', // text-gray-900
                     font: {
                         size: 14,
@@ -187,7 +182,7 @@ export const StockChart = ({ items }: StockChartProps) => {
             x: {
                 title: {
                     display: true,
-                    text: viewMode === 'byCategory' ? 'Catégories' : 'Items',
+                    text: viewMode === 'byCategory' ? t_stock('categories') : t_stock('items'),
                     color: 'rgb(17, 24, 39)', // text-gray-900
                     font: {
                         size: 14,

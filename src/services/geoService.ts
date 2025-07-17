@@ -435,5 +435,28 @@ export const geoService = {
             console.error('Erreur lors du basculement du statut de l\'itinéraire:', error);
             throw error;
         }
+    },
+
+    // Activer/désactiver un point individuel
+    togglePointStatus: async (pointId: string, isActive: boolean): Promise<void> => {
+        try {
+            await geoApi.patch(`/geo/${pointId}/status`, { isActive });
+        } catch (error: any) {
+            console.error('Erreur lors du basculement du statut du point:', error);
+            throw error;
+        }
+    },
+
+    // Activer/désactiver tous les points d'un cluster
+    toggleClusterStatus: async (pointIds: string[], isActive: boolean): Promise<void> => {
+        try {
+            await geoApi.patch('/geo/cluster/status', { 
+                pointIds, 
+                isActive 
+            });
+        } catch (error: any) {
+            console.error('Erreur lors du basculement du statut du cluster:', error);
+            throw error;
+        }
     }
 }; 

@@ -152,7 +152,7 @@ export const stockService = {
             // D'abord, récupérer le stockId de l'association
             const stockId = await stockService.getStockId(associationId);
             if (!stockId) {
-                throw new Error('Stock non trouvé pour cette association');
+                throw new Error('Stock not found for this association');
             }
 
             const requestData = { 
@@ -225,7 +225,7 @@ export const stockService = {
                 withCredentials: true
             });
         } catch (error) {
-            console.error('Erreur lors de la mise à jour de l\'item:', error);
+            console.error('Error updating item:', error);
             throw error;
         }
     },

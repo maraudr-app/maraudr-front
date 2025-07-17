@@ -195,6 +195,10 @@ const Plan: React.FC = () => {
     // État pour gérer le popup ouvert d'un point
     const [openPopupPoint, setOpenPopupPoint] = useState<GeoPoint | null>(null);
     
+    // États pour l'activation/désactivation des points
+    const [togglingPoints, setTogglingPoints] = useState<Set<string>>(new Set());
+    const [togglingClusters, setTogglingClusters] = useState<Set<number>>(new Set());
+    
     // États pour l'autocomplétion d'adresse
     const [addressQuery, setAddressQuery] = useState('');
     const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
@@ -634,6 +638,65 @@ const Plan: React.FC = () => {
         return '#6B7280'; // Gris - ancien
     };
 
+    // Fonction pour activer/désactiver un point individuel
+    const handleTogglePointStatus = async (point: GeoPoint) => {
+        if (!point.id) return;
+        
+        try {
+            setTogglingPoints(prev => new Set(prev).add(point.id!));
+            const newStatus = !point.isActive;
+            
+            await geoService.togglePointStatus(point.id, newStatus);
+            
+            // Mettre à jour le point dans la liste
+            setGeoPoints(prev => prev.map(p => 
+                p.id === point.id ? { ...p, isActive: newStatus } : p
+            ));
+            
+            toast.success(newStatus ? t_plan('point_activated') : t_plan('point_deactivated'));
+        } catch (error) {
+            console.error('Erreur lors du basculement du statut:', error);
+            toast.error(t_plan('toggle_status_error'));
+        } finally {
+            setTogglingPoints(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(point.id!);
+                return newSet;
+            });
+        }
+    };
+
+    // Fonction pour activer/désactiver tous les points d'un cluster
+    const handleToggleClusterStatus = async (cluster: { center: GeoPoint; points: GeoPoint[] }, clusterIndex: number) => {
+        const pointIds = cluster.points.map(p => p.id).filter(Boolean) as string[];
+        if (pointIds.length === 0) return;
+        
+        // Déterminer le nouveau statut basé sur le point principal
+        const newStatus = !cluster.center.isActive;
+        
+        try {
+            setTogglingClusters(prev => new Set(prev).add(clusterIndex));
+            
+            await geoService.toggleClusterStatus(pointIds, newStatus);
+            
+            // Mettre à jour tous les points du cluster
+            setGeoPoints(prev => prev.map(p => 
+                pointIds.includes(p.id!) ? { ...p, isActive: newStatus } : p
+            ));
+            
+            toast.success(newStatus ? t_plan('all_points_activated') : t_plan('all_points_deactivated'));
+        } catch (error) {
+            console.error('Erreur lors du basculement du statut du cluster:', error);
+            toast.error(t_plan('toggle_status_error'));
+        } finally {
+            setTogglingClusters(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(clusterIndex);
+                return newSet;
+            });
+        }
+    };
+
     // Fonction pour calculer la distance entre deux points en mètres
     const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
         const R = 6371e3; // Rayon de la Terre en mètres
@@ -709,7 +772,8 @@ const Plan: React.FC = () => {
     });
 
     // Obtenir les clusters de points
-    const pointClusters = clusterPoints(geoPoints);
+    const activePoints = geoPoints.filter(point => point.isActive !== false); // Afficher les points actifs ou sans statut défini
+    const pointClusters = clusterPoints(geoPoints); // Utiliser tous les points pour les clusters
 
     // Formater la date
     const formatDate = (timestamp?: string, observedAt?: string) => {
@@ -1073,9 +1137,9 @@ const Plan: React.FC = () => {
                             <MapClickHandler onMapClick={handleMapClick} isAddingPoint={isAddingPoint} onMapClickForRoute={handleMapClickForRoute} isCreatingRoute={isCreatingRoute} />
                             
                             {/* Affichage de la heatmap */}
-                            {showHeatmap && geoPoints.length > 0 && (
+                            {showHeatmap && activePoints.length > 0 && (
                                 <HeatmapLayer 
-                                    points={geoPoints}
+                                    points={activePoints}
                                     options={{
                                         radius: 30,
                                         blur: 20,
@@ -1091,12 +1155,18 @@ const Plan: React.FC = () => {
                                 const isCluster = cluster.points.length > 1;
                                 const mainPoint = cluster.center;
                                 
+                                // Filtrer les points actifs pour l'affichage sur la carte
+                                const activeClusterPoints = cluster.points.filter(point => point.isActive !== false);
+                                
+                                // Ne pas afficher le cluster s'il n'y a pas de points actifs
+                                if (activeClusterPoints.length === 0) return null;
+                                
                                 // Déterminer la couleur du cluster basée sur le point le plus récent
-                                const mostRecentColor = cluster.points.reduce((latest, point) => {
+                                const mostRecentColor = activeClusterPoints.reduce((latest, point) => {
                                     const pointTime = new Date(point.observedAt || point.timestamp || 0);
                                     const latestTime = new Date(latest.observedAt || latest.timestamp || 0);
                                     return pointTime > latestTime ? point : latest;
-                                }, cluster.points[0]);
+                                }, activeClusterPoints[0]);
                                 
                                 const clusterColor = getPointColor(mostRecentColor.observedAt || mostRecentColor.timestamp);
                                 
@@ -1105,7 +1175,7 @@ const Plan: React.FC = () => {
                                         key={`cluster-${clusterIndex}`}
                                         position={[mainPoint.latitude, mainPoint.longitude]}
                                         icon={isCluster 
-                                            ? createClusterIcon(cluster.points.length, clusterColor)
+                                            ? createClusterIcon(activeClusterPoints.length, clusterColor)
                                             : createCustomIcon(clusterColor)
                                         }
                                         ref={(ref) => {
@@ -1124,10 +1194,30 @@ const Plan: React.FC = () => {
                                                     // Affichage pour un cluster de plusieurs points
                                                     <div>
                                                         <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                                                            📍 {cluster.points.length} {t_plan('pointsNearby')}
+                                                            📍 {activeClusterPoints.length} {t_plan('pointsNearby')}
                                                         </h3>
+                                                        <div className="mb-3">
+                                                            <button
+                                                                onClick={() => handleToggleClusterStatus(cluster, clusterIndex)}
+                                                                disabled={togglingClusters.has(clusterIndex)}
+                                                                className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                                    cluster.center.isActive
+                                                                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                                                                        : 'bg-green-500 hover:bg-green-600 text-white'
+                                                                } disabled:opacity-50`}
+                                                            >
+                                                                {togglingClusters.has(clusterIndex) ? (
+                                                                    <div className="flex items-center justify-center">
+                                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                                        Traitement...
+                                                                    </div>
+                                                                ) : (
+                                                                    cluster.center.isActive ? t_plan('deactivate_all') : t_plan('activate_all')
+                                                                )}
+                                                            </button>
+                                                        </div>
                                                         <div className="max-h-48 overflow-y-auto space-y-3">
-                                                            {cluster.points.map((point, pointIndex) => (
+                                                            {activeClusterPoints.map((point, pointIndex) => (
                                                                 <div key={`cluster-point-${pointIndex}`} className="border-l-4 pl-3 py-2" style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}>
                                                                     <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-1">
                                                                         {point.name || `${t_plan('pointNumber')}${pointIndex + 1}`}
@@ -1148,13 +1238,36 @@ const Plan: React.FC = () => {
                                                                             {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
                                                                         </div>
                                                                     </div>
-                                                                    <button
-                                                                        onClick={() => handleShowRoute(point)}
-                                                                        className="w-full flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                                    >
-                                                                        <MapIcon className="w-3 h-3" />
-                                                                        <span>{t_plan('itinerary')}</span>
-                                                                    </button>
+                                                                    <div className="flex space-x-2 mb-2">
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleTogglePointStatus(point);
+                                                                            }}
+                                                                            disabled={togglingPoints.has(point.id!)}
+                                                                            className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                                                                point.isActive
+                                                                                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                                                                                    : 'bg-green-500 hover:bg-green-600 text-white'
+                                                                            } disabled:opacity-50`}
+                                                                        >
+                                                                            {togglingPoints.has(point.id!) ? (
+                                                                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mx-auto"></div>
+                                                                            ) : (
+                                                                                point.isActive ? t_plan('deactivate') : t_plan('activate')
+                                                                            )}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleShowRoute(point);
+                                                                            }}
+                                                                            className="flex-1 flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                                        >
+                                                                            <MapIcon className="w-2 h-2" />
+                                                                            <span>{t_plan('itinerary')}</span>
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -1179,13 +1292,36 @@ const Plan: React.FC = () => {
                                                                 {mainPoint.latitude.toFixed(4)}, {mainPoint.longitude.toFixed(4)}
                                                             </div>
                                                         </div>
-                                                        <button
-                                                            onClick={() => handleShowRoute(mainPoint)}
-                                                            className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                        >
-                                                            <MapIcon className="w-3 h-3" />
-                                                            <span>{t_plan('itinerary')}</span>
-                                                        </button>
+                                                        <div className="flex space-x-2">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleTogglePointStatus(mainPoint);
+                                                                }}
+                                                                disabled={togglingPoints.has(mainPoint.id!)}
+                                                                className={`flex-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                                                    mainPoint.isActive
+                                                                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                                                                        : 'bg-green-500 hover:bg-green-600 text-white'
+                                                                } disabled:opacity-50`}
+                                                            >
+                                                                {togglingPoints.has(mainPoint.id!) ? (
+                                                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mx-auto"></div>
+                                                                ) : (
+                                                                    mainPoint.isActive ? t_plan('deactivate') : t_plan('activate')
+                                                                )}
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleShowRoute(mainPoint);
+                                                                }}
+                                                                className="flex-1 flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
+                                                            >
+                                                                <MapIcon className="w-2 h-2" />
+                                                                <span>{t_plan('itinerary')}</span>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -1475,119 +1611,106 @@ const Plan: React.FC = () => {
 
                     {/* Liste des points */}
                     <div className="flex-1 overflow-y-auto max-h-80">
-                        {pointClusters.length === 0 ? (
+                        {geoPoints.length === 0 ? (
                             <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                                 <MapPinIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
                                 <p>{t_plan('noGeoLocationPoints')}</p>
                                 <p className="text-xs mt-1">{t_plan('addPointClickMap')}</p>
                             </div>
                         ) : (
-                            <div className="p-4 space-y-3">
+                            <div className="space-y-2 p-2">
                                 {pointClusters.map((cluster, clusterIndex) => {
-                                    const isCluster = cluster.points.length > 1;
-                                    const mainPoint = cluster.center;
-                                    
                                     return (
-                                        <div key={`sidebar-cluster-${clusterIndex}`}>
-                                            {isCluster ? (
-                                                // Affichage cluster dans la sidebar
-                                                <div className="p-3 border-2 border-orange-200 dark:border-orange-700 rounded-lg bg-orange-50 dark:bg-orange-900/20">
-                                                    <div className="flex items-center mb-2">
-                                                        <div className="w-6 h-6 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center mr-2 font-bold">
-                                                            {cluster.points.length}
-                                                        </div>
-                                                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {t_plan('clusterOf')} {cluster.points.length} {t_plan('points')}
-                                                        </h4>
-                                                    </div>
-                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                                                        {t_plan('groupedWithinRadius')}
-                                                    </p>
-                                                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                                                        {cluster.points.map((point, pointIndex) => (
-                                                            <div 
-                                                                key={`sidebar-point-${pointIndex}`} 
-                                                                className="p-2 bg-white dark:bg-gray-800 rounded border-l-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" 
-                                                                style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}
-                                                                onClick={() => handleOpenPointPopup(point)}
-                                                            >
-                                                                <div className="flex items-center mb-1">
-                                                                    <div 
-                                                                        className="w-2 h-2 rounded-full mr-2"
-                                                                        style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }}
-                                                                    ></div>
-                                                                    <h5 className="text-xs font-medium text-gray-800 dark:text-white">
-                                                                        {point.name || `${t_plan('pointNumber')}${pointIndex + 1}`}
-                                                                    </h5>
-                                                                </div>
-                                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                                                    {point.notes || 'Aucune description'}
-                                                                </p>
-                                                                <div className="text-xs text-gray-500 mb-2">
-                                                                    {formatDate(point.timestamp, point.observedAt)}
-                                                                </div>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleShowRoute(point);
-                                                                    }}
-                                                                    className="w-full flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                                >
-                                                                    <MapIcon className="w-2 h-2" />
-                                                                    <span>{t_plan('itinerary')}</span>
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                    <div key={`cluster-${clusterIndex}`} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                        {/* En-tête du cluster */}
+                                        <div className="p-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    <MapPinIcon className="w-4 h-4 text-gray-500" />
+                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {t_plan('clusterOf')} {cluster.points.length} {t_plan('points')}
+                                                    </span>
                                                 </div>
-                                            ) : (
-                                                // Affichage point isolé dans la sidebar (comportement normal)
-                                                <div 
-                                                    className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-                                                    onClick={() => handleOpenPointPopup(mainPoint)}
+                                                <button
+                                                    onClick={() => handleToggleClusterStatus(cluster, clusterIndex)}
+                                                    disabled={togglingClusters.has(clusterIndex)}
+                                                    className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                                        cluster.center.isActive 
+                                                            ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'
+                                                            : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30'
+                                                    } disabled:opacity-50`}
                                                 >
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center mb-2">
-                                                                <div 
-                                                                    className="w-3 h-3 rounded-full mr-2"
-                                                                    style={{ backgroundColor: getPointColor(mainPoint.observedAt || mainPoint.timestamp) }}
-                                                                ></div>
-                                                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                                    {mainPoint.name || t_plan('geoLocationPoint')}
-                                                                </h4>
-                                                            </div>
-                                                            {mainPoint.address && (
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                                                    📍 {mainPoint.address}
-                                                                </p>
+                                                    {togglingClusters.has(clusterIndex) ? (
+                                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mx-auto"></div>
+                                                    ) : (
+                                                        cluster.center.isActive ? t_plan('deactivate_all') : t_plan('activate_all')
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                {t_plan('groupedWithinRadius')}
+                                            </p>
+                                        </div>
+                                        
+                                        {/* Points du cluster */}
+                                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                            {cluster.points.map((point, pointIndex) => (
+                                                <div 
+                                                    key={`sidebar-point-${pointIndex}`} 
+                                                    className={`p-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors relative ${
+                                                        point.isActive === false 
+                                                            ? 'bg-gray-100 dark:bg-gray-800/50 opacity-60' 
+                                                            : 'bg-white dark:bg-gray-800'
+                                                    }`}
+                                                    style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}
+                                                    onClick={() => handleOpenPointPopup(point)}
+                                                >
+                                                    {/* Tag d'activation/désactivation en haut à droite */}
+                                                    <div className="absolute top-1 right-1">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleTogglePointStatus(point);
+                                                            }}
+                                                            disabled={togglingPoints.has(point.id!)}
+                                                            className={`px-2 py-1 text-xs font-medium rounded-full transition-colors ${
+                                                                point.isActive 
+                                                                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'
+                                                                    : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30'
+                                                            } disabled:opacity-50`}
+                                                        >
+                                                            {togglingPoints.has(point.id!) ? (
+                                                                <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-current mx-auto"></div>
+                                                            ) : (
+                                                                point.isActive ? t_plan('deactivate') : t_plan('activate')
                                                             )}
-                                                            {mainPoint.notes && mainPoint.notes !== 'description' && (
-                                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                                    {mainPoint.notes}
-                                                                </p>
-                                                            )}
-                                                            <div className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                                <div>{formatDate(mainPoint.timestamp, mainPoint.observedAt)}</div>
-                                                                <div className="mt-1">
-                                                                    {mainPoint.latitude.toFixed(4)}, {mainPoint.longitude.toFixed(4)}
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleShowRoute(mainPoint);
-                                                                }}
-                                                                className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                            >
-                                                                <MapIcon className="w-3 h-3" />
-                                                                <span>{t_plan('itinerary')}</span>
-                                                            </button>
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-start space-x-3 pr-16">
+                                                        <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2" 
+                                                             style={{ backgroundColor: getPointColor(point.observedAt || point.timestamp) }} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                                {t_plan('pointNumber')}{pointIndex + 1}
+                                                                {point.isActive === false && (
+                                                                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                                                        ({t_plan('deactivate')})
+                                                                    </span>
+                                                                )}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                {point.notes || t_plan('noDescription')}
+                                                            </p>
+                                                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                                {new Date(point.observedAt || point.timestamp || Date.now()).toLocaleDateString()}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            )}
+                                            ))}
                                         </div>
+                                    </div>
                                     );
                                 })}
                             </div>
@@ -1769,7 +1892,7 @@ const Plan: React.FC = () => {
                                                                 rel="noopener noreferrer"
                                                                 className="w-full flex items-center justify-center space-x-2 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded transition-all"
                                                             >
-                                                                <MapIcon className="w-3 h-3" />
+                                                                <MapIcon className="w-4 h-4" />
                                                                 <span>{t_plan('googleMaps')}</span>
                                                             </a>
                                                         )}

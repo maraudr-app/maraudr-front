@@ -5,7 +5,7 @@ import { Input } from '../common/input/input';
 import { Button } from '../common/button/button';
 import { Select } from '../common/select/select';
 import { QRScanner } from '../common/qr/QRScanner';
-import { Category, getAllCategories } from '../../types/stock/StockItem';
+import { Category, getAllCategories, getTranslatedCategories } from '../../types/stock/StockItem';
 import { stockService } from '../../services/stockService';
 import { useAssoStore } from '../../store/assoStore';
 import { useTranslation } from 'react-i18next';
@@ -331,11 +331,11 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
                                         onChange={handleChange}
                                         required
                                     >
-                                        {getAllCategories().map(category => (
-                                            <option key={category.value} value={category.value}>
-                                                {category.label}
-                                            </option>
-                                        ))}
+                                                                    {getTranslatedCategories(t).map(category => (
+                                <option key={category.value} value={category.value}>
+                                    {category.label}
+                                </option>
+                            ))}
                                     </Select>
                                 </div>
 

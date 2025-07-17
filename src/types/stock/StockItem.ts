@@ -26,6 +26,30 @@ export const getCategoryName = (categoryValue: Category | string | number): stri
     return categoryName || 'Inconnue';
 };
 
+// Fonction pour obtenir les catégories traduites
+export const getTranslatedCategories = (t: any) => {
+    return Object.values(Category)
+        .filter(value => typeof value === 'number')
+        .map(value => ({
+            value: value as Category,
+            label: t(`stock.category_${Object.keys(Category)[Object.values(Category).indexOf(value)].toLowerCase()}`)
+        }));
+};
+
+// Fonction pour obtenir le nom traduit d'une catégorie
+export const getTranslatedCategoryName = (categoryValue: Category | string | number, t: any): string => {
+    const numericValue = typeof categoryValue === 'string' ? parseInt(categoryValue) : Number(categoryValue);
+    
+    const categoryNames = Object.keys(Category) as (keyof typeof Category)[];
+    const categoryName = categoryNames.find(key => Category[key] === numericValue);
+    
+    if (categoryName) {
+        return t(`stock.category_${categoryName.toLowerCase()}`);
+    }
+    
+    return t('stock.category_unknown');
+};
+
 export interface StockItem {
     id: string;
     stockId: string;

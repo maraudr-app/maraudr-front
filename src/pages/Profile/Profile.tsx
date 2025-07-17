@@ -183,6 +183,12 @@ const Profile: React.FC = () => {
         return lang ? lang.apiName : 'French'; // Fallback vers French
       });
 
+      console.log('🔍 Debug langues:', {
+        formLanguages: form.languages,
+        languageNames: languageNames,
+        languageEnum: getLanguageEnum()
+      });
+
       // Format des données selon l'API spécifiée - seulement les champs nécessaires
       const updateData: any = {
         firstname: form.firstname.trim(),
@@ -195,16 +201,34 @@ const Profile: React.FC = () => {
         postalCode: form.postalCode.trim() || '',
         country: form.country.trim() || '',
         languages: languageNames, // Utiliser les noms de langues
+        biography: form.biography.trim() || '', // Ajouter la biographie
       };
-
-
 
       // Utiliser le sub de l'utilisateur pour la mise à jour
       if (!user?.sub) {
         throw new Error(t_profile('missingUserId'));
       }
 
-      console.log('📡 Envoi des données de mise à jour:', updateData);
+      console.log('📡 [PROFILE] Données complètes envoyées au serveur:', {
+        userId: user.sub,
+        updateData: updateData,
+        formData: {
+          firstname: form.firstname,
+          lastname: form.lastname,
+          email: form.email,
+          phoneNumber: form.phoneNumber,
+          street: form.street,
+          city: form.city,
+          state: form.state,
+          postalCode: form.postalCode,
+          country: form.country,
+          languages: form.languages,
+          biography: form.biography
+        },
+        languagesCount: languageNames.length,
+        selectedLanguages: form.languages,
+        convertedLanguages: languageNames
+      });
 
       await userService.updateUser(user.sub, updateData);
       setSuccess(t_profile('profileUpdated'));

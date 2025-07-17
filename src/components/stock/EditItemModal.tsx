@@ -5,7 +5,7 @@ import { Input } from '../common/input/input';
 import { Button } from '../common/button/button';
 import { Select } from '../common/select/select';
 import { QRScanner } from '../common/qr/QRScanner';
-import { Category, getAllCategories, StockItem } from '../../types/stock/StockItem';
+import { Category, getAllCategories, getTranslatedCategories, StockItem } from '../../types/stock/StockItem';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -147,7 +147,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
                                         onChange={handleChange}
                                         required
                                     >
-                                        {getAllCategories().map(category => (
+                                        {getTranslatedCategories(t).map(category => (
                                             <option key={category.value} value={category.value}>
                                                 {category.label}
                                             </option>

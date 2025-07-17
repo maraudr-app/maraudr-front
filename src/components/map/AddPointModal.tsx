@@ -41,7 +41,6 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
   // États du formulaire
   const [latitude, setLatitude] = useState<number | ''>('');
   const [longitude, setLongitude] = useState<number | ''>('');
-  const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
   const [addressQuery, setAddressQuery] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
@@ -52,7 +51,7 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
   const [success, setSuccess] = useState<string | null>(null);
 
   // Mode de saisie (coordonnées directes ou adresse)
-  const [inputMode, setInputMode] = useState<'coordinates' | 'address'>('coordinates');
+  const [inputMode, setInputMode] = useState<'coordinates' | 'address'>('address');
 
   // Initialiser les coordonnées si fournies
   useEffect(() => {
@@ -68,14 +67,13 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
     if (!isOpen) {
       setLatitude('');
       setLongitude('');
-      setName('');
       setNotes('');
       setAddressQuery('');
       setAddressSuggestions([]);
       setShowAddressSuggestions(false);
       setError(null);
       setSuccess(null);
-      setInputMode('coordinates');
+      setInputMode('address');
     }
   }, [isOpen]);
 
@@ -185,11 +183,6 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
       return;
     }
 
-    if (!name.trim()) {
-      setError('Le nom du point est requis');
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       setError(null);
@@ -198,7 +191,6 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
         associationId: selectedAssociation.id,
         latitude: latitude as number,
         longitude: longitude as number,
-        name: name.trim(),
         notes: notes.trim()
       };
 
@@ -378,17 +370,6 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
                   </div>
                 </div>
               )}
-
-              {/* Nom du point */}
-              <div>
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t_map('name_placeholder')}
-                  className="w-full"
-                />
-              </div>
 
               {/* Description */}
               <div>
