@@ -82,7 +82,7 @@
     "title": "Gestion des stocks",
     "stockManagement": "Gestion du Stock",
     "history": "Historique",
-    "addItem": "Ajouter un item",
+    "addItem": "Ajouter un item avec du code ",
     "recentHistory": "Historique récent",
     "units": "unités",
     "noHistoryAvailable": "Aucun historique disponible",
@@ -128,7 +128,14 @@
     "bar": "Barres",
     "quantityByCategory": "Quantité des items par catégorie",
     "stockQuantity": "Quantité en stock",
-    "selectItems": "Sélectionner des items"
+    "selectItems": "Sélectionner des items",
+    "update_stock": "Modifier la quantité",
+    "update_quantity": "Modifier la quantité",
+    "quantity_hint": "Entrez un nombre positif pour augmenter ou négatif pour diminuer",
+    "toast_stock_increased": "Stock augmenté avec succès",
+    "error_update_stock": "Erreur lors de la modification du stock",
+    "navbar_title": "Gestion du Stock",
+    "modal_history_title": "Historique du Stock"
   },
   "map": {
     "name_placeholder": "Nom du point de signalement...",

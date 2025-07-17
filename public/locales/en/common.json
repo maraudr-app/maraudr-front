@@ -181,7 +181,14 @@
     "bar": "Bar",
     "quantityByCategory": "Item quantity by category",
     "stockQuantity": "Stock quantity",
-    "selectItems": "Select items"
+    "selectItems": "Select items",
+    "update_stock": "Update quantity",
+    "update_quantity": "Update quantity",
+    "quantity_hint": "Enter a positive number to increase or negative to decrease",
+    "toast_stock_increased": "Stock increased successfully",
+    "error_update_stock": "Error updating stock",
+    "navbar_title": "Stock Management",
+    "modal_history_title": "Stock History"
   },
   "map": {
     "name_placeholder": "Point name...",

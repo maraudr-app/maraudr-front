@@ -1332,7 +1332,8 @@
   "title": "Title:",
   "date": "Date:",
   "time": "Time:",
-  "location": "Location:"
+  "location": "Location:",
+  "noPointsInRadius": "No points of interest found within a {radius} km radius around this position. Try increasing the radius or choosing another location."
 },
 "mcp": {
   "title": "AI Assistant",

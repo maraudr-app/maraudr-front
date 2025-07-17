@@ -61,7 +61,7 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
                     {/* En-tête */}
                     <div className="flex justify-between items-center mb-4">
                         <Dialog.Title className="text-lg font-semibold text-maraudr-darkText dark:text-maraudr-lightText">
-                            {t_stock('historyTitle')}
+                                                            {t_stock('modal_history_title')}
                         </Dialog.Title>
                         <button
                             onClick={onClose}

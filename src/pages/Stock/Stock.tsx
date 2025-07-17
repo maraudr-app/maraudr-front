@@ -572,9 +572,11 @@ export const Stock = () => {
                                                                         setShowReduceModal(true);
                                                                         setReduceQuantity('');
                                                                     }}
-                                                                    className="text-orange-500 hover:text-orange-600 p-2"
+                                                                    className="text-blue-500 hover:text-blue-600 p-2"
                                                                 >
-                                                                    <MinusCircleIcon className="h-5 w-5" />
+                                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                                    </svg>
                                                                 </Button>
                                                                 <Button
                                                                     onClick={() => handleDeleteClick(item.id)}
@@ -752,7 +754,7 @@ export const Stock = () => {
             {showReduceModal && itemToReduce && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
-                        <h2 className="text-xl font-bold mb-4">{t_stock('reduce_stock')}</h2>
+                        <h2 className="text-xl font-bold mb-4">{t_stock('update_stock')}</h2>
                         <div className="mb-4">
                             <div className="mb-2 text-gray-700 dark:text-gray-200">
                                 <strong>{t_stock('item')}:</strong> {itemToReduce.name}
@@ -762,18 +764,14 @@ export const Stock = () => {
                             </div>
                             <Input
                                 type="number"
-                                min={1}
-                                max={itemToReduce.quantity}
                                 value={reduceQuantity}
                                 onChange={e => setReduceQuantity(e.target.value)}
-                                placeholder={t_stock('reduce_quantity')}
+                                placeholder={t_stock('update_quantity')}
                                 className="w-full"
                             />
-                            {reduceQuantity && Number(reduceQuantity) > itemToReduce.quantity && (
-                                <div className="text-red-500 text-sm mt-2">
-                                    {t_stock('reduce_quantity_error')}
-                                </div>
-                            )}
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                {t_stock('quantity_hint')}
+                            </div>
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button
@@ -790,23 +788,24 @@ export const Stock = () => {
                                 disabled={
                                     loadingReduce ||
                                     !reduceQuantity ||
-                                    Number(reduceQuantity) < 1 ||
-                                    Number(reduceQuantity) > itemToReduce.quantity
+                                    isNaN(Number(reduceQuantity)) ||
+                                    Number(reduceQuantity) === 0
                                 }
                                 onClick={async () => {
                                     setLoadingReduce(true);
                                     try {
-                                        await stockService.reduceItemStock(itemToReduce.barCode || '', {
+                                        await stockService.updateItemQuantityById(itemToReduce.id, {
                                             associationId: selectedAssociation.id,
                                             quantity: Number(reduceQuantity),
                                         });
-                                        toast.success(t_stock('toast_stock_reduced'));
+                                        const isNegative = Number(reduceQuantity) < 0;
+                                        toast.success(isNegative ? t_stock('toast_stock_reduced') : t_stock('toast_stock_increased'));
                                         setShowReduceModal(false);
                                         setReduceQuantity('');
                                         setItemToReduce(null);
                                         await fetchItems();
                                     } catch (err) {
-                                        toast.error(t_stock('error_reduce_stock'));
+                                        toast.error(t_stock('error_update_stock'));
                                     } finally {
                                         setLoadingReduce(false);
                                     }

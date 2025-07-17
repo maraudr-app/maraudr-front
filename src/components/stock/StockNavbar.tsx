@@ -22,15 +22,21 @@ export const StockNavbar = ({
     isAddButtonDisabled = false,
     onItemHighlight
 }: StockNavbarProps) => {
-    const { t } = useTranslation();
+  
     const [showAddModal, setShowAddModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const { sidebarCollapsed } = useAssoStore();
+    const { t } = useTranslation('common');
+    
+   
 
     // Fonction pour les traductions du stock
     const t_stock = (key: string): string => {
         return t(`stock.${key}` as any);
     };
+
+    
+    
 
     // Définir la largeur de la sidebar en pixels
     const sidebarWidth = sidebarCollapsed ? '56px' : '192px';
@@ -40,19 +46,12 @@ export const StockNavbar = ({
             <div className="flex items-center justify-between h-16">
                 <div className="flex items-center gap-3 pl-7">
                         <CubeIcon className="w-5 h-5" />
-                    <div className="text-gray-900  dark:text-white">
-                        {t_stock('stockManagement')}
+                                        <div className="text-gray-900  dark:text-white">
+                        {t_stock('navbar_title')}
                     </div>
                 </div>
                 <div className="flex items-center space-x-4 px-4">
-                    {showCreateStock && (
-                        <Button
-                            onClick={onCreateStock}
-                            className="text-xs text-black px-3 py-2 rounded-md transition-colors"
-                        >
-                            {t_stock('createStock')}
-                        </Button>
-                    )}
+                   
                     
                     <Button
                         onClick={() => setShowHistoryModal(true)}

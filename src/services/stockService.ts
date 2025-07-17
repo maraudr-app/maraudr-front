@@ -317,5 +317,31 @@ export const stockService = {
                 withCredentials: true
             }
         );
+    },
+
+    // Nouvelle fonction pour modifier la quantité d'un item avec la nouvelle route de Khalil
+    updateItemQuantityById: async (itemId: string, data: { associationId: string, quantity: number }) => {
+        const token = await tokenManager.ensureValidToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+        
+        // URL spéciale pour cette nouvelle route
+        const getUpdateQuantityUrl = (): string => {
+            const isProduction = !window.location.hostname.includes('localhost');
+            return isProduction ? `${API_URL}/stock/item/update-quantity` : `${API_URL}/item/update-quantity`;
+        };
+
+        await axios.put(
+            `${getUpdateQuantityUrl()}/${itemId}`,
+            data,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            }
+        );
     }
 }; 

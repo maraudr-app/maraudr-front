@@ -8,7 +8,7 @@
     "value": "Total Value"
   },
   "actions": {
-    "add": "Add Item",
+    "add": "Add Item@@@@@@",
     "import": "Import Inventory",
     "export": "Export Data",
     "scan": "Scan Barcode",

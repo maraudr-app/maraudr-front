@@ -946,7 +946,8 @@
   "title": "Titre:",
   "date": "Date:",
   "time": "Heure:",
-  "location": "Lieu:"
+  "location": "Lieu:",
+  "noPointsInRadius": "Aucun point d'intérêt trouvé dans un rayon de {radius} km autour de cette position. Essayez d'augmenter le rayon ou de choisir un autre emplacement."
 },
   "map": {
     "title": "Plan & Géolocalisation",

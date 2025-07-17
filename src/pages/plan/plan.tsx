@@ -20,6 +20,7 @@ import { useAssoStore } from '../../store/assoStore';
 import { useAuthStore } from '../../store/authStore';
 import { geoService, GeoPoint, TravelTimes, RouteResponse } from '../../services/geoService';
 import { Input } from '../../components/common/input/input';
+import { Select } from '../../components/common/select/select';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/common/toast/Toast';
 import RouteInfoModal from '../../components/common/modal/RouteInfoModal';
@@ -687,6 +688,9 @@ const Plan: React.FC = () => {
 
         try {
             console.log('✅ Données complètes, début de création');
+            
+            // Pas de validation de rayon - on permet la création d'itinéraire peu importe les points
+            
             setIsCreatingRoute(false);
             setShowRouteConfirmationModal(false);
             
@@ -1708,23 +1712,20 @@ const Plan: React.FC = () => {
             {/* Modal de création de route */}
             {showRouteCreationModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-md p-6 w-[520px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                             {t_plan('createEventRoute')}
                         </h3>
                         
                         <div className="space-y-4 mb-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {t_plan('selectAnEvent')}
-                                </label>
-                                <select
+                                <Select
                                     value={selectedEvent?.id || ''}
                                     onChange={(e) => {
                                         const event = events.find(ev => ev.id === e.target.value);
                                         setSelectedEvent(event || null);
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                                    placeholder={t_plan('selectAnEvent')}
                                 >
                                     <option value="">{t_plan('chooseAnEvent')}</option>
                                     {events
@@ -1741,11 +1742,11 @@ const Plan: React.FC = () => {
                                             {event.title} - {new Date(event.beginningDate).toLocaleDateString()}
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                             
                             {selectedEvent && (
-                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md">
                                     <h4 className="font-medium text-gray-900 dark:text-white mb-2">
                                         {t_plan('selectedEvent')}
                                     </h4>
@@ -1771,7 +1772,7 @@ const Plan: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setSelectionMode('address')}
-                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                                                className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors ${
                                                     selectionMode === 'address'
                                                         ? 'bg-blue-500 text-white'
                                                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -1782,7 +1783,7 @@ const Plan: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setSelectionMode('map')}
-                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                                                className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-colors ${
                                                     selectionMode === 'map'
                                                         ? 'bg-blue-500 text-white'
                                                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -1796,30 +1797,24 @@ const Plan: React.FC = () => {
                                     {/* Recherche par adresse */}
                                     {selectionMode === 'address' && (
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                {t_plan('searchByAddress')}
-                                            </label>
                                             <div className="relative">
-                                                <input
+                                                <Input
                                                     type="text"
                                                     value={addressQuery}
                                                     onChange={(e) => handleAddressInput(e.target.value)}
                                                     placeholder={t_plan('typeAddress')}
-                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm pr-10"
-                                                />
-                                                {isLoadingAddresses && (
-                                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                    rightIcon={isLoadingAddresses ? (
                                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                                                    </div>
-                                                )}
+                                                    ) : null}
+                                                />
                                                 {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                    <div className="absolute left-0 z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                    <div className="absolute left-0 z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
                                                         {addressSuggestions.map((suggestion, index) => (
                                                             <button
                                                                 key={index}
                                                                 type="button"
                                                                 onClick={() => handleAddressSelect(suggestion)}
-                                                                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                                                                className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
                                                             >
                                                                 {suggestion.properties.formatted || suggestion.properties.name}
                                                             </button>
@@ -1841,7 +1836,7 @@ const Plan: React.FC = () => {
                                             max="50"
                                             value={radiusKm}
                                             onChange={(e) => setRadiusKm(parseInt(e.target.value))}
-                                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-md appearance-none cursor-pointer"
                                         />
                                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                                             <span>1 km</span>
@@ -1850,7 +1845,7 @@ const Plan: React.FC = () => {
                                     </div>
 
                                     {/* Instructions selon le mode */}
-                                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+                                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-md">
                                         <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-400 mb-2">
                                             <MapPinIcon className="w-5 h-5" />
                                             <span className="font-medium">{t_plan('nextStep')}</span>
@@ -1883,7 +1878,7 @@ const Plan: React.FC = () => {
                                             }
                                         }}
                                         disabled={selectionMode === 'address' && !selectedRoutePoint}
-                                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-3 rounded-md font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {selectionMode === 'address' ? 
                                             (selectedRoutePoint ? t_plan('continue') : t_plan('selectAddress')) : 
@@ -1900,7 +1895,7 @@ const Plan: React.FC = () => {
                                             setShowAddressSuggestions(false);
                                             setAddressSuggestions([]);
                                         }}
-                                        className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                                        className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                                     >
                                         {t_plan('cancel')}
                                     </button>
@@ -1911,7 +1906,7 @@ const Plan: React.FC = () => {
                                         setShowRouteCreationModal(false);
                                         setSelectedEvent(null);
                                     }}
-                                    className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                                 >
                                     {t_plan('close')}
                                 </button>
