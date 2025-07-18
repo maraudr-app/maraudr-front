@@ -201,25 +201,19 @@ export const Stock = () => {
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        
+        // Empêcher les valeurs négatives pour les champs de quantité
+        if ((name === 'minQuantity' || name === 'maxQuantity') && parseInt(value) < 0) {
+            return;
+        }
+        
         setFilter(prev => ({
             ...prev,
             [name]: value
         }));
     };
 
-    const handleFilterSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setCurrentPage(1);
-    };
 
-    const handleResetFilters = () => {
-        setFilter({
-            category: '',
-            name: '',
-            minQuantity: '',
-            maxQuantity: ''
-        });
-    };
 
     // Appliquer les filtres aux items
     const filteredItems = items.filter(item => {
@@ -435,7 +429,7 @@ export const Stock = () => {
                 {!isLoading && filteredItems.length > 0 && (
                     <div className="bg-white dark:bg-gray-800 shadow">
                         {/* Filtres */}
-                        <form onSubmit={handleFilterSubmit} className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <Input
                                     type="text"
@@ -466,6 +460,7 @@ export const Stock = () => {
                                     value={filter.maxQuantity}
                                     onChange={handleFilterChange}
                                     placeholder={t_stock('max_quantity')}
+                                    min="0"
                                 />
                                 <Input
                                     type="number"
@@ -473,24 +468,10 @@ export const Stock = () => {
                                     value={filter.minQuantity}
                                     onChange={handleFilterChange}
                                     placeholder={t_stock('min_quantity')}
+                                    min="0"
                                 />
                             </div>
-                            <div className="mt-4 flex justify-end space-x-2">
-                                <Button
-                                    type="button"
-                                    onClick={handleResetFilters}
-                                    className="text-black bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                                >
-                                    {t_stock('reset')}
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    className="text-black bg-maraudr-blue hover:bg-maraudr-orange"
-                                >
-                                    {t_stock('filter')}
-                                </Button>
-                            </div>
-                        </form>
+                        </div>
 
                         {/* Tableau */}
                         <div className="overflow-x-auto">

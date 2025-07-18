@@ -143,9 +143,96 @@ export const geoService = {
         }
     },
 
-    // Créer une connexion temps réel (fallback polling car WebSocket nécessite auth backend)
+    // Créer une connexion WebSocket temps réel
     createLiveConnection: async (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): Promise<{ close: () => void }> => {
-        console.log('🔄 Démarrage de la surveillance temps réel par polling (WebSocket indisponible)');
+        console.log('🔄 Démarrage de la connexion WebSocket temps réel');
+        
+        try {
+            // Construire l'URL WebSocket avec associationId seulement
+            const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production' || window.location.hostname !== 'localhost';
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            
+            let wsUrl: string;
+            if (isProduction) {
+                // En production, utiliser le proxy nginx avec double geo
+                wsUrl = `${wsProtocol}//${window.location.host}/ws/geo/geo/live?associationId=${associationId}`;
+            } else {
+                // En développement, connexion directe
+                wsUrl = `ws://localhost:8084/geo/live?associationId=${associationId}`;
+            }
+
+            console.log('🔗 Connexion WebSocket vers:', wsUrl);
+
+            // Créer la connexion WebSocket
+            const ws = new WebSocket(wsUrl);
+            
+            // Gestionnaire d'ouverture de connexion
+            ws.onopen = () => {
+                console.log('✅ Connexion WebSocket établie');
+            };
+
+            // Gestionnaire de messages reçus
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('📨 Message WebSocket reçu:', data);
+                    
+                    // Traiter les données reçues
+                    onMessage({
+                        type: 'new_point',
+                        point: {
+                            id: data.id || crypto.randomUUID(),
+                            associationId: data.associationId,
+                            latitude: data.latitude,
+                            longitude: data.longitude,
+                            notes: data.notes,
+                            observedAt: data.observationDate,
+                            timestamp: data.observationDate
+                        }
+                    });
+                } catch (error) {
+                    console.error('❌ Erreur parsing message WebSocket:', error);
+                }
+            };
+
+            // Gestionnaire d'erreur
+            ws.onerror = (error) => {
+                console.error('❌ Erreur WebSocket:', error);
+                if (onError) {
+                    onError(error);
+                }
+            };
+
+            // Gestionnaire de fermeture
+            ws.onclose = (event) => {
+                console.log('🔌 Connexion WebSocket fermée:', event.code, event.reason);
+                if (onError) {
+                    onError(new Event('WebSocket closed'));
+                }
+            };
+
+            // Retourner un objet avec la méthode close
+            return {
+                close: () => {
+                    console.log('🔌 Fermeture manuelle de la connexion WebSocket');
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.close(1000, 'Fermeture manuelle');
+                    }
+                }
+            };
+
+        } catch (error) {
+            console.error('❌ Erreur lors de la création de la connexion WebSocket:', error);
+            
+            // Fallback vers polling en cas d'erreur WebSocket
+            console.log('🔄 Fallback vers polling HTTP');
+            return await geoService.createLiveConnectionFallback(associationId, onMessage, onError);
+        }
+    },
+
+    // Fallback vers polling HTTP en cas d'erreur WebSocket
+    createLiveConnectionFallback: async (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): Promise<{ close: () => void }> => {
+        console.log('🔄 Démarrage de la surveillance temps réel par polling (fallback)');
         
         let lastCheckTime = new Date();
         let isActive = true;

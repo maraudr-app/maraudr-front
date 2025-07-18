@@ -64,7 +64,9 @@ export const StockChart = ({ items }: StockChartProps) => {
 
     const categories = useMemo(() => [
         { value: 'all', label: t_stock('allCategories') },
-        ...getTranslatedCategories(t).map(cat => ({ value: cat.value.toString(), label: cat.label }))
+        ...getTranslatedCategories(t)
+            .filter(cat => cat.value !== Category.Unknown)
+            .map(cat => ({ value: cat.value.toString(), label: cat.label }))
     ], [t_stock, t]);
 
     // Initialiser les items sélectionnés en fonction du mode de vue et de la catégorie
@@ -85,6 +87,10 @@ export const StockChart = ({ items }: StockChartProps) => {
                 : items.filter(item => item.category === selectedCategory);
             
             const categoryQuantities = filteredItems.reduce((acc, item) => {
+                // Exclure les items avec la catégorie Unknown
+                if (item.category === Category.Unknown) {
+                    return acc;
+                }
                 const categoryName = Object.keys(Category)[Object.values(Category).indexOf(item.category)];
                 acc[categoryName] = (acc[categoryName] || 0) + item.quantity;
                 return acc;
@@ -115,7 +121,8 @@ export const StockChart = ({ items }: StockChartProps) => {
         } else { // byItem mode
             const filteredItems = items.filter(item => 
                 (selectedCategory === 'all' || item.category === selectedCategory) && 
-                selectedItemIds.includes(item.id)
+                selectedItemIds.includes(item.id) &&
+                item.category !== Category.Unknown
             );
 
             return {
@@ -234,7 +241,7 @@ export const StockChart = ({ items }: StockChartProps) => {
             return [];
         }
         return items
-            .filter(item => item.category === selectedCategory)
+            .filter(item => item.category === selectedCategory && item.category !== Category.Unknown)
             .map(item => ({ value: item.id, label: item.name }));
     }, [items, selectedCategory]);
 
@@ -245,10 +252,10 @@ export const StockChart = ({ items }: StockChartProps) => {
     ], [t_stock]);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Graphique */}
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                <div className="flex items-center mb-4 space-x-4">
+            <div className="lg:col-span-3 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <div className="flex items-center mb-4 space-x-4 flex-wrap">
                     <div className="w-48">
                         <Select
                             value={chartType}
@@ -299,7 +306,7 @@ export const StockChart = ({ items }: StockChartProps) => {
                         </div>
                     )}
                 </div>
-                <div className="h-[400px]">
+                <div className="h-[400px] w-full">
                     {chartType === 'bar' ? (
                         <Bar data={dataForChart} options={options} />
                     ) : (
