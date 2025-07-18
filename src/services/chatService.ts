@@ -105,26 +105,23 @@ export const chatService = {
                                 // Convertir les \n littéraux en vrais sauts de ligne
                                 const processedData = data.replace(/\\n/g, '\n');
 
-                                // Streaming mot par mot avec setTimeout pour éviter le blocage
-                                const words = processedData.split(' ');
+                                // Streaming caractère par caractère pour préserver les retours à la ligne
                                 let currentIndex = 0;
                                 
-                                const sendNextWord = () => {
-                                    if (currentIndex < words.length) {
-                                        const word = words[currentIndex];
-                                        // Ajouter un espace avant le mot sauf pour le premier
-                                        const wordWithSpace = currentIndex === 0 ? word : ' ' + word;
-                                        onChunk(wordWithSpace);
+                                const sendNextChar = () => {
+                                    if (currentIndex < processedData.length) {
+                                        const char = processedData[currentIndex];
+                                        onChunk(char);
                                         currentIndex++;
                                         
-                                        // Continuer avec le prochain mot après un délai
-                                        if (currentIndex < words.length) {
-                                            setTimeout(sendNextWord, 30);
+                                        // Continuer avec le prochain caractère après un délai
+                                        if (currentIndex < processedData.length) {
+                                            setTimeout(sendNextChar, 10);
                                         }
                                     }
                                 };
                                 
-                                sendNextWord();
+                                sendNextChar();
                                 fullResponse += processedData;
                             }
                         }

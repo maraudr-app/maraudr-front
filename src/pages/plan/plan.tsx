@@ -197,7 +197,7 @@ const Plan: React.FC = () => {
     
     // États pour l'activation/désactivation des points
     const [togglingPoints, setTogglingPoints] = useState<Set<string>>(new Set());
-    const [togglingClusters, setTogglingClusters] = useState<Set<number>>(new Set());
+
     
     // États pour l'autocomplétion d'adresse
     const [addressQuery, setAddressQuery] = useState('');
@@ -614,36 +614,7 @@ const Plan: React.FC = () => {
         }
     };
 
-    // Fonction pour activer/désactiver tous les points d'un cluster
-    const handleToggleClusterStatus = async (cluster: { center: GeoPoint; points: GeoPoint[] }, clusterIndex: number) => {
-        const pointIds = cluster.points.map(p => p.id).filter(Boolean) as string[];
-        if (pointIds.length === 0) return;
-        
-        // Déterminer le nouveau statut basé sur le point principal
-        const newStatus = !cluster.center.isActive;
-        
-        try {
-            setTogglingClusters(prev => new Set(prev).add(clusterIndex));
-            
-            await geoService.toggleClusterStatus(pointIds, newStatus);
-            
-            // Mettre à jour tous les points du cluster
-            setGeoPoints(prev => prev.map(p => 
-                pointIds.includes(p.id!) ? { ...p, isActive: newStatus } : p
-            ));
-            
-            toast.success(newStatus ? t_plan('all_points_activated') : t_plan('all_points_deactivated'));
-        } catch (error) {
 
-            toast.error(t_plan('toggle_status_error'));
-        } finally {
-            setTogglingClusters(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(clusterIndex);
-                return newSet;
-            });
-        }
-    };
 
     // Fonction pour calculer la distance entre deux points en mètres
     const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
@@ -1130,26 +1101,6 @@ const Plan: React.FC = () => {
                                                         <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
                                                             📍 {cluster.points.length} {t_plan('pointsNearby')}
                                                         </h3>
-                                                        <div className="mb-3">
-                                                            <button
-                                                                onClick={() => handleToggleClusterStatus(cluster, clusterIndex)}
-                                                                disabled={togglingClusters.has(clusterIndex)}
-                                                                className={`w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                                    cluster.center.isActive
-                                                                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                                                                        : 'bg-green-500 hover:bg-green-600 text-white'
-                                                                } disabled:opacity-50`}
-                                                            >
-                                                                {togglingClusters.has(clusterIndex) ? (
-                                                                    <div className="flex items-center justify-center">
-                                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                                        Traitement...
-                                                                    </div>
-                                                                ) : (
-                                                                    cluster.center.isActive ? t_plan('deactivate_all') : t_plan('activate_all')
-                                                                )}
-                                                            </button>
-                                                        </div>
                                                         <div className="max-h-48 overflow-y-auto space-y-3">
                                                             {cluster.points.map((point, pointIndex) => (
                                                                 <div key={`cluster-point-${pointIndex}`} className="border-l-4 pl-3 py-2" style={{ borderColor: getPointColor(point.observedAt || point.timestamp) }}>
@@ -1553,28 +1504,11 @@ const Plan: React.FC = () => {
                                     <div key={`cluster-${clusterIndex}`} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                                         {/* En-tête du cluster */}
                                         <div className="p-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center space-x-2">
-                                                    <MapPinIcon className="w-4 h-4 text-gray-500" />
-                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {t_plan('clusterOf')} {cluster.points.length} {t_plan('points')}
-                                                    </span>
-                                                    </div>
-                                                <button
-                                                    onClick={() => handleToggleClusterStatus(cluster, clusterIndex)}
-                                                    disabled={togglingClusters.has(clusterIndex)}
-                                                    className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                                                        cluster.center.isActive 
-                                                            ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'
-                                                            : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30'
-                                                    } disabled:opacity-50`}
-                                                >
-                                                    {togglingClusters.has(clusterIndex) ? (
-                                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mx-auto"></div>
-                                                    ) : (
-                                                        cluster.center.isActive ? t_plan('deactivate_all') : t_plan('activate_all')
-                                                    )}
-                                                </button>
+                                            <div className="flex items-center space-x-2">
+                                                <MapPinIcon className="w-4 h-4 text-gray-500" />
+                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {t_plan('clusterOf')} {cluster.points.length} {t_plan('points')}
+                                                </span>
                                             </div>
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                         {t_plan('groupedWithinRadius')}

@@ -267,7 +267,7 @@ const Team: React.FC = () => {
                     <div className="flex items-center gap-3 pl-7">
                         <UserGroupIcon className="w-5 h-5 text-orange-500" />
                         <div className="text-gray-900 dark:text-white font-medium">
-                            {t_team('title')} ({teamMembers.filter(m => !m.isManager).length})
+                            {t_team('title')}
                         </div>
                     </div>
                     

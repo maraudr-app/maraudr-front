@@ -5,6 +5,7 @@ import {
     UserGroupIcon,
     ClockIcon,
     ArrowPathIcon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
 
 import { useAuthStore } from '../../store/authStore';
@@ -79,6 +80,9 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [showTimeModal, setShowTimeModal] = useState(false);
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+    const [disponibilityToDelete, setDisponibilityToDelete] = useState<Disponibility | null>(null);
+    const [userDisponibilities, setUserDisponibilities] = useState<Disponibility[]>([]);
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -125,6 +129,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             setLoading(true);
             const allAvailabilities = await userService.getDisponibilities(selectedAssociation.id);
             const userDisponibilities = allAvailabilities.filter((dispo: Disponibility) => dispo.userId === user.sub);
+            setUserDisponibilities(userDisponibilities);
             const availabilitiesMap: UserAvailability = {};
             userDisponibilities.forEach((dispo: Disponibility) => {
                 const startDate = new Date(dispo.start);
@@ -210,6 +215,41 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
         setStartTime('');
         setEndTime('');
         setShowTimeModal(false);
+    };
+
+    // Gérer la suppression d'une disponibilité
+    const handleDeleteDisponibility = (disponibility: Disponibility) => {
+        setDisponibilityToDelete(disponibility);
+        setShowDeleteConfirmModal(true);
+    };
+
+    // Confirmer la suppression
+    const confirmDeleteDisponibility = async () => {
+        if (!disponibilityToDelete) return;
+        
+        try {
+            setLoading(true);
+            await userService.deleteDisponibility(disponibilityToDelete.id);
+            
+            // Recharger les disponibilités
+            await loadUserAvailabilities();
+            
+            // Fermer le modal
+            setShowDeleteConfirmModal(false);
+            setDisponibilityToDelete(null);
+            
+            toast?.success(t_planning('availability_deleteSuccess'));
+        } catch (error) {
+            toast?.error(t_planning('availability_deleteError'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Annuler la suppression
+    const cancelDeleteDisponibility = () => {
+        setShowDeleteConfirmModal(false);
+        setDisponibilityToDelete(null);
     };
     // Valider la disponibilité
     const validateAvailability = async () => {
@@ -445,6 +485,56 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                 </div>
             </div>
 
+            {/* Liste des disponibilités avec boutons de suppression */}
+            {userDisponibilities.length > 0 && (
+                <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        {t_planning('availability_title')}
+                    </h3>
+                    <div className="max-h-48 overflow-y-auto space-y-3 pr-2">
+                        {userDisponibilities.map((disponibility) => {
+                            const startDate = new Date(disponibility.start);
+                            const endDate = new Date(disponibility.end);
+                            const isPast = endDate < new Date();
+                            
+                            return (
+                                <div 
+                                    key={disponibility.id} 
+                                    className={`flex items-center justify-between p-4 rounded-lg border ${
+                                        isPast 
+                                            ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700' 
+                                            : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
+                                    }`}
+                                >
+                                    <div className="flex items-center space-x-3">
+                                        <CalendarIcon className={`h-5 w-5 ${
+                                            isPast 
+                                                ? 'text-purple-600 dark:text-purple-400' 
+                                                : 'text-green-600 dark:text-green-400'
+                                        }`} />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {startDate.toLocaleDateString('fr-FR')} - {endDate.toLocaleDateString('fr-FR')}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteDisponibility(disponibility)}
+                                        className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                                        title={t_planning('availability_deleteAvailability')}
+                                    >
+                                        <TrashIcon className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Modal de saisie des heures */}
             {showTimeModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[300]">
@@ -525,6 +615,53 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
                                     className="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 ml-2"
                                 >
                                     {loading ? t_planning('availability.saving') : t_planning('availability_save')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de confirmation de suppression */}
+            {showDeleteConfirmModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-[400]">
+                    <div className="relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-6 border w-11/12 md:w-96 shadow-2xl rounded-xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <div className="text-center">
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+                                <TrashIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                {t_planning('availability_deleteConfirmTitle')}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                                {t_planning('availability_deleteConfirmMessage')}
+                            </p>
+                            
+                            {disponibilityToDelete && (
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+                                    <p className="text-sm text-gray-900 dark:text-white">
+                                        {new Date(disponibilityToDelete.start).toLocaleDateString('fr-FR')} - {new Date(disponibilityToDelete.end).toLocaleDateString('fr-FR')}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {new Date(disponibilityToDelete.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {new Date(disponibilityToDelete.end).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                            )}
+                            
+                            <div className="flex justify-between w-full">
+                                <button
+                                    onClick={cancelDeleteDisponibility}
+                                    disabled={loading}
+                                    className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-1 mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {t_planning('availability_cancel')}
+                                </button>
+                                <button
+                                    onClick={confirmDeleteDisponibility}
+                                    disabled={loading}
+                                    className="px-6 py-3 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 ml-2"
+                                >
+                                    {loading ? t_planning('availability_saving') : t_planning('availability_deleteAvailability')}
                                 </button>
                             </div>
                         </div>

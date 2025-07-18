@@ -281,6 +281,26 @@ export const assoService = {
         }
     },
 
+    removeMemberFromAssociation: async (membershipData: { userId: string; associationId: string }) => {
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        try {
+            const response = await axios.delete(`${API_URL}/association/member`, {
+                params: membershipData,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true
+            });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     // Vérifier si un utilisateur est membre d'une association spécifique avec la nouvelle API
     isUserMemberOfAssociation: async (userId: string, associationId: string): Promise<boolean> => {
         try {

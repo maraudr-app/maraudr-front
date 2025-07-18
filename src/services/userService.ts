@@ -19,7 +19,7 @@ export const userService = {
 
       const response = await api.post('/users', userData);
 
-      alert(response.data);
+
       return response.data;
     } catch (error: any) {
     
