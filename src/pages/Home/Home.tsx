@@ -263,10 +263,7 @@ const Home = () => {
               <div className="text-4xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2">8</div>
               <div className="text-maraudr-darkText dark:text-maraudr-lightText">Modules</div>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-maraudr-orange dark:text-maraudr-blue mb-2">100%</div>
-              <div className="text-maraudr-darkText dark:text-maraudr-lightText">Responsive</div>
-          </div>
+
             <div>
               <div className="text-4xl font-bold text-maraudr-blue dark:text-maraudr-orange mb-2">24/7</div>
               <div className="text-maraudr-darkText dark:text-maraudr-lightText">Disponible</div>
@@ -360,12 +357,6 @@ const Home = () => {
             Simplifiez la gestion de votre association
           </p>
           <div className="flex justify-center space-x-6 text-gray-400">
-            <Link to="/about" className="hover:text-maraudr-orange transition-colors">
-              À propos
-            </Link>
-            <Link to="/contact" className="hover:text-maraudr-orange transition-colors">
-              Contact
-            </Link>
             <Link to="/login" className="hover:text-maraudr-orange transition-colors">
               Connexion
             </Link>
