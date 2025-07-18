@@ -19,8 +19,6 @@ import { useTranslation } from 'react-i18next';
 interface FilterState {
     category: string;
     name: string;
-    minQuantity: string;
-    maxQuantity: string;
 }
 
 export const Stock = () => {
@@ -30,9 +28,7 @@ export const Stock = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [filter, setFilter] = useState<FilterState>({
         category: '',
-        name: '',
-        minQuantity: '',
-        maxQuantity: ''
+        name: ''
     });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -202,11 +198,6 @@ export const Stock = () => {
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         
-        // Empêcher les valeurs négatives pour les champs de quantité
-        if ((name === 'minQuantity' || name === 'maxQuantity') && parseInt(value) < 0) {
-            return;
-        }
-        
         setFilter(prev => ({
             ...prev,
             [name]: value
@@ -224,16 +215,6 @@ export const Stock = () => {
         
         // Filtre par catégorie
         if (filter.category && item.category !== parseInt(filter.category)) {
-            return false;
-        }
-        
-        // Filtre par quantité minimum
-        if (filter.minQuantity && item.quantity < parseInt(filter.minQuantity)) {
-            return false;
-        }
-        
-        // Filtre par quantité maximum
-        if (filter.maxQuantity && item.quantity > parseInt(filter.maxQuantity)) {
             return false;
         }
         
@@ -430,7 +411,7 @@ export const Stock = () => {
                     <div className="bg-white dark:bg-gray-800 shadow">
                         {/* Filtres */}
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Input
                                     type="text"
                                     name="name"
@@ -454,24 +435,8 @@ export const Stock = () => {
                                         ))}
                                     </Select>
                                 </div>
-                                <Input
-                                    type="number"
-                                    name="maxQuantity"
-                                    value={filter.maxQuantity}
-                                    onChange={handleFilterChange}
-                                    placeholder={t_stock('max_quantity')}
-                                    min="0"
-                                />
-                                <Input
-                                    type="number"
-                                    name="minQuantity"
-                                    value={filter.minQuantity}
-                                    onChange={handleFilterChange}
-                                    placeholder={t_stock('min_quantity')}
-                                    min="0"
-                                />
                             </div>
-                        </div>
+                            </div>
 
                         {/* Tableau */}
                         <div className="overflow-x-auto">
@@ -535,10 +500,10 @@ export const Stock = () => {
                                                         {item.description || '-'}
       </div>
                                                 </td>
-                                                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {getTranslatedCategoryName(item.category, t)}
-                                                    </div>
+              </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">

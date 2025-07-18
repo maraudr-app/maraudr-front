@@ -332,10 +332,10 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
                                         required
                                     >
                                                                     {getTranslatedCategories(t).map(category => (
-                                <option key={category.value} value={category.value}>
-                                    {category.label}
-                                </option>
-                            ))}
+                                            <option key={category.value} value={category.value}>
+                                                {category.label}
+                                            </option>
+                                        ))}
                                     </Select>
                                 </div>
 

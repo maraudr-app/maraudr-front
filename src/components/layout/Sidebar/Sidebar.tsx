@@ -165,7 +165,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   // Filtrer les éléments selon le rôle
   const filteredNavigationItems = useMemo(() => 
     navigationItems.filter(item => 
-      !item.showForManager || isManager()
+    !item.showForManager || isManager()
     ), [navigationItems, user?.userType]
   );
 

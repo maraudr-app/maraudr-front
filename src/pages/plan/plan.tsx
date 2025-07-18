@@ -1233,7 +1233,7 @@ const Plan: React.FC = () => {
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex space-x-2 mb-2">
-                                                                        <button
+                                                                    <button
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 handleTogglePointStatus(point);
@@ -1257,10 +1257,10 @@ const Plan: React.FC = () => {
                                                                                 handleShowRoute(point);
                                                                             }}
                                                                             className="flex-1 flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                                        >
+                                                                    >
                                                                             <MapIcon className="w-2 h-2" />
-                                                                            <span>{t_plan('itinerary')}</span>
-                                                                        </button>
+                                                                        <span>{t_plan('itinerary')}</span>
+                                                                    </button>
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -1287,7 +1287,7 @@ const Plan: React.FC = () => {
                                                             </div>
                                                         </div>
                                                         <div className="flex space-x-2">
-                                                            <button
+                                                        <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleTogglePointStatus(mainPoint);
@@ -1311,10 +1311,10 @@ const Plan: React.FC = () => {
                                                                     handleShowRoute(mainPoint);
                                                                 }}
                                                                 className="flex-1 flex items-center justify-center space-x-1 px-2 py-1 bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white text-xs rounded transition-all"
-                                                            >
+                                                        >
                                                                 <MapIcon className="w-2 h-2" />
-                                                                <span>{t_plan('itinerary')}</span>
-                                                            </button>
+                                                            <span>{t_plan('itinerary')}</span>
+                                                        </button>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1436,9 +1436,9 @@ const Plan: React.FC = () => {
                                                                 handleToggleItineraryStatus(itinerary, e);
                                                             }}
                                                             className={`ml-2 px-2 py-0.5 text-xs rounded-full cursor-pointer hover:opacity-80 transition-opacity ${
-                                                                itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
-                                                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
-                                                                    : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                                            itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
+                                                                ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
+                                                                : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                                                             }`}
                                                             title="Cliquer pour basculer le statut"
                                                         >
@@ -1622,9 +1622,9 @@ const Plan: React.FC = () => {
                                                 <div className="flex items-center space-x-2">
                                                     <MapPinIcon className="w-4 h-4 text-gray-500" />
                                                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                        {t_plan('clusterOf')} {cluster.points.length} {t_plan('points')}
+                                                            {t_plan('clusterOf')} {cluster.points.length} {t_plan('points')}
                                                     </span>
-                                                </div>
+                                                    </div>
                                                 <button
                                                     onClick={() => handleToggleClusterStatus(cluster, clusterIndex)}
                                                     disabled={togglingClusters.has(clusterIndex)}
@@ -1642,13 +1642,13 @@ const Plan: React.FC = () => {
                                                 </button>
                                             </div>
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {t_plan('groupedWithinRadius')}
-                                            </p>
+                                                        {t_plan('groupedWithinRadius')}
+                                                    </p>
                                         </div>
                                         
                                         {/* Points du cluster */}
                                         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                            {cluster.points.map((point, pointIndex) => (
+                                                        {cluster.points.map((point, pointIndex) => (
                                                 <div 
                                                     key={`sidebar-point-${pointIndex}`} 
                                                     className={`p-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors relative ${
@@ -1661,7 +1661,7 @@ const Plan: React.FC = () => {
                                                 >
                                                     {/* Tag d'activation/désactivation en haut à droite */}
                                                     <div className="absolute top-1 right-1">
-                                                        <button
+                                                                <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleTogglePointStatus(point);
@@ -1678,8 +1678,8 @@ const Plan: React.FC = () => {
                                                             ) : (
                                                                 point.isActive ? t_plan('deactivate') : t_plan('activate')
                                                             )}
-                                                        </button>
-                                                    </div>
+                                                                </button>
+                                                            </div>
                                                     
                                                     <div className="flex items-start space-x-3 pr-16">
                                                         <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2" 
@@ -1691,20 +1691,20 @@ const Plan: React.FC = () => {
                                                                     <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                                                                         ({t_plan('deactivate')})
                                                                     </span>
-                                                                )}
+                                                            )}
                                                             </p>
                                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                                 {point.notes || t_plan('noDescription')}
-                                                            </p>
+                                                                </p>
                                                             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                                                 {new Date(point.observedAt || point.timestamp || Date.now()).toLocaleDateString()}
                                                             </p>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </div>
                                             ))}
+                                                    </div>
                                         </div>
-                                    </div>
                                     );
                                 })}
                             </div>
@@ -1817,9 +1817,9 @@ const Plan: React.FC = () => {
                                                             <button
                                                                 onClick={(e) => handleToggleItineraryStatus(itinerary, e)}
                                                                 className={`ml-auto px-2 py-0.5 text-xs rounded-full cursor-pointer hover:opacity-80 transition-opacity ${
-                                                                    itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
-                                                                        ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
-                                                                        : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                                                itinerary.isActive === false || !itinerary.eventId || !getEventForItinerary(itinerary.eventId) || getEventForItinerary(itinerary.eventId)?.status === 'CANCELED'
+                                                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' 
+                                                                    : 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                                                                 }`}
                                                                 title="Cliquer pour basculer le statut"
                                                             >

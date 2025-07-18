@@ -35,10 +35,10 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
                     new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime()
                 );
                 setHistory(sortedItems);
-                    } catch (error) {
+            } catch (error) {
             toast.error(t_stock('errorLoadingHistory'));
-            console.error(error);
-        } finally {
+                console.error(error);
+            } finally {
                 setIsLoading(false);
             }
         };

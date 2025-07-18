@@ -792,6 +792,7 @@
           "emailError": "Please enter an email address",
           "emailFormatError": "Please enter a valid email address",
           "associationError": "No association selected",
+          "success": "Invitation sent successfully!",
           "invalidDataError": "Invalid data. Please check the email address.",
           "unauthorizedError": "You are not authorized to send invitations.",
           "forbiddenError": "Access denied. You don't have the necessary permissions.",
@@ -902,24 +903,7 @@
       "loadDisponibilitiesError": "Error loading availabilities"
     }
   },
-  "addMemberModalViainviation": {
-    "title": "Add a member to the team",
-    "invite": {
-      "tabTitle": "Invite by email",
-      "emailPlaceholder": "Email address",
-      "emailDescription": "An invitation email will be sent to this address",
-      "messagePlaceholder": "Custom message (optional)",
-      "messageDescription": "If no message is specified, a default message will be used",
-      "sendInvitationButton": "Send invitation",
-       "invalidDataError": "Invalid data. Please check the email address.",
-      "unauthorizedError": "You are not authorized to send invitations.",
-      "forbiddenError": "Access denied. You do not have the necessary permissions.",
-      "userExistsError": "A user with this email address already exists.",
-      "serverError": "Server error. Please try again later.",
-      "error": "Error sending the invitation.",
-      "connectionError": "Connection problem. Please check your internet connection."
-    }
-  },
+
   "media": {
   "noAssociation": "No association selected",
   "noAssociationMessage": "Please select an association to access media.",

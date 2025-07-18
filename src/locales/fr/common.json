@@ -401,7 +401,19 @@
           "emailDescription": "Un email d'invitation sera envoyé à cette adresse.",
           "messagePlaceholder": "Message personnalisé (optionnel)",
           "messageDescription": "Si aucun message n'est spécifié, un message par défaut sera utilisé.",
-          "sendInvitationButton": "Envoyer l'invitation"
+          "sendInvitationButton": "Envoyer l'invitation",
+          "defaultMessage": "Vous êtes invité à rejoindre l'association",
+          "emailError": "Veuillez saisir une adresse email",
+          "emailFormatError": "Veuillez saisir une adresse email valide",
+          "associationError": "Aucune association sélectionnée",
+          "success": "Invitation envoyée avec succès !",
+          "invalidDataError": "Données invalides. Vérifiez l'adresse email.",
+          "unauthorizedError": "Vous n'êtes pas autorisé à envoyer des invitations.",
+          "forbiddenError": "Accès interdit. Vous n'avez pas les permissions nécessaires.",
+          "userExistsError": "Un utilisateur avec cette adresse email existe déjà.",
+          "serverError": "Erreur du serveur. Veuillez réessayer plus tard.",
+          "error": "Erreur lors de l'envoi de l'invitation.",
+          "connectionError": "Problème de connexion. Vérifiez votre connexion internet."
         },
         "create": {
           "tabTitle": "Créer utilisateur",
@@ -505,24 +517,7 @@
       "loadDisponibilitiesError": "Erreur lors du chargement des disponibilités"
     }
   },
-  "addMemberModalViainviation": {
-    "title": "Ajouter un membre à l'équipe",
-    "invite": {
-      "tabTitle": "Inviter par email",
-      "emailPlaceholder": "Adresse email",
-      "emailDescription": "Un email d'invitation sera envoyé à cette adresse.",
-      "messagePlaceholder": "Message personnalisé (optionnel)",
-      "messageDescription": "Si aucun message n'est spécifié, un message par défaut sera utilisé.",
-      "sendInvitationButton": "Envoyer l'invitation",
-      "invalidDataError": "Données invalides. Vérifiez l'adresse email.",
-      "unauthorizedError": "Vous n'êtes pas autorisé à envoyer des invitations.",
-      "forbiddenError": "Accès interdit. Vous n'avez pas les permissions nécessaires.",
-      "userExistsError": "Un utilisateur avec cette adresse email existe déjà.",
-      "serverError": "Erreur du serveur. Veuillez réessayer plus tard.",
-      "error": "Erreur lors de l'envoi de l'invitation.",
-      "connectionError": "Problème de connexion. Vérifiez votre connexion internet."
-    }
-  },
+
   "media": {
   "noAssociation": "Aucune association sélectionnée",
   "noAssociationMessage": "Veuillez sélectionner une association pour accéder aux médias.",
