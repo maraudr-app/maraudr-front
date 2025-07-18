@@ -95,7 +95,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                 onClose();
             }, 2000);
         } catch (err: any) {
-            console.error('Erreur lors de l\'envoi de l\'invitation:', err);
+
             
             // Gestion d'erreurs détaillée
             if (err.response) {

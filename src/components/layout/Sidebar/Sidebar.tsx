@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
           const details = await assoService.getAssociation(selectedAssociation.id);
           setAssociationDetails(details);
         } catch (error) {
-          console.error('Error fetching association details:', error);
+
         }
       }
     };

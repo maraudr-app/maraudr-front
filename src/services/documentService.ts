@@ -21,7 +21,7 @@ documentApi.interceptors.request.use(async (config) => {
             config.headers.Authorization = `Bearer ${token}`;
         }
     } catch (error) {
-        console.error('Erreur lors de la vérification du token:', error);
+
     }
     return config;
 });
@@ -59,7 +59,7 @@ export const documentService = {
 
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de l\'upload du fichier:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de l\'upload du fichier';
             throw new Error(errorMessage);
         }
@@ -71,7 +71,7 @@ export const documentService = {
             const response = await documentApi.get(`/documents/${associationId}`);
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la récupération des documents:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la récupération des documents';
             throw new Error(errorMessage);
         }
@@ -89,7 +89,7 @@ export const documentService = {
 
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors du téléchargement du fichier:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors du téléchargement du fichier';
             throw new Error(errorMessage);
         }
@@ -100,7 +100,7 @@ export const documentService = {
         try {
             await documentApi.delete(`/delete/${associationId}/document/${documentId}`);
         } catch (error: any) {
-            console.error('Erreur lors de la suppression du fichier:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la suppression du fichier';
             throw new Error(errorMessage);
         }

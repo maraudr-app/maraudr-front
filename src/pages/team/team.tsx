@@ -106,9 +106,9 @@ const Team: React.FC = () => {
             
             setTeamMembers(convertedMembers);
             
-            console.log('Membres récupérés:', convertedMembers);
+
         } catch (err: any) {
-            console.error('Erreur lors de la récupération des membres:', err);
+
             setError(err.message || t_team('error.loading'));
         } finally {
             setLoading(false);
@@ -181,12 +181,12 @@ const Team: React.FC = () => {
             // Filtrer les disponibilités de l'utilisateur sélectionné
             const memberDisponibilities = allDisponibilities.filter((dispo: Disponibility) => dispo.userId === memberId);
             
-            console.log(`Disponibilités trouvées pour ${member.firstname} ${member.lastname}:`, memberDisponibilities);
+
             
             setUserDisponibilities(memberDisponibilities);
             setShowDisponibilities(true);
         } catch (err: any) {
-            console.error('Erreur lors du chargement des disponibilités:', err);
+
             showToast('error', t_team('toast.loadDisponibilitiesError'));
             setUserDisponibilities([]);
         } finally {

@@ -139,7 +139,7 @@ const RouteRenderer: React.FC<{
             </>
         );
     } catch (error) {
-        console.error('Erreur dans RouteRenderer:', error);
+
         setHasError(true);
         return null;
     }
@@ -242,7 +242,7 @@ const Plan: React.FC = () => {
                 });
                 toast.success('Position utilisateur détectée');
             } catch (error) {
-                console.error('Erreur géolocalisation:', error);
+
                 toast.error('Impossible d\'obtenir votre position. Autorisez la géolocalisation pour voir les itinéraires.');
             }
         };
@@ -260,7 +260,7 @@ const Plan: React.FC = () => {
                 const points = await geoService.getGeoPoints(selectedAssociation.id, daysFilter);
                 setGeoPoints(points);
             } catch (error) {
-                console.error('Erreur lors du chargement des points:', error);
+
                 toast.error(t_plan('errorLoadingGeoPoints'));
             } finally {
                 setLoading(false);
@@ -279,20 +279,12 @@ const Plan: React.FC = () => {
         const now = new Date();
         const cutoffDate = new Date(now.getTime() - (daysFilter * 24 * 60 * 60 * 1000));
         
-        console.log('🗓️ Application du filtre temporel basé sur createdAt:', {
-            totalItems: items.length,
-            daysFilter,
-            cutoffDate: cutoffDate.toISOString(),
-            now: now.toISOString()
-        });
+
         
         const filtered = items.filter(item => {
             // Se baser uniquement sur createdAt
             if (!item.createdAt) {
-                console.log('🚫 Item ignoré - pas de createdAt:', {
-                    id: item.id || 'unknown',
-                    availableFields: Object.keys(item)
-                });
+
                 return false;
             }
             
@@ -300,10 +292,7 @@ const Plan: React.FC = () => {
             
             // Vérifier que la date est valide
             if (isNaN(itemDate.getTime())) {
-                console.log('🚫 Item filtré - createdAt invalide:', {
-                    id: item.id || 'unknown',
-                    createdAt: item.createdAt
-                });
+
                 return false;
             }
             
@@ -315,25 +304,13 @@ const Plan: React.FC = () => {
             const isValid = diffInDays >= 0 && diffInDays <= daysFilter;
             
             if (!isValid && item.id) {
-                console.log('🚫 Item filtré:', {
-                    id: item.id,
-                    createdAt: item.createdAt,
-                    itemDate: itemDate.toISOString(),
-                    cutoffDate: cutoffDate.toISOString(),
-                    diffInDays: diffInDays.toFixed(2),
-                    daysFilter,
-                    reason: diffInDays < 0 ? 'Date future' : 'Trop ancien'
-                });
+
             }
             
             return isValid;
         });
         
-        console.log('✅ Résultat du filtrage temporel par createdAt:', {
-            avant: items.length,
-            après: filtered.length,
-            filtrés: items.length - filtered.length
-        });
+
         
         return filtered;
     }, []);
@@ -347,7 +324,7 @@ const Plan: React.FC = () => {
                 socketRef.current = await geoService.createLiveConnection(
                     selectedAssociation.id,
                     (data) => {
-                        console.log('Nouvelle donnée reçue:', data);
+
                         if (data.type === 'new_point') {
                             setGeoPoints(prev => [...prev, data.point]);
                             toast.success('Nouveau point ajouté en temps réel !');
@@ -356,7 +333,7 @@ const Plan: React.FC = () => {
                         }
                     },
                     (error) => {
-                        console.error('Erreur WebSocket:', error);
+
                         setIsConnected(false);
                         toast.error('Connexion temps réel interrompue');
                     }
@@ -367,7 +344,7 @@ const Plan: React.FC = () => {
                 toast.success('Connexion temps réel établie');
 
             } catch (error) {
-                console.error('Erreur lors de la connexion WebSocket:', error);
+
                 setIsConnected(false);
                 toast.error(`Erreur WebSocket: ${error instanceof Error ? error.message : 'Connexion impossible'}`);
             }
@@ -387,12 +364,12 @@ const Plan: React.FC = () => {
         if (!selectedAssociation?.id) return;
         
         try {
-            console.log('🔄 Chargement des événements pour l\'association:', selectedAssociation.id);
+
             const eventsData = await planningService.getAllEvents(selectedAssociation.id);
-            console.log('✅ Événements récupérés:', eventsData);
+
             setEvents(eventsData);
         } catch (error) {
-            console.error('❌ Erreur lors du chargement des événements:', error);
+
             toast.error(t_plan('errorLoadingEvents'));
         }
     }, [selectedAssociation?.id]);
@@ -408,8 +385,7 @@ const Plan: React.FC = () => {
         
         try {
             setLoadingItineraries(true);
-            console.log('🔄 Chargement des itinéraires pour l\'association:', selectedAssociation.id);
-            console.log('📅 Filtre temporel appliqué:', daysFilter, 'jours');
+
             
             const token = localStorage.getItem('token');
             if (!token) {
@@ -417,51 +393,33 @@ const Plan: React.FC = () => {
             }
             
             const itinerariesData = await geoService.getItineraries(selectedAssociation.id);
-            console.log('✅ Itinéraires récupérés (avant filtrage temporel):', itinerariesData);
-            console.log('📊 Structure des données:', {
-                type: typeof itinerariesData,
-                isArray: Array.isArray(itinerariesData),
-                length: Array.isArray(itinerariesData) ? itinerariesData.length : 'N/A',
-                sample: Array.isArray(itinerariesData) && itinerariesData.length > 0 ? itinerariesData[0] : 'Aucun échantillon'
-            });
+
             
             // Vérifier que les itinéraires appartiennent à l'association et appliquer le filtre temporel
             if (Array.isArray(itinerariesData)) {
                 let filteredItineraries = itinerariesData.filter(itinerary => {
                     const belongsToAssociation = itinerary.associationId === selectedAssociation.id;
                     if (!belongsToAssociation) {
-                        console.warn('⚠️ Itinéraire ignoré - associationId différent:', {
-                            itineraryId: itinerary.id,
-                            itineraryAssociationId: itinerary.associationId,
-                            currentAssociationId: selectedAssociation.id
-                        });
+
                     }
                     return belongsToAssociation;
                 });
                 
-                console.log('🔍 Filtrage par association:', {
-                    total: itinerariesData.length,
-                    filtered: filteredItineraries.length,
-                    associationId: selectedAssociation.id
-                });
+
                 
                 // Appliquer le filtre temporel
                 const beforeDateFilter = filteredItineraries.length;
                 filteredItineraries = filterByDate(filteredItineraries, daysFilter);
                 
-                console.log('📅 Filtrage temporel:', {
-                    beforeDateFilter,
-                    afterDateFilter: filteredItineraries.length,
-                    daysFilter
-                });
+
                 
                 setItineraries(filteredItineraries);
             } else {
-                console.warn('⚠️ Les données ne sont pas un tableau:', itinerariesData);
+
                 setItineraries([]);
             }
         } catch (error) {
-            console.error('❌ Erreur lors du chargement des itinéraires:', error);
+
             toast.error(t_plan('errorLoadingItineraries'));
         } finally {
             setLoadingItineraries(false);
@@ -478,7 +436,7 @@ const Plan: React.FC = () => {
         const handleEventCanceled = (event: CustomEvent) => {
             const { associationId } = event.detail;
             if (associationId === selectedAssociation?.id) {
-                console.log('🔄 Événement annulé détecté, rechargement des données...');
+
                 loadEvents();
                 loadItineraries();
                 toast.success(t_plan('dataUpdatedEventCanceled'));
@@ -488,7 +446,7 @@ const Plan: React.FC = () => {
         const handleEventDeleted = (event: CustomEvent) => {
             const { associationId } = event.detail;
             if (associationId === selectedAssociation?.id) {
-                console.log('🔄 Événement supprimé détecté, rechargement des données...');
+
                 loadEvents();
                 loadItineraries();
                 toast.success(t_plan('dataUpdatedEventDeleted'));
@@ -525,7 +483,7 @@ const Plan: React.FC = () => {
             );
             setRouteInfo(travelTimes);
         } catch (error) {
-            console.error('Erreur calcul itinéraire:', error);
+
             toast.error(t_plan('errorCalculatingRoute'));
         } finally {
             setRouteLoading(false);
@@ -551,7 +509,7 @@ const Plan: React.FC = () => {
                 // Ouvrir le popup
                 markerRef.openPopup();
             } else {
-                console.log('Marker ref non trouvé pour:', pointKey, 'Refs disponibles:', Object.keys(markerRefs.current));
+
             }
         }, 200);
     };
@@ -571,28 +529,18 @@ const Plan: React.FC = () => {
 
     // Gérer le clic sur la carte pour créer une route
     const handleMapClickForRoute = (lat: number, lng: number) => {
-        console.log('🎯 handleMapClickForRoute appelé avec:', { lat, lng });
-        console.log('🔍 États actuels:', { 
-            isCreatingRoute, 
-            selectedEvent: selectedEvent?.title, 
-            selectionMode 
-        });
+
         
         if (!isCreatingRoute || !selectedEvent || selectionMode !== 'map') {
-            console.log('❌ Conditions non remplies:', { 
-                isCreatingRoute, 
-                hasSelectedEvent: !!selectedEvent, 
-                selectionMode 
-            });
+
             return;
         }
         
-        console.log('✅ Conditions remplies, sélection du point');
+
         setSelectedRoutePoint({ lat, lng });
         setShowRouteConfirmationModal(true); // Réafficher le modal de confirmation
         setIsCreatingRoute(false); // Arrêter le mode création
-        
-        console.log('🎉 Modal de confirmation activé');
+
     };
 
     // Ajouter un nouveau point
@@ -619,7 +567,7 @@ const Plan: React.FC = () => {
             setShowPointModal(false);
             setSelectedPoint(null);
         } catch (error) {
-            console.error('Erreur lors de l\'ajout du point:', error);
+
             toast.error(t_plan('errorAddingPoint'));
         }
     };
@@ -655,7 +603,7 @@ const Plan: React.FC = () => {
             
             toast.success(newStatus ? t_plan('point_activated') : t_plan('point_deactivated'));
         } catch (error) {
-            console.error('Erreur lors du basculement du statut:', error);
+
             toast.error(t_plan('toggle_status_error'));
         } finally {
             setTogglingPoints(prev => {
@@ -686,7 +634,7 @@ const Plan: React.FC = () => {
             
             toast.success(newStatus ? t_plan('all_points_activated') : t_plan('all_points_deactivated'));
         } catch (error) {
-            console.error('Erreur lors du basculement du statut du cluster:', error);
+
             toast.error(t_plan('toggle_status_error'));
         } finally {
             setTogglingClusters(prev => {
@@ -795,20 +743,15 @@ const Plan: React.FC = () => {
 
     // Créer une route pour un événement
     const handleCreateRoute = async () => {
-        console.log('🚀 handleCreateRoute appelé');
-        console.log('📋 Données disponibles:', { 
-            selectedEvent: selectedEvent?.title, 
-            selectedRoutePoint, 
-            selectedAssociation: selectedAssociation?.id 
-        });
+
         
         if (!selectedEvent || !selectedRoutePoint || !selectedAssociation?.id) {
-            console.log('❌ Données manquantes pour créer la route');
+
             return;
         }
 
         try {
-            console.log('✅ Données complètes, début de création');
+
             
             // Pas de validation de rayon - on permet la création d'itinéraire peu importe les points
             
@@ -825,26 +768,24 @@ const Plan: React.FC = () => {
                 startLng: selectedRoutePoint.lng
             };
 
-            console.log('🔄 Création de route avec les données:', routeData);
-            console.log('📋 Événement sélectionné:', selectedEvent);
-            console.log('📍 Point sélectionné:', selectedRoutePoint);
+
 
             const newRoute = await geoService.createRoute(routeData);
-            console.log('✅ Route créée avec succès:', newRoute);
+
             setRoutes(prev => [...prev, newRoute]);
             toast.success('Route créée avec succès !');
             
             // Recharger toutes les routes et itinéraires pour mettre à jour l'affichage
             try {
-                console.log('🔄 Rechargement des itinéraires...');
+
                 const updatedItineraries = await geoService.getItineraries(selectedAssociation.id);
                 let filteredItineraries = updatedItineraries.filter((it: any) => it.associationId === selectedAssociation.id);
                 // Appliquer le filtre temporel
                 filteredItineraries = filterByDate(filteredItineraries, daysFilter);
                 setItineraries(filteredItineraries);
-                console.log('✅ Itinéraires rechargés (avec filtre temporel):', filteredItineraries.length);
+
             } catch (error) {
-                console.error('❌ Erreur lors du rechargement des itinéraires:', error);
+
                 // Pas grave, on garde l'ancienne liste
             }
             
@@ -856,7 +797,7 @@ const Plan: React.FC = () => {
             setShowAddressSuggestions(false);
             setAddressSuggestions([]);
         } catch (error) {
-            console.error('❌ Erreur lors de la création de la route:', error);
+
             toast.error(t_plan('errorCreatingRoute'));
         }
     };
@@ -864,26 +805,26 @@ const Plan: React.FC = () => {
     // Parser le GeoJSON d'une route
     const parseRouteGeoJson = (geoJsonString: string) => {
         try {
-            console.log('🔄 Parsing GeoJSON:', geoJsonString);
+
             
             // Vérifier que la chaîne n'est pas vide
             if (!geoJsonString || geoJsonString.trim() === '') {
-                console.warn('⚠️ GeoJSON vide ou null');
+
                 return null;
             }
             
             const parsed = JSON.parse(geoJsonString);
-            console.log('✅ GeoJSON parsé:', parsed);
+
             
             // Si le GeoJSON n'a pas de type mais a des features, on ajoute le type
             if (!parsed.type && parsed.features) {
-                console.log('🔧 Ajout du type FeatureCollection au GeoJSON (auto-correction)');
+
                 parsed.type = 'FeatureCollection';
             }
             
             // Vérifier que c'est un GeoJSON valide
             if (!parsed.type || !parsed.features) {
-                console.warn('⚠️ GeoJSON invalide - manque type ou features:', parsed);
+
                 return null;
             }
             
@@ -892,7 +833,7 @@ const Plan: React.FC = () => {
                 // Filtrer les features valides au lieu de rejeter tout
                 parsed.features = parsed.features.filter((feature: any, i: number) => {
                     if (!feature.geometry || !feature.geometry.type || !feature.geometry.coordinates) {
-                        console.warn(`⚠️ Feature ${i} invalide, ignorée:`, feature);
+
                         return false;
                     }
                     
@@ -910,13 +851,13 @@ const Plan: React.FC = () => {
                                 }
                             }
                             if (validPoints < 2) {
-                                console.warn(`⚠️ Feature ${i} n'a pas assez de points valides (${validPoints}), ignorée`);
+
                                 return false;
                             }
                         } else if (coords.length >= 2) {
                             // Pour Point, vérifier les coordonnées
                             if (typeof coords[0] !== 'number' || typeof coords[1] !== 'number') {
-                                console.warn(`⚠️ Feature ${i} coordonnées invalides, ignorée:`, coords);
+
                                 return false;
                             }
                         }
@@ -926,16 +867,15 @@ const Plan: React.FC = () => {
                 
                 // Si aucune feature valide, retourner null
                 if (parsed.features.length === 0) {
-                    console.warn('⚠️ Aucune feature valide trouvée');
+
                     return null;
                 }
             }
             
-            console.log('✅ GeoJSON final validé:', parsed);
+
             return parsed;
         } catch (error) {
-            console.error('❌ Erreur lors du parsing du GeoJSON:', error);
-            console.error('📄 Contenu du GeoJSON:', geoJsonString);
+
             return null;
         }
     };
@@ -950,22 +890,22 @@ const Plan: React.FC = () => {
 
         try {
             setIsLoadingAddresses(true);
-            console.log('🔍 Recherche d\'adresses pour:', query);
+
             
             const data = await geoService.searchAddresses(query);
-            console.log('📄 Données reçues:', data);
+
             
             if (data.features && Array.isArray(data.features)) {
-                console.log('✅ Suggestions trouvées:', data.features.length);
+
                 setAddressSuggestions(data.features);
                 setShowAddressSuggestions(true);
             } else {
-                console.log('⚠️ Aucune suggestion trouvée');
+
                 setAddressSuggestions([]);
                 setShowAddressSuggestions(false);
             }
         } catch (error) {
-            console.error('❌ Erreur lors de la recherche d\'adresses:', error);
+
             setAddressSuggestions([]);
             setShowAddressSuggestions(false);
         } finally {
@@ -1047,7 +987,7 @@ const Plan: React.FC = () => {
                 setItineraries(filteredData);
             }
         } catch (error: any) {
-            console.error('Erreur lors du basculement du statut:', error);
+
             toast.error('Erreur lors du basculement du statut');
         }
     };
@@ -1326,15 +1266,13 @@ const Plan: React.FC = () => {
 
                             {/* Affichage des routes d'événements */}
                             {!routesDisabled && routes.map((route, index) => {
-                                console.log(`🔍 Traitement de la route ${index}:`, route.id);
-                                console.log(`📄 GeoJSON brut:`, route.geoJson);
+
                                 
                                                                 const geoJsonData = parseRouteGeoJson(route.geoJson);
-                                console.log(`✅ GeoJSON parsé pour route ${index}:`, geoJsonData);
+
                                 
                                 const isValidGeoJson = geoJsonData && geoJsonData.type === 'FeatureCollection' && Array.isArray(geoJsonData.features) && geoJsonData.features.length > 0;
-                                console.log(`✅ Validation GeoJSON route ${index}:`, isValidGeoJson);
-                                console.log(`🚀 RouteRenderer sera rendu pour route ${route.id}:`, !!geoJsonData);
+
                                 
                                 return (
                                     <React.Fragment key={route.id || index}>
@@ -1389,15 +1327,12 @@ const Plan: React.FC = () => {
                             {/* Affichage des itinéraires existants */}
                             
                             {filteredItineraries.map((itinerary, index) => {
-                                console.log(`🗺️ Traitement de l'itinéraire ${index}:`, itinerary.id, 'Association:', itinerary.associationId);
-                                
+
                                 const geoJsonData = parseRouteGeoJson(itinerary.geoJson);
-                                console.log(`✅ GeoJSON parsé pour itinéraire ${index}:`, geoJsonData);
+
                                 
                                 const isValidGeoJson = geoJsonData && geoJsonData.type === 'FeatureCollection' && Array.isArray(geoJsonData.features) && geoJsonData.features.length > 0;
-                                console.log(`✅ Validation GeoJSON itinéraire ${index}:`, isValidGeoJson);
-                                console.log(`🚀 RouteRenderer sera rendu pour itinéraire ${itinerary.id}:`, !!geoJsonData);
-                                
+
                                 const isSelected = selectedItinerary === itinerary.id;
                                 const linkedEvent = getEventForItinerary(itinerary.eventId);
                                 
@@ -2081,11 +2016,10 @@ const Plan: React.FC = () => {
                                     <button
                                         onClick={() => {
                                             if (selectionMode === 'map') {
-                                                console.log('🚀 Bouton Commencer cliqué - Mode carte');
-                                                console.log('📋 Événement sélectionné:', selectedEvent?.title);
+
                                                 setIsCreatingRoute(true);
                                                 setShowRouteCreationModal(false);
-                                                console.log('✅ Mode création activé, modal fermé');
+
                                                 toast.success(t_plan('clickToSelectPoint'));
                                             } else {
                                                 toast.error(t_plan('selectAddressFirst'));

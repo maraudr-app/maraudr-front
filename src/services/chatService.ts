@@ -21,7 +21,7 @@ chatApi.interceptors.request.use(async (config) => {
             config.headers.Authorization = `Bearer ${token}`;
         }
     } catch (error) {
-        console.error('Erreur lors de la vérification du token:', error);
+
     }
     return config;
 });
@@ -48,7 +48,7 @@ export const chatService = {
             const response = await chatApi.post('/chat', request);
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de l\'envoi du message:', error);
+
             throw new Error(error.response?.data?.message || 'Erreur de communication avec le serveur');
         }
     },
@@ -104,7 +104,7 @@ export const chatService = {
                             if (data.trim()) {
                                 // Convertir les \n littéraux en vrais sauts de ligne
                                 const processedData = data.replace(/\\n/g, '\n');
-                                console.log('📤 Chunk reçu (longueur: ' + processedData.length + '):', processedData.substring(0, 100) + '...'); // Debug log
+
                                 
                                 // Simuler un streaming plus fluide pour les gros chunks
                                 if (processedData.length > 100) {
@@ -147,7 +147,7 @@ export const chatService = {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
         } catch (error: any) {
-            console.error('Erreur lors du streaming:', error);
+
             onError(error.message || 'Erreur de communication avec le serveur');
         }
     },

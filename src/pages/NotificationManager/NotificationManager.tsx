@@ -48,11 +48,10 @@ const NotificationManager: React.FC = () => {
             
             // 1. Récupérer tous les membres de l'équipe du manager
             const teamResponse = await teamService.getTeamMembers(user.sub);
-            console.log('🔍 Requête teamService.getTeamMembers:', `http://localhost:8082/managers/team/${user.sub}`);
-            console.log('📋 Résultat complet de la requête:', teamResponse);
+
             // L'API retourne directement un tableau, pas un objet avec propriété members
             const teamMembers = Array.isArray(teamResponse) ? teamResponse : (teamResponse.members || []);
-            console.log('👥 Membres de l\'équipe récupérés:', teamMembers);
+
             
             // 2. Vérifier pour chaque membre de l'équipe s'il est déjà dans l'association
             const pending: User[] = [];
@@ -61,7 +60,7 @@ const NotificationManager: React.FC = () => {
                 try {
                     // Utiliser la nouvelle API pour vérifier l'adhésion
                     const isMember = await assoService.isUserMemberOfAssociation(teamMember.id, selectedAssociation.id);
-                    console.log(`Membre équipe ${teamMember.id} (${teamMember.firstname} ${teamMember.lastname}) - Est dans l'association: ${isMember}`);
+
                     
                     // Si le membre de l'équipe n'est PAS dans l'association, l'ajouter à la liste d'attente
                     if (!isMember) {
@@ -85,7 +84,7 @@ const NotificationManager: React.FC = () => {
                     pending.push(userMember);
                     }
                 } catch (error) {
-                    console.error(`Erreur lors de la vérification du membre ${teamMember.id}:`, error);
+
                     // En cas d'erreur, on considère qu'il n'est pas membre (safe fallback)
                     const userMember: User = {
                         id: teamMember.id,
@@ -107,7 +106,7 @@ const NotificationManager: React.FC = () => {
                 }
             }
             
-            console.log('Membres en attente après vérification (membres équipe pas dans association):', pending);
+
             
             // Transformer en format message avec des informations réalistes pour l'affichage
             const realMessages = [
@@ -133,7 +132,7 @@ const NotificationManager: React.FC = () => {
             setPendingMembers(pending);
             
         } catch (error) {
-            console.error('Erreur lors du chargement des membres en attente:', error);
+
             toast.error('Erreur lors du chargement des messages');
         } finally {
             setLoading(false);
@@ -175,16 +174,16 @@ const NotificationManager: React.FC = () => {
             setMemberToValidate(null);
             
             // Recharger immédiatement pour être sûr que la liste est à jour
-            console.log('Rechargement des données après validation...');
+
             await loadPendingMembers();
             await refreshNotifications();
             
             // Déclencher un événement pour notifier les autres composants (comme le header)
             window.dispatchEvent(new CustomEvent('notificationsUpdated'));
-            console.log('Rechargement terminé et événement déclenché');
+
             
         } catch (error) {
-            console.error('Erreur lors de la validation:', error);
+
             toast.error('Erreur lors de la validation de l\'adhésion');
         } finally {
             setProcessing(null);
@@ -317,7 +316,7 @@ const NotificationManager: React.FC = () => {
                                             setSelectedUserDetails(userDetails);
                                             setShowUserDetailsModal(true);
                                         } catch (err) {
-                                            console.error('Erreur lors de la récupération du profil utilisateur:', err);
+
                                         } finally {
                                             setLoadingUserDetails(false);
                                         }

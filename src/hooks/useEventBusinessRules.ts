@@ -126,7 +126,7 @@ export const useEventBusinessRules = () => {
       toast.success(t_planning('events.actions.startSuccess'));
       onSuccess?.();
     } catch (error: any) {
-      console.error('Erreur lors du démarrage:', error);
+
       toast.error(error.message || t_planning('events.actions.startError'));
     } finally {
       setLoading(null);
@@ -141,7 +141,7 @@ export const useEventBusinessRules = () => {
       toast.success(t_planning('events.actions.finishSuccess'));
       onSuccess?.();
     } catch (error: any) {
-      console.error('Erreur lors de la finalisation:', error);
+
       toast.error(error.message || t_planning('events.actions.finishError'));
     } finally {
       setLoading(null);
@@ -175,10 +175,10 @@ export const useEventBusinessRules = () => {
           await Promise.all(updatePromises);
           
           if (relatedItineraries.length > 0) {
-            console.log(`✅ ${relatedItineraries.length} itinéraire(s) désactivé(s) pour l'événement ${eventId}`);
+
           }
         } catch (error) {
-          console.warn('⚠️ Erreur lors de la mise à jour des itinéraires liés:', error);
+
           // On continue même si la mise à jour des itinéraires échoue
         }
       }
@@ -191,7 +191,7 @@ export const useEventBusinessRules = () => {
       toast.success(t_planning('events.actions.cancelSuccess'));
       onSuccess?.();
     } catch (error: any) {
-      console.error('Erreur lors de l\'annulation:', error);
+
       toast.error(error.message || t_planning('events.actions.cancelError'));
     } finally {
       setLoading(null);

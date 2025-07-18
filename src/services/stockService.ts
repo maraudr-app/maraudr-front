@@ -225,7 +225,7 @@ export const stockService = {
                 withCredentials: true
             });
         } catch (error) {
-            console.error('Error updating item:', error);
+
             throw error;
         }
     },

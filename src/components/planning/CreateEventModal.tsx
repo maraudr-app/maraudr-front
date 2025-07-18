@@ -105,7 +105,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             
             setTeamMembers(convertedMembers);
         } catch (error) {
-            console.error('Erreur lors du chargement des membres:', error);
+
         } finally {
             setLoadingMembers(false);
         }
@@ -120,7 +120,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             const availabilities = await userService.getAllDisponibilities(selectedAssociation.id);
             setAllAvailabilities(availabilities || []);
         } catch (error) {
-            console.error('Erreur lors du chargement des disponibilités:', error);
+
             setAllAvailabilities([]);
         } finally {
             setLoadingAvailabilities(false);
@@ -308,7 +308,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             onClose();
             
         } catch (err: any) {
-            console.error('Erreur lors de la création de l\'événement:', err);
+
             setError(err.message || t_planning('createEvent_error'));
         } finally {
             setLoading(false);

@@ -70,21 +70,16 @@ export const assoService = {
     },
 
     getAssociation: async (id: string | any) => {
-        // 🔍 DEBUG: Capturer le problème id[id] et id[name]
-        console.log('🔍 getAssociation appelé avec:', {
-            id: id,
-            typeofId: typeof id,
-            stringified: JSON.stringify(id)
-        });
+
+
 
         // Si c'est un objet, montrer la stack trace
         if (typeof id === 'object' && id !== null) {
-            console.error('❌ ERREUR: Objet passé au lieu d\'un ID string!', id);
-            console.trace('📍 Stack trace pour trouver la source:');
+
             
             // Essayer de récupérer l'ID de l'objet si possible
             if (id.id) {
-                console.warn('🔧 Tentative de récupération de l\'ID depuis l\'objet:', id.id);
+
                 // Utiliser l'ID de l'objet pour continuer
                 id = id.id;
             } else {
@@ -93,7 +88,7 @@ export const assoService = {
         }
 
         try {
-            console.log('📡 Envoi de la requête finale avec ID:', id);
+
             const response = await axios.get(`${API_URL}/association`, {
                 params: { id },
                 headers: {
@@ -104,8 +99,7 @@ export const assoService = {
             
             return response.data;
         } catch (error: any) {
-            console.error('❌ Erreur dans getAssociation:', error);
-            console.error('URL générée:', error.config?.url);
+
             throw error;
         }
     },
@@ -128,7 +122,7 @@ export const assoService = {
     // Nouvelle fonction spécifiquement pour les invitations qui utilise le bon format d'URL
     getAssociationByIdForInvitation: async (id: string) => {
         try {
-            console.log('🔍 Récupération association pour invitation avec ID:', id);
+
             const response = await axios.get(`${API_URL}/association`, {
                 params: { id },
                 headers: {
@@ -136,10 +130,10 @@ export const assoService = {
                 },
                 withCredentials: true
             });
-            console.log('✅ Association récupérée:', response.data);
+
             return response.data;
         } catch (error: any) {
-            console.error('❌ Erreur récupération association pour invitation:', error);
+
             throw error;
         }
     },
@@ -201,7 +195,7 @@ export const assoService = {
     // Méthode mise à jour pour récupérer les membres avec leurs détails complets
     getAssociationMembers: async (associationId: string): Promise<AssociationMember[]> => {
         try {
-            console.log('Récupération des membres pour l\'association:', associationId);
+
             
             // 1. Récupérer les données de l'association (qui contient les IDs des membres)
             const associationResponse = await axios.get(`${API_URL}/association`, {
@@ -213,10 +207,10 @@ export const assoService = {
             });
 
             const associationData: AssociationData = associationResponse.data;
-            console.log('Données association récupérées:', associationData);
+
 
             if (!associationData.members || associationData.members.length === 0) {
-                console.log('Aucun membre trouvé dans l\'association');
+
                 return [];
             }
 
@@ -224,7 +218,7 @@ export const assoService = {
             const memberDetailsPromises = associationData.members.map(async (memberId: string) => {
                 try {
                     const userDetails = await userService.getUser(memberId);
-                    console.log('Détails utilisateur récupérés pour', memberId, ':', userDetails);
+
                     
                     // Déterminer si l'utilisateur est le manager
                     const isManager = memberId === associationData.managerId;
@@ -249,7 +243,7 @@ export const assoService = {
                     
                     return associationMember;
         } catch (error) {
-                    console.error(`Erreur lors de la récupération des détails pour le membre ${memberId}:`, error);
+
                     return null;
                 }
             });
@@ -258,11 +252,11 @@ export const assoService = {
             const memberDetails = await Promise.all(memberDetailsPromises);
             const validMembers = memberDetails.filter((member): member is AssociationMember => member !== null);
             
-            console.log('Membres finaux récupérés:', validMembers);
+
             return validMembers;
 
         } catch (error: any) {
-            console.error('Erreur lors de la récupération des membres de l\'association:', error);
+
             throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des membres');
         }
     },

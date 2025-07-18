@@ -19,7 +19,7 @@ planningApi.interceptors.request.use(async (config) => {
         config.headers.Authorization = `Bearer ${token}`;
         }
     } catch (error) {
-        console.error('Erreur lors de la vérification du token:', error);
+
     }
     return config;
 });
@@ -29,7 +29,7 @@ planningApi.interceptors.response.use(
     (response) => response,
     async (error) => {
         if (error.response?.status === 401) {
-            console.log('❌ Erreur 401 détectée dans planningService...');
+
             try {
                 const newToken = await tokenManager.refreshToken();
                 if (newToken && error.config) {
@@ -37,7 +37,7 @@ planningApi.interceptors.response.use(
                     return planningApi.request(error.config);
                 }
             } catch (refreshError) {
-                console.error('❌ Impossible de refresh le token:', refreshError);
+
             }
         }
         return Promise.reject(error);
@@ -66,7 +66,7 @@ export const planningService = {
             });
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la création du planning:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la création du planning';
             throw new Error(errorMessage);
         }
@@ -78,7 +78,7 @@ export const planningService = {
             const response = await planningApi.post('/planning', eventData);
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la création de l\'événement:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la création de l\'événement';
             throw new Error(errorMessage);
         }
@@ -89,7 +89,7 @@ export const planningService = {
         try {
             await planningApi.delete(`/planning/${eventId}`);
         } catch (error: any) {
-            console.error('Erreur lors de la suppression de l\'événement:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la suppression de l\'événement';
             throw new Error(errorMessage);
         }
@@ -101,7 +101,7 @@ export const planningService = {
             const response = await planningApi.get(`/planning/all-events/${associationId}`);
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la récupération des événements:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la récupération des événements';
             throw new Error(errorMessage);
         }
@@ -113,7 +113,7 @@ export const planningService = {
             const response = await planningApi.get('/planning/my-events');
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la récupération de mes événements:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la récupération de mes événements';
             throw new Error(errorMessage);
         }
@@ -125,7 +125,7 @@ export const planningService = {
             const response = await planningApi.get(`/planning/my-events/${associationId}`);
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la récupération de mes événements pour l\'association:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la récupération de mes événements pour l\'association';
             throw new Error(errorMessage);
         }
@@ -137,7 +137,7 @@ export const planningService = {
             const response = await planningApi.get(`/planning/events/${eventId}`);
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la récupération de l\'événement:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la récupération de l\'événement';
             throw new Error(errorMessage);
         }
@@ -149,7 +149,7 @@ export const planningService = {
             const response = await planningApi.patch(`/planning/update-event/${eventId}`, eventData);
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la mise à jour de l\'événement:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la mise à jour de l\'événement';
             throw new Error(errorMessage);
         }
@@ -160,7 +160,7 @@ export const planningService = {
         try {
             await planningApi.post(`/planning/${eventId}/participants`, { participantId });
         } catch (error: any) {
-            console.error('Erreur lors de l\'ajout du participant:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de l\'ajout du participant';
             throw new Error(errorMessage);
         }
@@ -171,7 +171,7 @@ export const planningService = {
         try {
             await planningApi.delete(`/planning/${eventId}/participants/${participantId}`);
         } catch (error: any) {
-            console.error('Erreur lors de la suppression du participant:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la suppression du participant';
             throw new Error(errorMessage);
         }
@@ -182,7 +182,7 @@ export const planningService = {
         try {
             await planningApi.post(`/planning/start-event/${eventId}`);
         } catch (error: any) {
-            console.error('Erreur lors du démarrage de l\'événement:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors du démarrage de l\'événement';
             throw new Error(errorMessage);
         }
@@ -193,7 +193,7 @@ export const planningService = {
         try {
             await planningApi.post(`/planning/finish-event/${eventId}`);
         } catch (error: any) {
-            console.error('Erreur lors de la finalisation de l\'événement:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de la finalisation de l\'événement';
             throw new Error(errorMessage);
         }
@@ -204,7 +204,7 @@ export const planningService = {
         try {
             await planningApi.post(`/planning/cancel-event/${eventId}`);
         } catch (error: any) {
-            console.error('Erreur lors de l\'annulation de l\'événement:', error);
+
             const errorMessage = error.response?.data?.detail || error.response?.data || 'Erreur lors de l\'annulation de l\'événement';
             throw new Error(errorMessage);
         }

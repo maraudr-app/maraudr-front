@@ -63,10 +63,10 @@ const McpServer: React.FC = () => {
                         conversationHistory: updatedHistory
                     },
                     (chunk: string) => {
-                        console.log('📤 Chunk affiché:', chunk); // Debug log
+
                         setStreamingResponse(prev => {
                             const newResponse = prev + chunk;
-                            console.log('📝 Réponse totale:', newResponse.length, 'caractères'); // Debug log
+
                             return newResponse;
                         });
                         // Forcer React à recalculer le rendu

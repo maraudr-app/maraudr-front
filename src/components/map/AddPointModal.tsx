@@ -128,7 +128,7 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
         setShowAddressSuggestions(false);
       }
     } catch (error: any) {
-      console.error('Erreur lors de la recherche d\'adresses:', error);
+
       setError(error.message || t_map('address_search_error'));
       setAddressSuggestions([]);
       setShowAddressSuggestions(false);
@@ -205,7 +205,7 @@ const AddPointModal: React.FC<AddPointModalProps> = ({
       }, 1500);
 
     } catch (error: any) {
-      console.error('Erreur lors de l\'ajout du point:', error);
+
       
       if (error.response?.status === 401) {
         setError(t_map('auth_error'));

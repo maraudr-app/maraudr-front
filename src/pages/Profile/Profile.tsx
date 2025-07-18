@@ -82,7 +82,7 @@ const Profile: React.FC = () => {
           biography: details.biography || "",
         });
       } catch (err) {
-        console.error('Erreur lors du chargement des détails utilisateur:', err);
+
         setError(t_profile('loadingError'));
       } finally {
         setLoadingDetails(false);
@@ -183,11 +183,7 @@ const Profile: React.FC = () => {
         return lang ? lang.apiName : 'French'; // Fallback vers French
       });
 
-      console.log('🔍 Debug langues:', {
-        formLanguages: form.languages,
-        languageNames: languageNames,
-        languageEnum: getLanguageEnum()
-      });
+
 
       // Format des données selon l'API spécifiée - seulement les champs nécessaires
       const updateData: any = {
@@ -209,26 +205,7 @@ const Profile: React.FC = () => {
         throw new Error(t_profile('missingUserId'));
       }
 
-      console.log('📡 [PROFILE] Données complètes envoyées au serveur:', {
-        userId: user.sub,
-        updateData: updateData,
-        formData: {
-          firstname: form.firstname,
-          lastname: form.lastname,
-          email: form.email,
-          phoneNumber: form.phoneNumber,
-          street: form.street,
-          city: form.city,
-          state: form.state,
-          postalCode: form.postalCode,
-          country: form.country,
-          languages: form.languages,
-          biography: form.biography
-        },
-        languagesCount: languageNames.length,
-        selectedLanguages: form.languages,
-        convertedLanguages: languageNames
-      });
+
 
       await userService.updateUser(user.sub, updateData);
       setSuccess(t_profile('profileUpdated'));
@@ -243,7 +220,7 @@ const Profile: React.FC = () => {
       // Recharger les données utilisateur
       await useAuthStore.getState().fetchUser();
     } catch (err: any) {
-      console.error('❌ Erreur lors de la mise à jour:', err);
+
       setError(err.message || t_profile('updateError'));
     } finally {
       setLoading(false);
@@ -554,7 +531,7 @@ const Profile: React.FC = () => {
                     // Convertir en string si c'est un nombre
                     const langIdStr = String(langId);
                     const lang = getLanguageEnum().find(l => l.value === langIdStr);
-                    console.log('🔍 Debug langue:', { langId, langIdStr, lang, allLangs: getLanguageEnum() }); // Debug
+
                     return lang ? (
                       <span key={langId} className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm">
                         {lang.label}

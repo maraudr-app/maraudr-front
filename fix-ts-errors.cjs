@@ -24,7 +24,7 @@ function addTsIgnore(filePath, patterns) {
 
     if (modified) {
         fs.writeFileSync(filePath, lines.join('\n'));
-        console.log(`Fixed: ${filePath}`);
+
     }
 }
 

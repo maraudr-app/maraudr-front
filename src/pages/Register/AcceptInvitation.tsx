@@ -104,7 +104,7 @@ const AcceptInvitation = () => {
           setForm(prev => ({ ...prev, email: data.invitedEmail }));
         }
       } catch (error) {
-        console.log('❌ Erreur lors du décodage du token d\'invitation:', error);
+
         // @ts-ignore
         toast.error('Invitation invalide ou expirée');
         setAssociationName(null);
@@ -166,25 +166,24 @@ const AcceptInvitation = () => {
     clearMessages(); // Nettoyer tous les messages précédents
     setIsLoading(true);
 
-    console.log('🚀 Début de la soumission du formulaire d\'invitation');
 
     try {
       if (form.password !== form.confirmPassword) {
-        console.log('❌ Erreur: Les mots de passe ne correspondent pas');
+
         // @ts-ignore
         setFormError(t('register.passwordMatchError'));
         return;
       }
 
       if (passwordError || confirmPasswordError) {
-        console.log('❌ Erreur: Erreurs de validation du mot de passe');
+
         // @ts-ignore
         setFormError(t('register.formError'));
         return;
       }
 
       if (!invitationToken || !associationName) {
-        console.log('❌ Erreur: Données d\'invitation manquantes', { invitationToken, associationName });
+
         setFormError('Données d\'invitation manquantes');
         return;
       }
@@ -197,28 +196,20 @@ const AcceptInvitation = () => {
         languages: form.languages,
       };
 
-      console.log('📡 Données formatées pour l\'API d\'invitation:', userData);
-      console.log('🔑 Token d\'invitation utilisé:', invitationToken);
       
       const response = await userService.createAccount(userData);
       
-      console.log('✅ Réponse de l\'API - Succès:', response);
+
       
       if (response) {
-        console.log('🎉 Compte créé avec succès, reste sur la page');
+
         setSuccessMessage('🎉 Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
         
         // ✅ L'utilisateur reste sur la page pour voir le message de succès
         // Il peut ensuite cliquer manuellement sur "Aller à la connexion" s'il le souhaite
       }
     } catch (error: any) {
-      console.log('❌ Erreur lors de la création du compte:', error);
-      console.log('📋 Détails de l\'erreur:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        statusText: error.response?.statusText
-      });
+
       
       // @ts-ignore
       let errorMessage: string = t('register.error.default' as string);
@@ -228,11 +219,10 @@ const AcceptInvitation = () => {
       } else if (error.message) {
         errorMessage = String(error.message);
       }
-      
-      console.log('💬 Message d\'erreur affiché à l\'utilisateur:', errorMessage);
+
       setApiError(`❌ Erreur lors de la création du compte: ${errorMessage}`);
     } finally {
-      console.log('🏁 Fin de la soumission du formulaire');
+
       setIsLoading(false);
     }
   };

@@ -23,11 +23,10 @@ export const useNotifications = () => {
             
             // 1. Récupérer tous les membres de l'équipe du manager
             const teamResponse = await teamService.getTeamMembers(user.sub);
-            console.log('🔍 Hook notifications - Requête teamService.getTeamMembers:', `http://localhost:8082/managers/team/${user.sub}`);
-            console.log('📋 Hook notifications - Résultat complet de la requête:', teamResponse);
+
             // L'API retourne directement un tableau, pas un objet avec propriété members
             const teamMembers = Array.isArray(teamResponse) ? teamResponse : (teamResponse.members || []);
-            console.log('👥 Hook notifications - Membres de l\'équipe récupérés:', teamMembers);
+
             
             // 2. Compter les membres de l'équipe qui ne sont PAS dans l'association
             let pendingCount = 0;
@@ -36,24 +35,22 @@ export const useNotifications = () => {
                 try {
                     // Utiliser la même API que NotificationManager
                     const isMember = await assoService.isUserMemberOfAssociation(teamMember.id, selectedAssociation.id);
-                    console.log(`Hook notifications - Membre équipe ${teamMember.id} (${teamMember.firstname} ${teamMember.lastname}) - Est dans l'association: ${isMember}`);
-                    
+
                     // Si le membre de l'équipe n'est PAS dans l'association, l'ajouter au compteur
                     if (!isMember) {
                         pendingCount++;
                     }
                 } catch (error) {
-                    console.error(`Hook notifications - Erreur lors de la vérification du membre ${teamMember.id}:`, error);
                     // En cas d'erreur, on considère qu'il n'est pas membre (safe fallback)
                     pendingCount++;
                 }
             }
             
-            console.log(`Hook notifications - Équipe: ${teamMembers.length}, En attente: ${pendingCount}`);
+
             setNotificationCount(pendingCount);
             
         } catch (error) {
-            console.error('Hook notifications - Erreur lors du calcul des notifications:', error);
+
             setNotificationCount(0);
         } finally {
             setLoading(false);
@@ -65,7 +62,7 @@ export const useNotifications = () => {
         
         // Écouter les événements de mise à jour des notifications
         const handleNotificationUpdate = () => {
-            console.log('Hook notifications - Événement de mise à jour reçu');
+
             calculateNotifications();
         };
 

@@ -48,7 +48,7 @@ function App() {
         try {
           await fetchUser();
         } catch (error) {
-          console.error('Erreur lors du chargement des données utilisateur:', error);
+      
         }
       }
     };

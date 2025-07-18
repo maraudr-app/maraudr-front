@@ -102,7 +102,7 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
             onItemAdded();
             onClose();
         } catch (error: any) {
-            console.error('Erreur lors de l\'ajout par code-barres:', error);
+
             
             if (error.message?.includes('Produit inexistant') || error.message?.includes('not found')) {
                 setError(t_stock('barcodeNotFound'));
@@ -157,7 +157,7 @@ export const AddItemModal = ({ isOpen, onClose, onItemAdded, onItemHighlight }: 
             onItemAdded();
             onClose();
         } catch (error: any) {
-            console.error('Erreur lors de l\'ajout manuel:', error);
+
             setError(error.message || t_stock('unknownError'));
         } finally {
             setIsLoading(false);

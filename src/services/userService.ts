@@ -16,15 +16,14 @@ export const userService = {
 
   createAccount: async (userData: UserToCreate) => {
     try {
-      console.log('📡 Envoi de la requête POST vers /users avec les données:', userData);
+
       const response = await api.post('/users', userData);
-      console.log('📡 Réponse reçue du serveur:', response.data);
+
       alert(response.data);
       return response.data;
     } catch (error: any) {
     
-      console.error('❌ Erreur lors de la création du compte:', error);
-      console.error('❌ Détails de l\'erreur:', error.response?.data);
+
       const errorMessage = error.response?.data?.detail || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
@@ -65,45 +64,15 @@ export const userService = {
 
   updateUser: async (userSub: string, userData: any) => {
     try {
-      console.log('📡 [userService] Début mise à jour utilisateur:', { 
-        userSub, 
-        userData,
-        allFields: {
-          firstname: userData.firstname,
-          lastname: userData.lastname,
-          email: userData.email,
-          phoneNumber: userData.phoneNumber,
-          street: userData.street,
-          city: userData.city,
-          state: userData.state,
-          postalCode: userData.postalCode,
-          country: userData.country,
-          languages: userData.languages
-        },
-        languages: userData.languages,
-        languagesType: typeof userData.languages,
-        languagesLength: userData.languages?.length,
-        dataType: typeof userData,
-        isArray: Array.isArray(userData)
-      });
+
       
       const response = await api.put(`/users/${userSub}`, userData);
       
-      console.log('✅ [userService] Réponse mise à jour reçue:', {
-        status: response.status,
-        data: response.data,
-        headers: response.headers
-      });
+
       
       return response.data;
     } catch (error: any) {
-      console.error('❌ [userService] Erreur mise à jour utilisateur:', {
-        error: error,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers
-      });
+
       
       const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Une erreur est survenue';
       throw new Error(errorMessage);
@@ -127,7 +96,7 @@ export const userService = {
       const response = await api.post('/users/disponibilities', disponibilityData);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur détaillée:', error.response?.data);
+
       
       // Extraire le message d'erreur de la validation
       let errorMessage = 'availability_unknownError';
@@ -167,7 +136,7 @@ export const userService = {
       const response = await api.put(`/users/disponibilities/${disponibilityId}`, disponibilityData);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur détaillée:', error.response?.data);
+
       const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
@@ -178,7 +147,7 @@ export const userService = {
       const response = await api.get(`/users/disponibilities/${associationId}`);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur détaillée:', error.response?.data);
+
       const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
@@ -189,7 +158,7 @@ export const userService = {
       const response = await api.get(`/users/disponibilities/all/${associationId}`);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur détaillée:', error.response?.data);
+
       const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
@@ -200,7 +169,7 @@ export const userService = {
       const response = await api.get(`/users/disponibilities/futur/${associationId}`);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur détaillée:', error.response?.data);
+
       const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }
@@ -210,7 +179,7 @@ export const userService = {
     try {
       await api.delete(`/users/disponibilities/${disponibilityId}`);
     } catch (error: any) {
-      console.error('Erreur détaillée:', error.response?.data);
+
       const errorMessage = error.response?.data?.detail || error.response?.data || 'Une erreur est survenue';
       throw new Error(errorMessage);
     }

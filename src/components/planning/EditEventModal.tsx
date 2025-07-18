@@ -133,7 +133,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
             
             setTeamMembers(convertedMembers);
         } catch (error) {
-            console.error('Erreur lors du chargement des membres:', error);
+
         } finally {
             setLoadingMembers(false);
         }
@@ -148,7 +148,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
             const availabilities = await userService.getAllDisponibilities(selectedAssociation.id);
             setAllAvailabilities(availabilities || []);
         } catch (error) {
-            console.error('Erreur lors du chargement des disponibilités:', error);
+
             setAllAvailabilities([]);
         } finally {
             setLoadingAvailabilities(false);
@@ -368,7 +368,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({
             onEventUpdated();
             onClose();
         } catch (error) {
-            console.error('Erreur lors de la modification de l\'événement:', error);
+
             setError(t_planning('editEvent_error'));
         } finally {
             setLoading(false);

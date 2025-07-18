@@ -94,7 +94,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
             
             setTeamMembers(convertedMembers);
         } catch (error) {
-            console.error('Erreur lors du chargement des membres:', error);
+
         } finally {
             setLoadingMembers(false);
         }
@@ -141,7 +141,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
             setShowAddEvent(true);
             
         } catch (err: any) {
-            console.error('Erreur lors de la création du planning:', err);
+
             setError(err.message || t_planning('createPlanning_error'));
         } finally {
             setLoading(false);
@@ -198,7 +198,7 @@ const CreatePlanningModal: React.FC<CreatePlanningModalProps> = ({
             toast.success(t_planning('createPlanning_eventAdded'));
             
         } catch (err: any) {
-            console.error('Erreur lors de la création de l\'événement:', err);
+
             setError(err.message || t_planning('createPlanning_eventError'));
         } finally {
             setLoading(false);

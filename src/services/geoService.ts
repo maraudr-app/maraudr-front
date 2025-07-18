@@ -22,7 +22,7 @@ geoApi.interceptors.request.use(async (config) => {
             config.headers.Authorization = `Bearer ${token}`;
         }
     } catch (error) {
-        console.error('Erreur lors de la vérification du token:', error);
+
     }
     return config;
 });
@@ -32,7 +32,7 @@ geoApi.interceptors.response.use(
     (response) => response,
     async (error) => {
         if (error.response?.status === 401) {
-            console.log('❌ Erreur 401 détectée dans geoService...');
+
             try {
                 const newToken = await tokenManager.refreshToken();
                 if (newToken && error.config) {
@@ -40,7 +40,7 @@ geoApi.interceptors.response.use(
                     return geoApi.request(error.config);
                 }
             } catch (refreshError) {
-                console.error('❌ Impossible de refresh le token:', refreshError);
+
             }
         }
         return Promise.reject(error);
@@ -103,7 +103,7 @@ export const geoService = {
             const response = await geoApi.post('/geo', geoPoint);
             return response.data;
         } catch (error) {
-            console.error('Error adding geo point:', error);
+
             throw error;
         }
     },
@@ -114,7 +114,7 @@ export const geoService = {
             const response = await geoApi.post('/geo/store', { associationId });
             return response.data;
         } catch (error) {
-            console.error('Error saving geo store:', error);
+
             throw error;
         }
     },
@@ -127,7 +127,7 @@ export const geoService = {
             });
             return response.data;
         } catch (error) {
-            console.error('Error fetching geo points:', error);
+
             throw error;
         }
     },
@@ -138,14 +138,14 @@ export const geoService = {
             const response = await geoApi.get(`/geo/store/${associationId}`);
             return response.data;
         } catch (error) {
-            console.error('Error fetching geo store:', error);
+
             throw error;
         }
     },
 
     // Créer une connexion WebSocket temps réel
     createLiveConnection: async (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): Promise<{ close: () => void }> => {
-        console.log('🔄 Démarrage de la connexion WebSocket temps réel');
+
         
         try {
             // Construire l'URL WebSocket avec associationId seulement
@@ -161,27 +161,27 @@ export const geoService = {
                 wsUrl = `ws://localhost:8084/geo/live?associationId=${associationId}`;
             }
 
-            console.log('🔗 Connexion WebSocket vers:', wsUrl);
+
 
             // Créer la connexion WebSocket
             const ws = new WebSocket(wsUrl);
             
             // Gestionnaire d'ouverture de connexion
             ws.onopen = () => {
-                console.log('✅ Connexion WebSocket établie');
+
             };
 
             // Gestionnaire de messages reçus
             ws.onmessage = (event) => {
                 // Vérifier si c'est un ping (message texte simple)
                 if (event.data === 'ping') {
-                    console.log('🏓 Ping WebSocket reçu - connexion active');
+
                     return;
                 }
                 
                 try {
                     const data = JSON.parse(event.data);
-                    console.log('📨 Message WebSocket reçu:', data);
+
                     
                     // Traiter les données reçues
                     onMessage({
@@ -197,14 +197,13 @@ export const geoService = {
                         }
                     });
                 } catch (error) {
-                    console.error('❌ Erreur parsing message WebSocket:', error);
-                    console.error('📄 Contenu du message:', event.data);
+
                 }
             };
 
             // Gestionnaire d'erreur
             ws.onerror = (error) => {
-                console.error('❌ Erreur WebSocket:', error);
+
                 if (onError) {
                     onError(error);
                 }
@@ -212,7 +211,7 @@ export const geoService = {
 
             // Gestionnaire de fermeture
             ws.onclose = (event) => {
-                console.log('🔌 Connexion WebSocket fermée:', event.code, event.reason);
+
                 if (onError) {
                     onError(new Event('WebSocket closed'));
                 }
@@ -221,7 +220,7 @@ export const geoService = {
             // Retourner un objet avec la méthode close
             return {
                 close: () => {
-                    console.log('🔌 Fermeture manuelle de la connexion WebSocket');
+
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.close(1000, 'Fermeture manuelle');
                     }
@@ -229,17 +228,17 @@ export const geoService = {
             };
 
         } catch (error) {
-            console.error('❌ Erreur lors de la création de la connexion WebSocket:', error);
+
             
             // Fallback vers polling en cas d'erreur WebSocket
-            console.log('🔄 Fallback vers polling HTTP');
+
             return await geoService.createLiveConnectionFallback(associationId, onMessage, onError);
         }
     },
 
     // Fallback vers polling HTTP en cas d'erreur WebSocket
     createLiveConnectionFallback: async (associationId: string, onMessage: (data: any) => void, onError?: (error: Event) => void): Promise<{ close: () => void }> => {
-        console.log('🔄 Démarrage de la surveillance temps réel par polling (fallback)');
+
         
         let lastCheckTime = new Date();
         let isActive = true;
@@ -260,7 +259,7 @@ export const geoService = {
                 });
                 
                 if (newPoints.length > 0) {
-                    console.log(`📍 ${newPoints.length} nouveau(x) point(s) détecté(s)`);
+
                     newPoints.forEach(point => {
                         onMessage({
                             type: 'new_point',
@@ -277,7 +276,7 @@ export const geoService = {
                 }
                 
             } catch (error) {
-                console.error('Erreur lors du polling:', error);
+
                 if (isActive) {
                     setTimeout(pollForUpdates, 10000); // Retry plus lentement en cas d'erreur
                 }
@@ -287,13 +286,13 @@ export const geoService = {
         // Démarrer le polling
         pollForUpdates();
         
-        console.log('✅ Surveillance temps réel activée (polling toutes les 5s)');
+
         
         // Retourner un objet compatible avec WebSocket
         return {
             close: () => {
                 isActive = false;
-                console.log('🔌 Surveillance temps réel arrêtée');
+
             }
         };
     },
@@ -384,7 +383,7 @@ export const geoService = {
                 }
             };
         } catch (error) {
-            console.error('Error calculating travel times:', error);
+
             // Fallback: calcul approximatif basé sur la distance à vol d'oiseau
             const distance = geoService.calculateDistance(fromLat, fromLng, toLat, toLng);
             
@@ -453,19 +452,13 @@ export const geoService = {
         startLng: number;
     }): Promise<RouteResponse> => {
         try {
-            console.log('🔄 Tentative de création de route vers:', `${GEO_API_URL}/itineraries`);
-            console.log('📦 Données envoyées:', routeData);
+
             
             const response = await geoApi.post('/itineraries', routeData);
-            console.log('✅ Route créée avec succès:', response.data);
+
             return response.data;
         } catch (error: any) {
-            console.error('❌ Erreur lors de la création de la route:');
-            console.error('   - URL:', `${GEO_API_URL}/itineraries`);
-            console.error('   - Erreur:', error.message);
-            console.error('   - Code:', error.code);
-            console.error('   - Status:', error.response?.status);
-            console.error('   - Données:', error.response?.data);
+
             
             if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
                 throw new Error(`Service géolocalisation non accessible sur ${GEO_API_URL}. Vérifiez que le service est démarré.`);
@@ -483,7 +476,7 @@ export const geoService = {
             });
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la récupération des itinéraires:', error);
+
             throw error;
         }
     },
@@ -496,7 +489,7 @@ export const geoService = {
             });
             return response.data;
         } catch (error: any) {
-            console.error('Erreur lors de la recherche d\'adresses:', error);
+
             throw error;
         }
     },
@@ -506,7 +499,7 @@ export const geoService = {
         try {
             await geoApi.delete(`/itineraries/${itineraryId}`);
         } catch (error: any) {
-            console.error('Erreur lors de la suppression de l\'itinéraire:', error);
+
             throw error;
         }
     },
@@ -516,7 +509,7 @@ export const geoService = {
         try {
             await geoApi.patch(`/itineraries/${itineraryId}`, updateData);
         } catch (error: any) {
-            console.error('Erreur lors de la mise à jour de l\'itinéraire:', error);
+
             throw error;
         }
     },
@@ -526,7 +519,7 @@ export const geoService = {
         try {
             await geoApi.patch(`/itinerary/${itineraryId}/status`);
         } catch (error: any) {
-            console.error('Erreur lors du basculement du statut de l\'itinéraire:', error);
+
             throw error;
         }
     },
@@ -536,7 +529,7 @@ export const geoService = {
         try {
             await geoApi.patch(`/geo/${pointId}/status`, { isActive });
         } catch (error: any) {
-            console.error('Erreur lors du basculement du statut du point:', error);
+
             throw error;
         }
     },
@@ -549,7 +542,7 @@ export const geoService = {
                 isActive 
             });
         } catch (error: any) {
-            console.error('Erreur lors du basculement du statut du cluster:', error);
+
             throw error;
         }
     }

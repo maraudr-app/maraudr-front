@@ -67,7 +67,7 @@ const Login = () => {
         setError(t_auth('invalidCredentials'));
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+
       
       // Gérer différents types d'erreurs avec les traductions appropriées
       if (error.message?.includes('User not authenticated')) {

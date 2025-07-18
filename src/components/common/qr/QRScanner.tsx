@@ -52,7 +52,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
             const scanner = new QrScanner(
                 videoRef.current,
                 (result) => {
-                    console.log('QR Code scanné:', result.data);
+
                     onScan(result.data);
                     stopScanner();
                     onClose();
@@ -68,7 +68,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
             setQrScanner(scanner);
             setIsLoading(false);
         } catch (err) {
-            console.error('Erreur lors du démarrage du scanner:', err);
+
             setError('Impossible d\'accéder à la caméra. Vérifiez les permissions.');
             setIsLoading(false);
         }
@@ -92,7 +92,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
                     await qrScanner.setCamera(cameras[1].id);
                 }
             } catch (err) {
-                console.error('Erreur lors du changement de caméra:', err);
+
             }
         }
     };

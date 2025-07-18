@@ -129,7 +129,7 @@ export const authService = {
       try {
         return JSON.parse(userStr) as User;
       } catch (error) {
-        console.error('Error parsing stored user:', error);
+
         localStorage.removeItem('user');
         return null;
       }
@@ -207,7 +207,7 @@ export const authService = {
 
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching current user data:', error);
+
       throw new Error(error.response?.data?.message || 'Failed to fetch current user data');
     }
   },
@@ -228,7 +228,7 @@ export const authService = {
       
       return updatedUser;
     } catch (error) {
-      console.error('Error updating profile:', error);
+
       throw error;
     }
   },
@@ -254,7 +254,7 @@ export const authService = {
         }
       });
     } catch (error) {
-      console.error('Error sending invitation:', error);
+
       throw error;
     }
   },
@@ -262,8 +262,7 @@ export const authService = {
   // Fonction pour décoder le token d'invitation (via appel API au backend)
   decodeInvitationToken: async (token: string): Promise<{ managerFirstName: string; managerLastName: string; associationName: string; associationId: string; invitedEmail: string }> => {
     try {
-      console.log('Token reçu:', token);
-      console.log('Longueur du token:', token.length);
+
       
       // Utiliser l'endpoint correct selon le Swagger
       const response = await axios.post(`${API_URL}/auth/invitation-token/validate/${token}`, {}, {
@@ -273,7 +272,7 @@ export const authService = {
         }
       });
       
-      console.log('Données décodées par le backend:', response.data);
+
       
       // Adapter le mapping selon la réponse du backend
       return {
@@ -284,8 +283,7 @@ export const authService = {
         invitedEmail: '' // Le backend ne retourne pas l'email invité
       };
     } catch (error) {
-      console.error('Error decoding invitation token via backend:', error);
-      console.error('Token problématique:', token);
+
       throw new Error('Invalid invitation token');
     }
   },

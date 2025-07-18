@@ -56,7 +56,7 @@ class MediaService {
             
             return mappedFiles;
         } catch (error) {
-            console.error('Erreur lors de la récupération des fichiers média:', error);
+
             return [];
         }
     }
@@ -87,7 +87,7 @@ class MediaService {
             });
             return response.data;
         } catch (error) {
-            console.error('Erreur lors de l\'upload du fichier:', error);
+
             throw error;
         }
     }
@@ -98,7 +98,7 @@ class MediaService {
             await axios.delete(`${this.baseUrl}/delete/${associationId}/document/${fileId}`, { headers });
             return true;
         } catch (error) {
-            console.error('Erreur lors de la suppression du fichier:', error);
+
             return false;
         }
     }
@@ -109,7 +109,7 @@ class MediaService {
             const response = await axios.put(`${this.baseUrl}/${fileId}`, updates, { headers });
             return response.data;
         } catch (error) {
-            console.error('Erreur lors de la mise à jour du fichier:', error);
+
             throw error;
         }
     }
@@ -120,7 +120,7 @@ class MediaService {
             const response = await axios.get(`${this.baseUrl}/categories`, { headers });
             return response.data;
         } catch (error) {
-            console.error('Erreur lors de la récupération des catégories:', error);
+
             return [];
         }
     }
@@ -132,7 +132,7 @@ class MediaService {
             const response = await axios.get(`${this.baseUrl}/users/${associationId}`, { headers });
             return response.data;
         } catch (error) {
-            console.error('Erreur lors de la récupération des uploaders:', error);
+
             // Retourner une liste vide en cas d'erreur
             return [];
         }

@@ -14,7 +14,7 @@ export const useAssociationChange = (
 
     useEffect(() => {
         if (selectedAssociation) {
-            console.log('🔄 useAssociationChange: Association changée vers:', selectedAssociation.name);
+
             callback(selectedAssociation);
         }
     }, [selectedAssociation, ...dependencies]);
@@ -22,7 +22,7 @@ export const useAssociationChange = (
     // Écouter l'événement personnalisé pour plus de robustesse
     useEffect(() => {
         const handleAssociationChange = (event: CustomEvent) => {
-            console.log('🎯 useAssociationChange: Événement reçu:', event.detail.association);
+
         };
 
         window.addEventListener('associationChanged', handleAssociationChange as EventListener);

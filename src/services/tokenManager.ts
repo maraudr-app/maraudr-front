@@ -35,7 +35,7 @@ class TokenManager {
       // Token expire dans moins de 5 minutes (300 secondes)
       return timeUntilExpiration < 300;
     } catch (error) {
-      console.error('Erreur lors du décodage du token:', error);
+
       return true; // Si on ne peut pas décoder, considérer comme expiré
     }
   }
@@ -47,14 +47,14 @@ class TokenManager {
       const currentTime = Math.floor(Date.now() / 1000);
       return decoded.exp < currentTime;
     } catch (error) {
-      console.error('Erreur lors du décodage du token:', error);
+
       return true;
     }
   }
 
   // Nettoyer complètement le localStorage et les stores
   clearAllUserData(): void {
-    console.log('🧹 Nettoyage complet des données utilisateur...');
+
     
     // Supprimer tous les éléments liés à l'authentification
     localStorage.removeItem('token');
@@ -79,10 +79,10 @@ class TokenManager {
       useAuthStore.getState().logout();
       useAssoStore.getState().clearAssociations();
     } catch (error) {
-      console.error('Erreur lors du nettoyage des stores:', error);
+
     }
     
-    console.log('✅ Nettoyage terminé');
+
   }
 
   // Refresh token
@@ -126,7 +126,7 @@ class TokenManager {
             refreshToken: refreshToken
           });
         } catch (refreshError: any) {
-          console.warn('Refresh token invalide, tentative avec le token actuel...');
+
           
           // Si le refresh token échoue, essayer avec le token actuel
           if (currentToken && !this.isTokenExpired(currentToken)) {
@@ -160,11 +160,11 @@ class TokenManager {
       // Mettre à jour le store
       useAuthStore.getState().setToken(accessToken);
 
-      console.log('✅ Token refreshé avec succès');
+
       return accessToken;
 
     } catch (error: any) {
-      console.error('❌ Erreur lors du refresh du token:', error);
+
       
       // ✅ Ne pas nettoyer/rediriger si on est sur une page d'invitation
       const isInvitationPage = window.location.pathname === '/accept-invitation' || 
@@ -175,7 +175,7 @@ class TokenManager {
         this.clearAllUserData();
         this.redirectToLogin();
       } else {
-        console.log('🚫 Nettoyage/redirection bloqués après échec refresh : utilisateur sur page d\'invitation');
+
       }
       
       throw new Error('Session expirée, veuillez vous reconnecter');
@@ -184,18 +184,18 @@ class TokenManager {
 
   // Redirection vers la page de connexion
   redirectToLogin(): void {
-    // ✅ Ne pas rediriger si on est sur une page d'invitation
+
     const isInvitationPage = window.location.pathname === '/accept-invitation' || 
                            window.location.pathname.includes('/accept-invitation');
     
     if (isInvitationPage) {
-      console.log('🚫 Redirection bloquée : utilisateur sur page d\'invitation');
+
       return;
     }
     
     // Éviter les redirections en boucle
     if (window.location.pathname !== '/login') {
-      console.log('🔄 Redirection vers la page de connexion...');
+
       window.location.href = '/login';
     }
   }
@@ -205,7 +205,7 @@ class TokenManager {
     const currentToken = localStorage.getItem('token');
     
     if (!currentToken) {
-      console.log('❌ Aucun token trouvé');
+
       
       // ✅ Ne pas nettoyer/rediriger si on est sur une page d'invitation
       const isInvitationPage = window.location.pathname === '/accept-invitation' || 
@@ -215,29 +215,29 @@ class TokenManager {
         this.clearAllUserData();
         this.redirectToLogin();
       } else {
-        console.log('🚫 Nettoyage/redirection bloqués : utilisateur sur page d\'invitation');
+
       }
       return null;
     }
 
     // Si le token est complètement expiré
     if (this.isTokenExpired(currentToken)) {
-      console.log('❌ Token expiré, tentative de refresh...');
+
       try {
         return await this.refreshToken();
       } catch (error) {
-        console.error('❌ Impossible de rafraîchir le token:', error);
+
         return null;
       }
     }
 
     // Si le token expire bientôt, le rafraîchir préventivement
     if (this.isTokenExpiringSoon(currentToken)) {
-      console.log('⚠️ Token expire bientôt, refresh préventif...');
+
       try {
         return await this.refreshToken();
       } catch (error) {
-        console.warn('⚠️ Refresh préventif échoué, utilisation du token actuel:', error);
+
         return currentToken; // Utiliser le token actuel si le refresh échoue
       }
     }
@@ -254,12 +254,11 @@ class TokenManager {
         try {
           await this.ensureValidToken();
         } catch (error) {
-          console.error('Erreur lors de la vérification automatique du token:', error);
+
         }
       }
     }, 60000); // 60 secondes
 
-    console.log('🕐 Monitoring des tokens activé (vérification toutes les minutes)');
   }
 }
 

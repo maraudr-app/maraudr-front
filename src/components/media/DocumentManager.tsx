@@ -67,7 +67,7 @@ const DocumentManager: React.FC = () => {
             const docs = await mediaService.getDocuments(selectedAssociation.id, {});
             setDocuments(docs);
         } catch (error: any) {
-            console.error('Erreur lors du chargement des documents:', error);
+
             setError(t_media('errorLoadingDocuments'));
         } finally {
             setLoading(false);
@@ -110,7 +110,7 @@ const DocumentManager: React.FC = () => {
             setSuccess(t_media('uploadSuccess'));
             loadDocuments(); // Recharger la liste
         } catch (error: any) {
-            console.error('Erreur lors de l\'upload:', error);
+
             setError(error.message || t_media('errorUpload'));
         } finally {
             setUploading(false);
@@ -146,7 +146,7 @@ const DocumentManager: React.FC = () => {
             document.body.removeChild(link);
             setSuccess(t_media('downloadStarted'));
         } catch (error: any) {
-            console.error('Erreur lors du téléchargement:', error);
+
             setError(t_media('errorDownload'));
         }
     };
@@ -167,7 +167,7 @@ const DocumentManager: React.FC = () => {
             setSuccess(t_media('deleteSuccess'));
             loadDocuments(); // Recharger la liste
         } catch (error: any) {
-            console.error('Erreur lors de la suppression:', error);
+
             setError(t_media('errorDelete'));
         } finally {
             setDeleting(null);

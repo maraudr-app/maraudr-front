@@ -100,22 +100,16 @@ export const getUserTeamUrl = (): string => {
 
 // Fonction de debug pour vérifier les URLs générées
 export const debugApiUrls = () => {
-  console.log('🔧 Configuration API Debug:');
-  console.log('Mode:', isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
-  console.log('API_DOMAIN:', API_DOMAIN);
+
 
   const modules: (keyof typeof PORTS)[] = ['user', 'stock', 'association', 'geo', 'planning', 'mcp', 'document', 'email'];
 
   modules.forEach(module => {
-    console.log(`${module}:`);
-    console.log(`  API URL: ${getModuleApiUrl(module)}`);
-    console.log(`  Base URL: ${getModuleBaseUrl(module)}`);
-    console.log(`  Module name: ${MODULE_NAMES[module]}`);
-    console.log(`  Uses API prefix: ${MODULES_WITH_API_PREFIX.includes(module)}`);
+
     if (!isProduction) {
-      console.log(`  Port: ${PORTS[module]}`);
+
     }
   });
   
-  console.log('User Team URL:', getUserTeamUrl());
+
 };

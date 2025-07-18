@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children, requireAuth = true }: ProtectedRouteProps) =
         try {
           await useAssoStore.getState().fetchUserAssociations();
         } catch (error) {
-          console.error('Erreur lors du chargement des associations:', error);
+
         } finally {
           setIsLoading(false);
         }

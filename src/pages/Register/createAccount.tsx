@@ -162,7 +162,7 @@ const CreateAccount = () => {
         languages: form.languages,
           } as NonManagerUserData;
 
-      console.log('🚀 Tentative de création d\'utilisateur avec les données:', userData);
+
       
       // Préparer les données pour le backend selon le type d'utilisateur
       const backendData = {
@@ -171,14 +171,11 @@ const CreateAccount = () => {
         // Pour les utilisateurs : utiliser le managerToken fourni
         managerToken: !userData.isManager ? userData.managerToken : undefined
       };
-      
-      console.log('📡 Données formatées pour le backend:', backendData);
+
       
       
       const response = await userService.createAccount(backendData);
-   
-      
-      console.log('✅ Réponse de création d\'utilisateur:', response);
+
       
   
     } catch (error: any) {

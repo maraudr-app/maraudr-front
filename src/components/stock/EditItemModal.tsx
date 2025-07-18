@@ -69,7 +69,7 @@ export const EditItemModal = ({ isOpen, onClose, onItemUpdated, item }: EditItem
             onItemUpdated(updatedItem);
             onClose();
         } catch (error) {
-            console.error('Erreur lors de la modification:', error);
+
             const errorMessage = error instanceof Error ? error.message : t_stock('unknownError');
             toast.error(`${t_stock('modificationError')}: ${errorMessage}`);
         } finally {

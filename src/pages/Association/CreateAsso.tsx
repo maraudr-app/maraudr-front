@@ -103,7 +103,7 @@ const CreateAsso = () => {
           toast.success(t_createAssociation('associationSelected').replace('{name}', newAssociation.name));
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération de la nouvelle association:', error);
+
         // Même en cas d'erreur, on continue vers le dashboard
       }
       
@@ -160,7 +160,7 @@ const CreateAsso = () => {
       }
       
       setApiError(errorMessage);
-      console.error('Erreur création association:', error.response?.data);
+
     } finally {
       setIsLoading(false);
     }

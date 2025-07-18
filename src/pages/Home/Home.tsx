@@ -39,7 +39,7 @@ const Home = () => {
         try {
           await useAssoStore.getState().fetchUserAssociations();
         } catch (error) {
-          console.error('Erreur lors du chargement des associations:', error);
+
         } finally {
           setIsLoadingAssociations(false);
         }

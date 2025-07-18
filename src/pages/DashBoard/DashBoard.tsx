@@ -403,40 +403,35 @@ const DashBoard = () => {
 
   // Charger les données du dashboard
   useEffect(() => {
-    console.log('🔍 ===== DÉBUT DEBUG DASHBOARD =====');
-    console.log('👤 User:', user);
-    console.log('🏢 Selected Association:', selectedAssociation);
-    console.log('🎯 User Type:', user?.userType);
-    console.log('🆔 Association ID:', selectedAssociation?.id);
+
     
     if (!selectedAssociation?.id) {
-      console.log('❌ Pas d\'association sélectionnée, arrêt du chargement');
+
       return;
     }
     
-    console.log('✅ Association trouvée, démarrage du chargement...');
+
 
     const loadDashboardData = async () => {
       setLoading(true);
       
-      console.log('🚀 Début de loadDashboardData');
+
       
       try {
         // ===== 1. VÉRIFICATION STOCK =====
-        console.log('📦 Chargement du stock...');
+
         let stockItems: any[] = [];
         let lowStockItems: any[] = [];
         
         try {
           stockItems = await stockService.getStockItems(selectedAssociation.id);
-          console.log('📦 Stock Items reçus:', stockItems);
-          console.log('📦 Nombre d\'articles:', stockItems?.length || 0);
+
           
           // Pour l'instant, considérer qu'un item est en stock faible si quantity < 5
           lowStockItems = stockItems.filter(item => item.quantity < 5);
-          console.log('⚠️ Articles en stock faible:', lowStockItems?.length || 0);
+
         } catch (stockError) {
-          console.error('❌ Erreur chargement stock (continuons quand même):', stockError);
+
           stockItems = [];
           lowStockItems = [];
         }
@@ -457,18 +452,16 @@ const DashBoard = () => {
           weeklyGeoActivity: []
         };
         
-        console.log('📋 Données initiales:', initialData);
+
         setDashboardData(initialData);
 
         // ===== 2. VÉRIFICATION ÉQUIPE (si Manager) =====
         if (user?.userType === 'Manager') {
-          console.log('👨‍💼 UTILISATEUR EST MANAGER - Chargement des données équipe...');
+
           
           try {
             const teamResponse = await teamService.getTeamMembers(user.sub);
-            console.log('👥 Team Response:', teamResponse);
-            console.log('👥 Membres de l\'équipe:', teamResponse?.members);
-            console.log('👥 Nombre de membres:', teamResponse?.members?.length || 0);
+
             
             const teamCount = teamResponse?.members?.length || 0;
             
@@ -478,61 +471,59 @@ const DashBoard = () => {
                 teamMembers: teamCount, 
                 teamMembersList: teamResponse?.members || [] 
               };
-              console.log('👥 Mise à jour données équipe:', newData);
+
               return newData;
             });
           } catch (teamError) {
-            console.error('❌ Erreur chargement équipe:', teamError);
+
           }
         } else {
-          console.log('👤 UTILISATEUR N\'EST PAS MANAGER (type:', user?.userType, ')');
+
         }
 
         // ===== 3. VÉRIFICATION DISPONIBILITÉS =====
-        console.log('📅 Chargement des disponibilités...');
+
         try {
           const availability = await userService.getDisponibilities(selectedAssociation.id);
-          console.log('📅 Disponibilités reçues:', availability);
-          console.log('📅 Nombre de disponibilités:', availability?.length || 0);
+
           
           setDashboardData(prev => {
             const newData = { ...prev, activeDisponibilities: availability?.length || 0 };
-            console.log('📅 Mise à jour disponibilités:', newData);
+
             return newData;
           });
         } catch (availabilityError) {
-          console.error('❌ Erreur chargement disponibilités:', availabilityError);
+
         }
 
         // ===== 4. VÉRIFICATION DISPONIBILITÉS GLOBALES (si Manager) =====
         if (user?.userType === 'Manager') {
-          console.log('🌍 Chargement de toutes les disponibilités...');
+
           try {
             const allAvailabilities = await userService.getAllDisponibilities(selectedAssociation.id);
-            console.log('🌍 Toutes les disponibilités:', allAvailabilities);
+
             setAllDisponibilities(allAvailabilities || []);
           } catch (allAvailabilityError) {
-            console.error('❌ Erreur chargement toutes disponibilités:', allAvailabilityError);
+
           }
         }
 
         // ===== 5. VÉRIFICATION ÉVÉNEMENTS =====
-        console.log('🎯 Chargement des événements...');
+
         let userEvents: Event[] = [];
         let allAssociationEvents: Event[] = [];
         let todayEvents: Event[] = [];
         
         if (user?.userType === 'Manager') {
-          console.log('👨‍💼 Manager - Récupération de TOUS les événements de l\'association');
+
           
           try {
             allAssociationEvents = await planningService.getAllEvents(selectedAssociation.id);
-            console.log('🎯 Tous les événements de l\'association:', allAssociationEvents);
-            console.log('🎯 Nombre total d\'événements:', allAssociationEvents?.length || 0);
+
             
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            console.log('📅 Aujourd\'hui c\'est:', today.toLocaleDateString('fr-FR'));
+
             
             // Filtrer les événements du jour
             todayEvents = allAssociationEvents.filter(event => {
@@ -546,32 +537,23 @@ const DashBoard = () => {
               
               const isActiveToday = eventStartDate <= todayDate && eventEndDate >= todayDate;
               
-              console.log(`🔍 Événement "${event.title}":`, {
-                start: event.beginningDate,
-                end: event.endDate,
-                startDate: eventStartDate.toLocaleDateString('fr-FR'),
-                endDate: eventEndDate.toLocaleDateString('fr-FR'),
-                isActiveToday
-              });
+
               
               return isActiveToday;
             });
             
-            console.log('🎯 Événements du jour trouvés:', todayEvents);
-            console.log('🎯 Nombre d\'événements du jour:', todayEvents.length);
-            
+
           } catch (eventsError) {
-            console.error('❌ Erreur chargement événements:', eventsError);
+
           }
           
         } else {
-          console.log('👤 Membre - Récupération de MES événements');
+
           try {
             userEvents = await planningService.getMyEventsByAssociation(selectedAssociation.id);
-            console.log('👤 Mes événements:', userEvents);
-            console.log('👤 Nombre de mes événements:', userEvents?.length || 0);
+
           } catch (myEventsError) {
-            console.error('❌ Erreur chargement mes événements:', myEventsError);
+
           }
         }
         
@@ -580,25 +562,23 @@ const DashBoard = () => {
         const eventsToCheck = user?.userType === 'Manager' ? allAssociationEvents : userEvents;
         const upcomingEvents = eventsToCheck.filter(event => new Date(event.beginningDate) > now);
         
-                 console.log('🔮 Événements à venir:', upcomingEvents);
-         console.log('🔮 Nombre d\'événements à venir:', upcomingEvents.length);
+
          
          // ===== 7. VÉRIFICATION POINTS D'INTÉRÊT =====
-         console.log('📍 Chargement des points d\'intérêt...');
+
          let geoPoints: GeoPoint[] = [];
          let weeklyGeoActivity: { day: string; count: number }[] = [];
          
          try {
            geoPoints = await geoService.getGeoPoints(selectedAssociation.id, 7); // Derniers 7 jours
-           console.log('📍 Points d\'intérêt reçus:', geoPoints);
-           console.log('📍 Nombre de points:', geoPoints?.length || 0);
+
            
            // Calculer l'activité par jour de la semaine
            weeklyGeoActivity = calculateWeeklyActivity(geoPoints);
-           console.log('📊 Activité hebdomadaire:', weeklyGeoActivity);
+
            
          } catch (geoError) {
-           console.error('❌ Erreur chargement points d\'intérêt:', geoError);
+
            geoPoints = [];
            weeklyGeoActivity = [];
          }
@@ -613,19 +593,19 @@ const DashBoard = () => {
            weeklyGeoActivity: weeklyGeoActivity
          };
         
-        console.log('🏁 Données finales à appliquer:', finalData);
+
         
         setDashboardData(prev => {
           const result = { ...prev, ...finalData };
-          console.log('🏁 Données dashboard après mise à jour complète:', result);
+
           return result;
         });
 
       } catch (error) {
-        console.error('❌ ERREUR GLOBALE dans loadDashboardData:', error);
+
       } finally {
         setLoading(false);
-        console.log('🔍 ===== FIN DEBUG DASHBOARD =====');
+
       }
     };
 
@@ -635,7 +615,7 @@ const DashBoard = () => {
   // Ajouter un useEffect pour écouter les changements d'association
   useEffect(() => {
     const handleAssociationChange = (event: CustomEvent) => {
-      console.log('🎯 Dashboard: Événement de changement d\'association reçu:', event.detail.association);
+
     };
 
     window.addEventListener('associationChanged', handleAssociationChange as EventListener);

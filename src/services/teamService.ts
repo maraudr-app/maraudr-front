@@ -57,7 +57,7 @@ teamApi.interceptors.response.use(
     (response) => response,
     async (error) => {
         if (error.response?.status === 401) {
-            console.log('❌ Erreur 401 détectée dans teamService...');
+
             try {
                 const { tokenManager } = await import('./tokenManager');
                 const newToken = await tokenManager.refreshToken();
@@ -66,7 +66,7 @@ teamApi.interceptors.response.use(
                     return teamApi.request(error.config);
                 }
             } catch (refreshError) {
-                console.error('❌ Impossible de refresh le token:', refreshError);
+
             }
         }
         return Promise.reject(error);

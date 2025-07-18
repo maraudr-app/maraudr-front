@@ -37,7 +37,7 @@ export const StockHistoryModal = ({ isOpen, onClose }: StockHistoryModalProps) =
                 setHistory(sortedItems);
             } catch (error) {
             toast.error(t_stock('errorLoadingHistory'));
-                console.error(error);
+
             } finally {
                 setIsLoading(false);
             }

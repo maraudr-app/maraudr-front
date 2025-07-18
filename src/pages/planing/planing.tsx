@@ -294,7 +294,7 @@ const UserAvailabilityView: React.FC<UserAvailabilityViewProps> = ({ hideAddButt
             await loadUserAvailabilities();
             
         } catch (error: any) {
-            console.error(t_planning('errors_createAvailability') + ':', error);
+
             
             // Gestion des erreurs spécifiques
             let errorMessage = t_planning('availability_unknownError');
@@ -564,7 +564,7 @@ const Planning: React.FC = () => {
     
     // Debug pour voir les changements de selectedUser
     useEffect(() => {
-        console.log('selectedUser changed to:', selectedUser);
+
     }, [selectedUser]);
     
     // États pour les vraies données
@@ -609,19 +609,18 @@ const Planning: React.FC = () => {
     // Charger toutes les disponibilités de l'association
     const loadAllDisponibilities = async () => {
         if (!selectedAssociation?.id) {
-            console.log('loadAllDisponibilities: Pas d\'association sélectionnée');
+
             return;
         }
         
         try {
             setLoadingDisponibilities(true);
-            console.log('loadAllDisponibilities: Chargement pour association ID:', selectedAssociation.id);
+
             const disponibilities = await userService.getAllDisponibilities(selectedAssociation.id);
-            console.log('Toutes les disponibilités chargées:', disponibilities);
-            console.log('Nombre de disponibilités:', disponibilities?.length || 0);
+
             setAllDisponibilities(disponibilities || []);
         } catch (error) {
-            console.error('Erreur lors du chargement des disponibilités:', error);
+
         // @ts-ignore
             toast.error(t_planning('errors_loadAvailabilities'));
             setAllDisponibilities([]);
@@ -657,10 +656,10 @@ const Planning: React.FC = () => {
                 updatedAt: member.updatedAt
             }));
             
-            console.log('Utilisateurs de l\'équipe chargés:', convertedMembers);
+
             setTeamUsers(convertedMembers);
         } catch (error) {
-            console.error('Erreur lors du chargement des utilisateurs:', error);
+
         // @ts-ignore
             toast.error(t_planning('errors_loadUsers'));
         } finally {
@@ -671,19 +670,18 @@ const Planning: React.FC = () => {
     // Charger tous les événements de l'association
     const loadAllEvents = async () => {
         if (!selectedAssociation?.id) {
-            console.log('loadAllEvents: Pas d\'association sélectionnée');
+
             return;
         }
         
         try {
             setLoadingEvents(true);
-            console.log('loadAllEvents: Chargement pour association ID:', selectedAssociation.id);
+
             const events = await planningService.getAllEvents(selectedAssociation.id);
-            console.log('Tous les événements chargés:', events);
-            console.log('Nombre d\'événements:', events?.length || 0);
+
             setAllEvents(events || []);
         } catch (error) {
-            console.error('Erreur lors du chargement des événements:', error);
+
         // @ts-ignore
             toast.error(t_planning('errors_loadEvents'));
             setAllEvents([]);
@@ -694,8 +692,7 @@ const Planning: React.FC = () => {
     
     // Charger les disponibilités et utilisateurs quand l'association change
     useEffect(() => {
-        console.log('Planning useEffect - selectedAssociation:', selectedAssociation);
-        console.log('Planning useEffect - user:', user);
+
         if (selectedAssociation?.id && user?.sub) {
             loadAllDisponibilities();
             loadTeamUsers();
@@ -705,9 +702,9 @@ const Planning: React.FC = () => {
 
     // Effet initial pour s'assurer que les données sont chargées
     useEffect(() => {
-        console.log('Planning initial load - isManager:', user?.userType === 'Manager');
+
         if (user?.userType === 'Manager' && selectedAssociation?.id) {
-            console.log('Loading initial data for manager...');
+
             loadAllDisponibilities();
             loadTeamUsers();
             loadAllEvents();
@@ -788,7 +785,7 @@ const Planning: React.FC = () => {
         
         try {
             await planningService.deleteEvent(eventToDelete.id);
-            console.log('Événement supprimé avec succès');
+
             
             // Émettre un événement personnalisé pour notifier les autres pages
             window.dispatchEvent(new CustomEvent('eventDeleted', { 
@@ -805,7 +802,7 @@ const Planning: React.FC = () => {
                 // @ts-ignore
         toast.success(t_planning('events_eventDeleted'));
         } catch (error) {
-            console.error('Erreur lors de la suppression de l\'événement:', error);
+
                 // @ts-ignore
         toast.error(t_planning('errors_deleteEvent'));
         }
@@ -955,7 +952,7 @@ const Planning: React.FC = () => {
     // Filtrage des membres selon la recherche (exclure les managers)
     const filteredTeamUsers = teamUsers.filter(user => {
         const fullName = `${user.firstname} ${user.lastname}`.toLowerCase();
-        console.log(user);
+
         return !user.isManager && fullName.includes(searchTeam.toLowerCase());
     });
 
@@ -1045,15 +1042,14 @@ const Planning: React.FC = () => {
         const [modalError, setModalError] = useState<string>('');
 
         const handleAddDisponibility = () => {
-            console.log('handleAddDisponibility appelé');
-            console.log('user?.userType:', user?.userType);
+
             
             // Réinitialiser l'erreur du modal
             setModalError('');
             
             // Pour les utilisateurs simples (non-managers), ouvrir directement le modal
             if (user?.userType !== 'Manager') {
-                console.log('Ouverture du modal pour utilisateur simple');
+
                 // Initialiser avec aujourd'hui
                 const today = new Date();
                 setStartDate(today);
@@ -1062,7 +1058,7 @@ const Planning: React.FC = () => {
                 setEndTime('18:00');
                 setShowTimeModal(true);
             } else {
-                console.log('Utilisation du trigger pour manager');
+
                 // Pour les managers, utiliser le trigger
                 setTriggerAddDisponibility(true);
             }
@@ -1127,7 +1123,7 @@ const Planning: React.FC = () => {
                 setModalError('');
                 setShowTimeModal(true);
             } catch (error: any) {
-                console.error('Erreur lors de la vérification des conflits:', error);
+
                 
                 // Gestion des erreurs spécifiques
                 let errorMessage = t_planning('availability_unknownError');
@@ -1259,7 +1255,7 @@ const Planning: React.FC = () => {
                 setRefreshTrigger(prev => prev + 1);
                 
             } catch (error: any) {
-                console.error('Erreur lors de la création de la disponibilité:', error);
+
                 
                 // Gestion des erreurs spécifiques
                 let errorMessage = t_planning('availability_unknownError');
