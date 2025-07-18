@@ -260,16 +260,11 @@ export const Stock = () => {
                 {!isLoading && items.length > 0 && (
                     <div className="mb-8">
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                                <ExclamationTriangleIcon className="w-6 h-6 text-orange-500 mr-3" />
-                                {t_stock('critical')}
-                            </h2>
-                            
                             {(() => {
-                                const criticalItems = filteredItems.filter(item => item.quantity <= 10);
+                                const criticalItems = items.filter(item => item.quantity <= 10);
                                 // Trier par quantité croissante puis prendre les 3 plus bas
                                 const lowestCritical = [...criticalItems].sort((a, b) => a.quantity - b.quantity).slice(0, 3);
-                                const lowStockItems = filteredItems.filter(item => item.quantity > 10 && item.quantity <= 20);
+                                const lowStockItems = items.filter(item => item.quantity > 10 && item.quantity <= 20);
                                 
                                 return (
                                     <div className="space-y-4">
@@ -370,7 +365,7 @@ export const Stock = () => {
                                         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                                 <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{filteredItems.length}</div>
+                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{items.length}</div>
                                                     <div className="text-sm text-gray-600 dark:text-gray-400">{t_stock('total_items')}</div>
                                                 </div>
                                                 <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
@@ -391,9 +386,9 @@ export const Stock = () => {
                 )}
 
                 {/* Graphique et Historique */}
-                {!isLoading && filteredItems.length > 0 && (
+                {!isLoading && items.length > 0 && (
                     <div className="mb-8">
-                        <StockChart items={filteredItems} />
+                        <StockChart items={items} />
                     </div>
                 )}
 
