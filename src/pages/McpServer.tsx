@@ -195,12 +195,7 @@ const McpServer: React.FC = () => {
                                             }`}
                                         >
                                             <div className="text-sm whitespace-pre-wrap">
-                                                {msg.content.split('\n').map((line, index, array) => (
-                                                    <React.Fragment key={index}>
-                                                        {line}
-                                                        {index < array.length - 1 && <br />}
-                                                    </React.Fragment>
-                                                ))}
+                                                {msg.content}
                                             </div>
                                         </div>
                                     </div>
@@ -211,12 +206,7 @@ const McpServer: React.FC = () => {
                                     <div className="flex justify-start">
                                         <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
                                             <div className="text-sm whitespace-pre-wrap">
-                                                {streamingResponse.split('\n').map((line, index, array) => (
-                                                    <React.Fragment key={index}>
-                                                        {line}
-                                                        {index < array.length - 1 && <br />}
-                                                    </React.Fragment>
-                                                ))}
+                                                {streamingResponse}
                                                 <span className="inline-block w-1 h-4 bg-maraudr-blue dark:bg-maraudr-orange ml-1 animate-bounce">▎</span>
                                             </div>
                                         </div>

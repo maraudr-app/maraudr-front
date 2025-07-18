@@ -105,20 +105,26 @@ export const chatService = {
                                 // Convertir les \n littéraux en vrais sauts de ligne
                                 const processedData = data.replace(/\\n/g, '\n');
 
-                                
-                                // Streaming mot par mot pour un effet plus naturel
+                                // Streaming mot par mot avec setTimeout pour éviter le blocage
                                 const words = processedData.split(' ');
-                                for (let i = 0; i < words.length; i++) {
-                                    const word = words[i];
-                                    // Ajouter un espace avant le mot sauf pour le premier
-                                    const wordWithSpace = i === 0 ? word : ' ' + word;
-                                    onChunk(wordWithSpace);
-                                    
-                                    // Petit délai entre chaque mot pour simuler la frappe
-                                    if (i < words.length - 1) {
-                                        await new Promise(resolve => setTimeout(resolve, 50));
+                                let currentIndex = 0;
+                                
+                                const sendNextWord = () => {
+                                    if (currentIndex < words.length) {
+                                        const word = words[currentIndex];
+                                        // Ajouter un espace avant le mot sauf pour le premier
+                                        const wordWithSpace = currentIndex === 0 ? word : ' ' + word;
+                                        onChunk(wordWithSpace);
+                                        currentIndex++;
+                                        
+                                        // Continuer avec le prochain mot après un délai
+                                        if (currentIndex < words.length) {
+                                            setTimeout(sendNextWord, 30);
+                                        }
                                     }
-                                }
+                                };
+                                
+                                sendNextWord();
                                 fullResponse += processedData;
                             }
                         }
