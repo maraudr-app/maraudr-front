@@ -999,7 +999,7 @@
   "low": "Low stock",
   "empty": "No item found in stock",
   "search_item": "Search for an item",
-  "all_categories": "All categories",
+      "allCategories": "All categories",
   "max_quantity": "Maximum quantity",
   "min_quantity": "Minimum quantity",
   "reset": "Reset",
@@ -1073,7 +1073,11 @@
   "category_liquid": "Liquid",
   "category_medical": "Medical",
   "category_clothes": "Clothes",
-  "errorLoadingHistory": "Error loading history"
+      "errorLoadingHistory": "Error loading history",
+    "noSearchResults": "No results found",
+    "noSearchResultsMessage": "No items match your search. Try modifying your search criteria.",
+    "noItemsInStock": "No items in stock",
+    "noItemsInStockMessage": "Your stock is empty. Start by adding items."
 },
   "planning": {
     "errors_loadAvailabilities": "Error loading availabilities",

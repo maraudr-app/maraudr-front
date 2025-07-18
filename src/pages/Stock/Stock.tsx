@@ -397,17 +397,8 @@ export const Stock = () => {
                     </div>
                 )}
 
-                {/* Message d'état vide */}
-                {!isLoading && filteredItems.length === 0 && (
-                    <div className="text-center p-8">
-                        <p className="text-gray-500 dark:text-gray-400">
-                            {items.length === 0 ? t_stock('empty') : 'Aucun item ne correspond aux filtres'}
-                        </p>
-                    </div>
-                )}
-
-                {/* Section Tableau avec Filtres - Affichée uniquement s'il y a des items */}
-                {!isLoading && filteredItems.length > 0 && (
+                {/* Section Tableau avec Filtres - Toujours affichée */}
+                {!isLoading && (
                     <div className="bg-white dark:bg-gray-800 shadow">
                         {/* Filtres */}
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -424,10 +415,10 @@ export const Stock = () => {
                                         name="category"
                                         value={filter.category}
                                         onChange={handleFilterChange}
-                                        placeholder={t_stock('all_categories')}
+                                        placeholder={t_stock('allCategories') || 'Toutes les catégories'}
                                         className="w-full"
                                     >
-                                        <option value="">{t_stock('all_categories')}</option>
+                                        <option value="">{t_stock('allCategories') || 'Toutes les catégories'}</option>
                                         {getTranslatedCategories(t).map(category => (
                                             <option key={category.value} value={category.value}>
                                                 {category.label}
@@ -481,98 +472,118 @@ export const Stock = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                        {currentItems.map((item, index) => {
-                                            const isHighlighted = highlightedItemId === item.id;
-                                            const baseRowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700';
-                                            const highlightClass = isHighlighted 
-                                                ? 'bg-gradient-to-r from-green-50 via-orange-100 to-blue-50 dark:from-green-900/20 dark:via-orange-900/30 dark:to-blue-900/20 animate-pulse border-l-4 border-green-300' 
-                                                : '';
-                                            
-                                            return (
-                                            <tr key={item.id} className={`${baseRowClass} ${highlightClass} transition-all duration-500`}>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-maraudr-darkText dark:text-maraudr-lightText">
-                                                        {item.name}
-          </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {item.description || '-'}
-      </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {getTranslatedCategoryName(item.category, t)}
-              </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {item.quantity}
-              </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {new Date(item.entryDate).toLocaleDateString()}
-              </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {item.barCode || '-'}
-            </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex justify-end space-x-2">
-                                                        {editingItem?.id === item.id ? (
-                                                            <>
-                                                                <Button
-                                                                    onClick={() => handleEditSubmit(item)}
-                                                                    className="text-green-500 hover:text-green-600 p-2"
-                                                                >
-                                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-                                                                </Button>
-                                                                <Button
-                                                                    onClick={() => setShowEditModal(false)}
-                                                                    className="text-red-500 hover:text-red-600 p-2"
-                                                                >
-                                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-                                                                </Button>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Button
-                                                                    onClick={() => {
-                                                                        setItemToReduce(item);
-                                                                        setShowReduceModal(true);
-                                                                        setReduceQuantity('');
-                                                                    }}
-                                                                    className="text-blue-500 hover:text-blue-600 p-2"
-                                                                >
-                                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                                    </svg>
-                                                                </Button>
-                                                                <Button
-                                                                    onClick={() => handleDeleteClick(item.id)}
-                                                                    className="text-red-500 hover:text-red-600 p-2"
-                                                                >
-                                                                    <FaTrash className="h-4 w-4" />
-                                                                </Button>
-                                                            </>
-                                                        )}
-            </div>
+                                        {filteredItems.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} className="px-6 py-12 text-center">
+                                                    <div className="flex flex-col items-center space-y-3">
+                                                        <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                        </svg>
+                                                        <div>
+                                                            <p className="text-lg font-medium text-gray-900 dark:text-white">
+                                                                {items.length === 0 ? t_stock('noItemsInStock') : t_stock('noSearchResults')}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                                {items.length === 0 ? t_stock('noItemsInStockMessage') : t_stock('noSearchResultsMessage')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
-                                            );
-                                        })}
+                                        ) : (
+                                            currentItems.map((item, index) => {
+                                                const isHighlighted = highlightedItemId === item.id;
+                                                const baseRowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700';
+                                                const highlightClass = isHighlighted 
+                                                    ? 'bg-gradient-to-r from-green-50 via-orange-100 to-blue-50 dark:from-green-900/20 dark:via-orange-900/30 dark:to-blue-900/20 animate-pulse border-l-4 border-green-300' 
+                                                    : '';
+                                                
+                                                return (
+                                                <tr key={item.id} className={`${baseRowClass} ${highlightClass} transition-all duration-500`}>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-medium text-maraudr-darkText dark:text-maraudr-lightText">
+                                                            {item.name}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {item.description || '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {getTranslatedCategoryName(item.category, t)}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {item.quantity}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {new Date(item.entryDate).toLocaleDateString()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {item.barCode || '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex justify-end space-x-2">
+                                                            {editingItem?.id === item.id ? (
+                                                                <>
+                                                                    <Button
+                                                                        onClick={() => handleEditSubmit(item)}
+                                                                        className="text-green-500 hover:text-green-600 p-2"
+                                                                    >
+                                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                    <Button
+                                                                        onClick={() => setShowEditModal(false)}
+                                                                        className="text-red-500 hover:text-red-600 p-2"
+                                                                    >
+                                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Button
+                                                                        onClick={() => {
+                                                                            setItemToReduce(item);
+                                                                            setShowReduceModal(true);
+                                                                            setReduceQuantity('');
+                                                                        }}
+                                                                        className="text-blue-500 hover:text-blue-600 p-2"
+                                                                    >
+                                                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                    <Button
+                                                                        onClick={() => handleDeleteClick(item.id)}
+                                                                        className="text-red-500 hover:text-red-600 p-2"
+                                                                    >
+                                                                        <FaTrash className="h-4 w-4" />
+                                                                    </Button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                );
+                                            })
+                                        )}
                                     </tbody>
                                 </table>
                                 
                                 {/* Pagination - déplacée en dehors du overflow-x-auto */}
-                                {totalPages > 1 && (
+                                {totalPages > 1 && filteredItems.length > 0 && (
                                     <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
                                         <div className="flex-1 flex justify-between sm:hidden">
                                             <Button

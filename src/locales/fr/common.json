@@ -614,7 +614,7 @@
     "low": "Stock faible",
     "empty": "Aucun item trouvé dans le stock",
     "search_item": "Rechercher un item",
-    "all_categories": "Toutes les catégories",
+    "allCategories": "Toutes les catégories",
     "max_quantity": "Quantité maximum",
     "min_quantity": "Quantité minimum",
     "reset": "Réinitialiser",
@@ -688,7 +688,11 @@
     "category_liquid": "Liquide",
     "category_medical": "Médical",
     "category_clothes": "Vêtements",
-    "errorLoadingHistory": "Erreur lors du chargement de l'historique"
+    "errorLoadingHistory": "Erreur lors du chargement de l'historique",
+    "noSearchResults": "Aucun résultat trouvé",
+    "noSearchResultsMessage": "Aucun article ne correspond à votre recherche. Essayez de modifier vos critères de recherche.",
+    "noItemsInStock": "Aucun article en stock",
+    "noItemsInStockMessage": "Votre stock est vide. Commencez par ajouter des articles."
   },
   "planning": {
     "errors_loadAvailabilities": "Erreur lors du chargement des disponibilités",

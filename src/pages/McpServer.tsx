@@ -144,13 +144,6 @@ const McpServer: React.FC = () => {
                         <span className="text-gray-900 dark:text-white text-lg font-bold">{t_mcp('title')}</span>
                             </div>
                     <div className="flex items-center space-x-4">
-                            <button
-                                onClick={clearHistory}
-                                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                                title={t_mcp('clearHistory')}
-                            >
-                                <XMarkIcon className="w-5 h-5" />
-                            </button>
                         </div>
                     </div>
             </nav>
