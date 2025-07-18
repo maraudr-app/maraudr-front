@@ -155,7 +155,7 @@ export const geoService = {
             let wsUrl: string;
             if (isProduction) {
                 // En production, utiliser le proxy nginx avec double geo
-                wsUrl = `${wsProtocol}//${window.location.host}/ws/geo/geo/live?associationId=${associationId}`;
+                wsUrl = `wss://api.maraudr.eu/geo/geo/live?associationId=${associationId}`;
             } else {
                 // En développement, connexion directe
                 wsUrl = `ws://localhost:8084/geo/live?associationId=${associationId}`;
@@ -173,6 +173,12 @@ export const geoService = {
 
             // Gestionnaire de messages reçus
             ws.onmessage = (event) => {
+                // Vérifier si c'est un ping (message texte simple)
+                if (event.data === 'ping') {
+                    console.log('🏓 Ping WebSocket reçu - connexion active');
+                    return;
+                }
+                
                 try {
                     const data = JSON.parse(event.data);
                     console.log('📨 Message WebSocket reçu:', data);
@@ -192,6 +198,7 @@ export const geoService = {
                     });
                 } catch (error) {
                     console.error('❌ Erreur parsing message WebSocket:', error);
+                    console.error('📄 Contenu du message:', event.data);
                 }
             };
 
