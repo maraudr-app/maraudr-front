@@ -194,7 +194,14 @@ const McpServer: React.FC = () => {
                                                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                                             }`}
                                         >
-                                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                            <div className="text-sm whitespace-pre-wrap">
+                                                {msg.content.split('\n').map((line, index, array) => (
+                                                    <React.Fragment key={index}>
+                                                        {line}
+                                                        {index < array.length - 1 && <br />}
+                                                    </React.Fragment>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -203,10 +210,15 @@ const McpServer: React.FC = () => {
                                 {isStreaming && (
                                     <div className="flex justify-start">
                                         <div className="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
-                                            <p className="text-sm whitespace-pre-wrap animate-pulse">
-                                                {streamingResponse}
+                                            <div className="text-sm whitespace-pre-wrap">
+                                                {streamingResponse.split('\n').map((line, index, array) => (
+                                                    <React.Fragment key={index}>
+                                                        {line}
+                                                        {index < array.length - 1 && <br />}
+                                                    </React.Fragment>
+                                                ))}
                                                 <span className="inline-block w-1 h-4 bg-maraudr-blue dark:bg-maraudr-orange ml-1 animate-bounce">▎</span>
-                                            </p>
+                                            </div>
                                         </div>
                                     </div>
                                 )}

@@ -106,37 +106,18 @@ export const chatService = {
                                 const processedData = data.replace(/\\n/g, '\n');
 
                                 
-                                // Simuler un streaming plus fluide pour les gros chunks
-                                if (processedData.length > 100) {
-                                    // Diviser le texte en mots et les envoyer progressivement
-                                    const words = processedData.split(' ');
-                                    let currentChunk = '';
-                                    let wordIndex = 0;
+                                // Streaming mot par mot pour un effet plus naturel
+                                const words = processedData.split(' ');
+                                for (let i = 0; i < words.length; i++) {
+                                    const word = words[i];
+                                    // Ajouter un espace avant le mot sauf pour le premier
+                                    const wordWithSpace = i === 0 ? word : ' ' + word;
+                                    onChunk(wordWithSpace);
                                     
-                                    const sendNextChunk = () => {
-                                        if (wordIndex < words.length) {
-                                            currentChunk += (currentChunk ? ' ' : '') + words[wordIndex];
-                                            wordIndex++;
-                                            
-                                            // Envoyer tous les 3-4 mots ou si c'est le dernier
-                                            if (wordIndex % 4 === 0 || wordIndex === words.length) {
-                                                onChunk(currentChunk);
-                                                currentChunk = '';
-                                                
-                                                // Continuer avec un délai
-                                                if (wordIndex < words.length) {
-                                                    setTimeout(sendNextChunk, 30);
-                                                }
-                                            } else {
-                                                // Continuer immédiatement pour accumuler les mots
-                                                sendNextChunk();
-                                            }
-                                        }
-                                    };
-                                    
-                                    sendNextChunk();
-                                } else {
-                                    onChunk(processedData);
+                                    // Petit délai entre chaque mot pour simuler la frappe
+                                    if (i < words.length - 1) {
+                                        await new Promise(resolve => setTimeout(resolve, 50));
+                                    }
                                 }
                                 fullResponse += processedData;
                             }
