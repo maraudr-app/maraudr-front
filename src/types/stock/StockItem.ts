@@ -9,7 +9,7 @@ export enum Category {
 // Fonction pour obtenir toutes les catégories pour les sélecteurs
 export const getAllCategories = () => {
     return Object.values(Category)
-        .filter(value => typeof value === 'number' && value !== Category.Unknown)
+        .filter(value => typeof value === 'number')
         .map(value => ({
             value: value as Category,
             label: Object.keys(Category)[Object.values(Category).indexOf(value)]
@@ -29,7 +29,7 @@ export const getCategoryName = (categoryValue: Category | string | number): stri
 // Fonction pour obtenir les catégories traduites
 export const getTranslatedCategories = (t: any) => {
     return Object.values(Category)
-        .filter(value => typeof value === 'number' && value !== Category.Unknown)
+        .filter(value => typeof value === 'number')
         .map(value => ({
             value: value as Category,
             label: t(`stock.category_${Object.keys(Category)[Object.values(Category).indexOf(value)].toLowerCase()}`)
