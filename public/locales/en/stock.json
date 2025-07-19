@@ -1,0 +1,107 @@
+{
+  "title": "Stock Management",
+  "overview": {
+    "title": "Stock Overview",
+    "total": "Total Items",
+    "categories": "Categories",
+    "locations": "Locations",
+    "value": "Total Value"
+  },
+  "actions": {
+    "add": "Add Item",
+    "import": "Import Inventory",
+    "export": "Export Data",
+    "scan": "Scan Barcode",
+    "filter": "Filter Items",
+    "search": "Search inventory..."
+  },
+  "item": {
+    "name": "Item Name",
+    "description": "Item Description",
+    "barcode": "Item Barcode",
+    "category": "Item Category",
+    "quantity": "Item Quantity",
+    "delete": "Delete Item",
+    "deleteConfirm": "Are you sure you want to delete this item? This action is irreversible."
+  },
+  "table": {
+    "name": "Item Name",
+    "category": "Category",
+    "quantity": "Quantity",
+    "location": "Location",
+    "expiry": "Expiry Date",
+    "value": "Value",
+    "status": "Status",
+    "actions": "Actions",
+    "description": "Description",
+    "barcode": "Barcode",
+    "entryDate": "Entry Date"
+  },
+  "filters": {
+    "all": "All Items",
+    "low": "Low Stock",
+    "expiring": "Expiring Soon",
+    "category": "By Category",
+    "location": "By Location",
+    "minQuantity": "Min Quantity",
+    "maxQuantity": "Max Quantity"
+  },
+  "details": {
+    "title": "Item Details",
+    "history": "Transaction History",
+    "edit": "Edit Item",
+    "delete": "Delete Item",
+    "transfer": "Transfer Stock",
+    "deleteConfirm": "Are you sure you want to delete this item? This action is irreversible."
+  },
+  "status": {
+    "inStock": "In Stock",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock",
+    "expiringSoon": "Expiring Soon",
+    "expired": "Expired"
+  },
+  "alerts": {
+    "low": "Low Stock Alert",
+    "expiry": "Expiration Alert",
+    "success": "Operation Successful",
+    "error": "Operation Failed",
+    "noItemFound": "No item found in stock"
+  },
+  "errors": {
+    "noAssociation": "No association selected. Please choose one.",
+    "checkStock": "Error checking or creating stock.",
+    "loadItems": "Error loading items.",
+    "deleteItem": "Error deleting item."
+  },
+  "success": {
+    "itemDeleted": "Item deleted successfully!",
+    "itemAdded": "Item updated successfully!"
+  },
+  "balance": "Balance",
+  "income": "Income",
+  "savings": "Savings",
+  "expenses": "Expenses",
+  "finances": "Finances",
+  "outcome": "Outcome",
+  "monthly": "Monthly",
+  "weekly": "Weekly",
+  "daily": "Daily",
+  "allExpenses": "All Expenses",
+  "shopping": "Shopping",
+  "workspace": "Workspace",
+  "food": "Food",
+  "entertainment": "Entertainments",
+  "myCards": "My Cards",
+  "yourBalance": "Your Balance",
+  "currency": "Currency",
+  "active": "Active",
+  "addNewCard": "Add New Card",
+  "transactions": "Transactions",
+  "recent": "Recent",
+  "quickTransfer": "Quick Transfer",
+  "cardNumber": "Card Number",
+  "sendMoney": "Send Money",
+  "saveAsDraft": "Save as Draft",
+  "history": "Recent History"
+} 

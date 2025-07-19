@@ -1,23 +1,28 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from "../components/layout/Sidebar/Sidebar.tsx";
-
+import { useAssoStore } from '../store/assoStore';
+import { useAuthStore } from '../store/authStore';
 
 const MaraudrApp = () => {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const { fetchUserAssociations, sidebarCollapsed } = useAssoStore();
+    const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+    const user = useAuthStore(state => state.user);
 
-    const handleSidebarToggle = (isCollapsed: boolean) => {
-        setSidebarCollapsed(isCollapsed);
-    };
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            fetchUserAssociations();
+        }
+    }, [isAuthenticated, user, fetchUserAssociations]);
 
     return (
-        <div className="flex h-screen">
+        <div className="flex min-h-screen bg-white dark:bg-gray-900">
             {/* Sidebar */}
-            <Sidebar onToggle={handleSidebarToggle} />
+            <Sidebar />
 
             {/* Contenu principal qui s'adapte à la taille de la sidebar */}
             <div 
-                className={`flex-1 bg-gray-100 dark:bg-gray-900 p-4 transition-all duration-300 ${
+                className={`flex-1 bg-white dark:bg-gray-900 p-4 pt-4 transition-all duration-300 min-h-screen ${
                     sidebarCollapsed ? 'ml-14' : 'ml-48'
                 }`}
             >

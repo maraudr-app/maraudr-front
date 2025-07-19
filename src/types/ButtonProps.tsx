@@ -7,5 +7,6 @@ export interface ButtonProps {
     isLoading?: boolean;
     type?: "button" | "submit" | "reset";
     children?: ReactNode;
+    variant?: 'pill';
 }
 

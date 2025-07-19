@@ -1,0 +1,107 @@
+{
+  "title": "Gestion du Stock",
+  "overview": {
+    "title": "Aperçu du Stock",
+    "total": "Nombre total d'articles",
+    "categories": "Catégories",
+    "locations": "Emplacements",
+    "value": "Valeur totale"
+  },
+  "actions": {
+    "add": "Ajouter un Article",
+    "import": "Importer Inventaire",
+    "export": "Exporter les Données",
+    "scan": "Scanner un Code-barres",
+    "filter": "Filtrer les Articles",
+    "search": "Rechercher dans l'inventaire..."
+  },
+  "item": {
+    "name": "Nom de l'article",
+    "description": "Description de l'article",
+    "barcode": "Code-barres de l'article",
+    "category": "Catégorie de l'article",
+    "quantity": "Quantité de l'article",
+    "delete": "Supprimer l'article",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible."
+  },
+  "table": {
+    "name": "Nom de l'Article",
+    "category": "Catégorie",
+    "quantity": "Quantité",
+    "location": "Emplacement",
+    "expiry": "Date d'expiration",
+    "value": "Valeur",
+    "status": "Statut",
+    "actions": "Actions",
+    "description": "Description",
+    "barcode": "Code-barres",
+    "entryDate": "Date d'entrée"
+  },
+  "filters": {
+    "all": "Tous les Articles",
+    "low": "Stock faible",
+    "expiring": "Expire bientôt",
+    "category": "Par Catégorie",
+    "location": "Par Emplacement",
+    "minQuantity": "Quantité minimum",
+    "maxQuantity": "Quantité maximum"
+  },
+  "details": {
+    "title": "Détails de l'Article",
+    "history": "Historique des Transactions",
+    "edit": "Modifier l'Article",
+    "delete": "Supprimer l'Article",
+    "transfer": "Transférer Stock",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible."
+  },
+  "status": {
+    "inStock": "En Stock",
+    "lowStock": "Stock Faible",
+    "outOfStock": "Rupture de Stock",
+    "expiringSoon": "Expire Bientôt",
+    "expired": "Expiré"
+  },
+  "alerts": {
+    "low": "Alerte Stock Faible",
+    "expiry": "Alerte Expiration",
+    "success": "Opération Réussie",
+    "error": "Opération Échouée",
+    "noItemFound": "Aucun item trouvé dans le stock"
+  },
+  "errors": {
+    "noAssociation": "Aucune association sélectionnée. Veuillez en choisir une.",
+    "checkStock": "Erreur lors de la vérification ou de la création du stock.",
+    "loadItems": "Erreur lors du chargement des articles.",
+    "deleteItem": "Erreur lors de la suppression de l'article."
+  },
+  "success": {
+    "itemDeleted": "Article supprimé avec succès !",
+    "itemAdded": "Article mis à jour avec succès !"
+  },
+  "balance": "Solde",
+  "income": "Revenu",
+  "savings": "Épargne",
+  "expenses": "Dépenses",
+  "finances": "Finances",
+  "outcome": "Résultat",
+  "monthly": "Mensuel",
+  "weekly": "Hebdomadaire",
+  "daily": "Quotidien",
+  "allExpenses": "Toutes les Dépenses",
+  "shopping": "Achats",
+  "workspace": "Espace de Travail",
+  "food": "Alimentation",
+  "entertainment": "Divertissements",
+  "myCards": "Mes Cartes",
+  "yourBalance": "Votre Solde",
+  "currency": "Devise",
+  "active": "Actif",
+  "addNewCard": "Ajouter une Nouvelle Carte",
+  "transactions": "Transactions",
+  "recent": "Récent",
+  "quickTransfer": "Transfert Rapide",
+  "cardNumber": "Numéro de Carte",
+  "sendMoney": "Envoyer de l'argent",
+  "saveAsDraft": "Enregistrer comme Brouillon",
+  "history": "Historique récent"
+} 

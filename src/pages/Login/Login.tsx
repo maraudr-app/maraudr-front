@@ -9,6 +9,7 @@ import { LockClosedIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 import { useLoginNavigation } from '../../hooks/useLoginNavigation';
 import { useAuthStore } from '../../store/authStore';
+import { assoService } from '../../services/assoService';
 
 const Login = () => {
   const [email, setEmail] = useState<string>('');
@@ -21,6 +22,11 @@ const Login = () => {
   const navigate = useNavigate();
   const { handleCloseLoginPage } = useLoginNavigation();
   const login = useAuthStore(state => state.login);
+
+  // Fonction pour les traductions d'authentification (même pattern que les autres composants)
+  const t_auth = (key: string): string => {
+    return t(`auth.${key}` as any);
+  };
 
   // Hide login button in navbar when on home page
   const isHomePage = location.pathname === '/';
@@ -42,37 +48,44 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    // Pour la simulation, on accepte tout email/mot de passe
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      
-      // Validation simple
-      if (!email || !password) {
-        setError('Veuillez remplir tous les champs');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Appeler la fonction login du store
       const success = await login(email, password);
-      
       if (success) {
-        // Si rememberMe est coché, on peut stocker un flag supplémentaire
-        if (rememberMe) {
-          localStorage.setItem('rememberMeEmail', email);
-        } else {
-          localStorage.removeItem('rememberMeEmail');
+        const user = useAuthStore.getState().user;
+        if (!user || !user.sub) {
+          throw new Error('User not authenticated or user ID not found.');
         }
-        
-        // Redirection vers le tableau de bord
-        navigate('/maraudApp');
+
+        // Toujours rediriger vers le dashboard après connexion
+        // Le dashboard et MaraudrApp géreront le chargement des associations
+          navigate('/maraudApp/dashboard');
       } else {
-        setError('Échec de la connexion. Veuillez réessayer.');
+        // Si login retourne false, c'est une erreur d'authentification
+       
+        setError(t_auth('invalidCredentials'));
       }
-    } catch (err) {
-      setError('Échec de la connexion. Veuillez réessayer.');
-      console.error(err);
+    } catch (error: any) {
+
+      
+      // Gérer différents types d'erreurs avec les traductions appropriées
+      if (error.message?.includes('User not authenticated')) {
+        setError(t_auth('authenticationError'));
+      } else if (error.message?.includes('Network') || error.code === 'NETWORK_ERROR') {
+        setError(t_auth('networkError'));
+      } else if (error.response?.status === 401) {
+        setError(t_auth('invalidCredentials'));
+      } else if (error.response?.status === 403) {
+        setError(t_auth('accountBlocked'));
+      } else if (error.response?.status >= 500) {
+        setError(t_auth('serverError'));
+      } else if (error.response?.data?.message) {
+        // Si le backend retourne un message d'erreur spécifique, l'utiliser
+        setError(error.response.data.message);
+      } else {
+        setError(t_auth('loginError'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -102,9 +115,11 @@ const Login = () => {
                 </div>
               </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors">
-                {t('auth.welcome')}
+     
+                {t_auth('welcome')}
               </h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300 transition-colors">{t('auth.login')}</p>
+        
+              <p className="text-sm text-gray-700 dark:text-gray-300 transition-colors">{t_auth('login')}</p>
             </div>
 
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -114,7 +129,8 @@ const Login = () => {
                   name="email"
                   type="email"
                   required
-                  placeholder={t('auth.email')}
+       
+                  placeholder={t_auth('email')}
                   value={email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -126,7 +142,8 @@ const Login = () => {
                   name="password"
                   type="password"
                   required
-                  placeholder={t('auth.password')}
+      
+                  placeholder={t_auth('password')}
                   value={password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
@@ -144,21 +161,34 @@ const Login = () => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                    {t('auth.remember')}
+       
+                    {t_auth('remember')}
                   </label>
                 </div>
 
                 <div className="text-sm">
                   <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                    {t('auth.forgot')}
+     
+                    {t_auth('forgot')}
                   </Link>
                 </div>
               </div>
 
               {/* Afficher l'erreur s'il y en a une */}
               {error && (
-                <div className="text-red-500 text-sm mt-2 text-center">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3 mt-3">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-200">
                   {error}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -170,46 +200,23 @@ const Login = () => {
                 isLoading={isLoading}
                 className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
               >
-                {t('auth.loginButton')}
+      
+                {t_auth('loginButton')}
               </Button>
               
               <div className="text-center">
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {t('auth.noAccount')}{' '}
-                  <Link to="/set-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                    {t('auth.register')}
+      
+                  {t_auth('noAccount')}{' '}
+                  <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+      
+                    {t_auth('register')}
                   </Link>
                 </span>
               </div>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500 dark:bg-gray-800 dark:text-gray-400">{t('auth.or')}</span>
-                </div>
-              </div>
-
-              <div className="mt-4 mb-6">
-                <div className="mb-3">
-                  <GoogleButton
-                    onClick={() => {/* Auth logic */}}
-                    className="w-full"
-                    text={t('auth.google')}
-                  />
-                </div>
-                <div>
-                  <MicrosoftButton
-                    onClick={() => {/* Auth logic */}}
-                    className="w-full"
-                    text={t('auth.microsoft')}
-                  />
-                </div>
-              </div>
-            </div>
+           
           </div>
 
           {/* Partie droite - Image */}

@@ -1,31 +1,44 @@
 {
   "hero": {
     "title": "Simplify your organization's management",
-    "description": "An intuitive platform to manage your members, organize missions, track inventory, and analyze your actions. Designed for committed organizations like yours.",
+    "description": "A comprehensive platform to manage your organization: Smart Dashboard, Planning & Availability, Stock Management, Mapping, Media, AI Assistance and personalized profiles. Everything you need to optimize your social actions.",
     "createAccount": "Create account",
+    "login": "Sign in",
     "discoverFeatures": "Discover features"
   },
   "features": {
     "title": "Our features",
     "memberManagement": {
       "title": "Member management",
-      "description": "Efficiently manage your members, their roles, and contributions. Track membership fees and keep a complete history of activities."
+      "description": "Manage your team with manager/member roles, track detailed profiles and coordinate your volunteers efficiently."
     },
-    "dataAnalysis": {
-      "title": "Data analysis",
-      "description": "Visualize and analyze your data to make informed decisions. Create detailed reports on your activities and their impact."
+    "dashboard": {
+      "title": "Smart Dashboard",
+      "description": "Complete overview of your organization with real-time statistics, charts and metrics to drive your actions."
     },
     "stockManagement": {
-      "title": "Inventory management",
-      "description": "Track your inventories in real-time, receive threshold alerts, and optimize resource distribution across your different locations."
+      "title": "Stock management",
+      "description": "Track your inventories in real-time, manage inputs/outputs, receive alerts and optimize your resources."
     },
-    "fieldTracking": {
-      "title": "Field tracking",
-      "description": "Locate your teams, coordinate actions, and improve volunteer safety with our real-time tracking system."
+    "planning": {
+      "title": "Planning & Availability",
+      "description": "Organize your events, manage member availability and coordinate your missions with interactive calendars."
     },
-    "socialImpact": {
-      "title": "Social impact",
-      "description": "Measure and demonstrate the impact of your actions on the community. Generate impact reports for your partners and donors."
+    "map": {
+      "title": "Mapping & Routes",
+      "description": "Visualize your intervention points on an interactive map, create optimized routes and track your field actions."
+    },
+    "media": {
+      "title": "Media & Documents",
+      "description": "Centralize your photos, documents and resources in an organized gallery with search and secure sharing."
+    },
+    "ai": {
+      "title": "AI Assistance",
+      "description": "Benefit from intelligent assistance for your questions, advice and contextual help to optimize your actions."
+    },
+    "profile": {
+      "title": "Personalized profiles",
+      "description": "Manage your personal information and that of your organization with detailed and editable profiles."
     }
   },
   "testimonials": {
@@ -34,23 +47,24 @@
       {
         "name": "John Smith",
         "org": "Help Association",
-        "quote": "Thanks to real-time inventory tracking, we've reduced our losses by 30% and optimized our field distributions."
+        "quote": "The dashboard gives us a clear view of our actions. Stock management has allowed us to optimize our distributions and reduce losses by 40%."
       },
       {
         "name": "Mary Johnson",
         "org": "Local Sports Club",
-        "quote": "The geolocation feature has allowed us to effectively coordinate our volunteers during major events."
+        "quote": "Planning and availability management has revolutionized our organization. We now coordinate our volunteers in real-time with incredible efficiency."
       },
       {
         "name": "Paul Brown",
         "org": "Cultural Association",
-        "quote": "The event management module has saved us valuable time and improved communication with our participants."
+        "quote": "Mapping and AI assistance help us plan our interventions. The interface is intuitive and our members easily adopt it."
       }
     ]
   },
   "cta": {
     "title": "Ready to transform your organization?",
     "description": "Join hundreds of organizations already using our tool to structure their actions and multiply their impact.",
-    "button": "Create my account"
+    "button": "Create my space",
+    "login": "Sign in"
   }
 } 

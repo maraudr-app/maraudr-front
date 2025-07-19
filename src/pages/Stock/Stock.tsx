@@ -1,487 +1,807 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { StockNavbar } from '../../components/stock/StockNavbar';
+import { StockChart } from '../../components/stock/StockChart';
+import { EditItemModal } from '../../components/stock/EditItemModal';
+import { stockService } from '../../services/stockService';
+import { useAssoStore } from '../../store/assoStore';
+import { StockItem, Category, getAllCategories, getCategoryName, getTranslatedCategories, getTranslatedCategoryName } from '../../types/stock/StockItem';
+import { toast } from 'react-hot-toast';
+import { FaTrash, FaPencilAlt } from 'react-icons/fa';
+import { Button } from '../../components/common/button/button';
+import { Select } from '../../components/common/select/select';
+import { Input } from '../../components/common/input/input';
+import { Dialog } from '@headlessui/react';
+import { XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon, MinusCircleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
-import { 
-  CreditCardIcon, 
-  BanknotesIcon, 
-  ReceiptPercentIcon,
-  EllipsisVerticalIcon,
-  PlusIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  BuildingLibraryIcon
-} from '@heroicons/react/24/outline';
-import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 
-const Stock = () => {
+
+interface FilterState {
+    category: string;
+    name: string;
+}
+
+export const Stock = () => {
+    const navigate = useNavigate();
   const { t } = useTranslation();
-  const [selectedPeriod, setSelectedPeriod] = useState('monthly');
-  const [selectedExpensePeriod, setSelectedExpensePeriod] = useState('monthly');
+    const [items, setItems] = useState<StockItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [filter, setFilter] = useState<FilterState>({
+        category: '',
+        name: ''
+    });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+    const { selectedAssociation, associations, setSelectedAssociation } = useAssoStore();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+    const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+    const [highlightedItemName, setHighlightedItemName] = useState<string | null>(null);
+    const [showReduceModal, setShowReduceModal] = useState(false);
+    const [itemToReduce, setItemToReduce] = useState<StockItem | null>(null);
+    const [reduceQuantity, setReduceQuantity] = useState('');
+    const [loadingReduce, setLoadingReduce] = useState(false);
 
-  // Fonctions pour changer les périodes
-  const handlePeriodChange = (period: string) => {
-    console.log(`Changing period to: ${period}`);
-    setSelectedPeriod(period);
-  };
+    const t_stock = (key: string): string => t(`stock.${key}` as any);
 
-  const handleExpensePeriodChange = (period: string) => {
-    console.log(`Changing expense period to: ${period}`);
-    setSelectedExpensePeriod(period);
-  };
+    useEffect(() => {
+        if (!selectedAssociation) {
+            if (associations.length > 0) {
+                setSelectedAssociation(associations[0]);
+            } else {
+                // Aucune association disponible
+                return;
+            }
+        }
 
-  // Données fictives pour les statistiques
-  const stats = [
-    {
-      title: t('stock.balance', 'Balance'),
-      value: '$2190.19',
-      icon: <CreditCardIcon className="h-6 w-6 text-white" />,
-      bgColor: 'bg-indigo-600',
-    },
-    {
-      title: t('stock.income', 'Income'),
-      value: '$21.30',
-      icon: <BanknotesIcon className="h-6 w-6 text-blue-600" />,
-      bgColor: 'bg-gray-100',
-    },
-    {
-      title: t('stock.savings', 'Savings'),
-      value: '$1875.10',
-      icon: <BuildingLibraryIcon className="h-6 w-6 text-blue-600" />,
-      bgColor: 'bg-gray-100',
-    },
-    {
-      title: t('stock.expenses', 'Expenses'),
-      value: '$19.112',
-      icon: <ReceiptPercentIcon className="h-6 w-6 text-blue-600" />,
-      bgColor: 'bg-gray-100',
-    },
-  ];
+        const initializeStock = async () => {
+            if (!selectedAssociation?.id) return;
 
-  // Données fictives pour le graphique
-  const expenseCategories = [
-    { name: t('stock.shopping', 'Shopping'), value: 35, color: 'bg-indigo-800 dark:bg-indigo-700' },
-    { name: t('stock.workspace', 'Workspace'), value: 25, color: 'bg-indigo-600 dark:bg-indigo-500' },
-    { name: t('stock.food', 'Food'), value: 20, color: 'bg-indigo-400 dark:bg-indigo-400' },
-    { name: t('stock.entertainment', 'Entertainments'), value: 20, color: 'bg-indigo-200 dark:bg-indigo-300' },
-  ];
+            try {
+                let stockId = await stockService.getStockId(selectedAssociation.id);
+                
+                if (!stockId) {
+                    stockId = await stockService.createStock(selectedAssociation.id);
+                }
+                
+                await fetchItems();
+            } catch (error) {
+                // Erreur silencieuse
+            }
+        };
 
-  // Données fictives pour les transactions
-  const transactions = [
-    {
-      id: 1,
-      name: 'Cameron Williamson',
-      category: 'Figma',
-      date: '12/02/22',
-      time: '10:37:19 AM',
-      amount: '$17.12',
-      status: 'Pending',
-      avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
-    },
-    {
-      id: 2,
-      name: 'Courtney Henry',
-      category: 'Netflix',
-      date: '11/02/22',
-      time: '12:22:21 AM',
-      amount: '$10.21',
-      status: 'Completed',
-      avatar: 'https://randomuser.me/api/portraits/women/2.jpg'
-    },
-    {
-      id: 3,
-      name: 'Eleanor Pena',
-      category: 'Spotify',
-      date: '10/02/22',
-      time: '10:11:39 AM',
-      amount: '$12.18',
-      status: 'Completed',
-      avatar: 'https://randomuser.me/api/portraits/women/3.jpg'
-    },
-  ];
+        initializeStock();
+    }, [selectedAssociation, associations, setSelectedAssociation]);
 
-  // Données fictives pour la carte
-  const cardInfo = {
-    number: '0818 7183 0713 2514',
-    expiryDate: '07/10',
-    type: 'VISA',
-    balance: '$2190.19',
-    cardType: 'mandiri'
-  };
+    // Écouter les événements de changement d'association
+    useEffect(() => {
+        const handleAssociationChange = (event: CustomEvent) => {
+            fetchItems();
+        };
 
-  // Données fictives pour les contacts fréquents
-  const contacts = [
-    { id: 1, name: 'John', avatar: 'https://randomuser.me/api/portraits/men/4.jpg' },
-    { id: 2, name: 'Sarah', avatar: 'https://randomuser.me/api/portraits/women/5.jpg' },
-    { id: 3, name: 'Michael', avatar: 'https://randomuser.me/api/portraits/men/6.jpg' },
-    { id: 4, name: 'Emily', avatar: 'https://randomuser.me/api/portraits/women/7.jpg' },
-    { id: 5, name: 'David', avatar: 'https://randomuser.me/api/portraits/men/8.jpg' },
-    { id: 6, name: 'Jessica', avatar: 'https://randomuser.me/api/portraits/women/9.jpg' },
-  ];
+        window.addEventListener('associationChanged', handleAssociationChange as EventListener);
+        return () => {
+            window.removeEventListener('associationChanged', handleAssociationChange as EventListener);
+        };
+    }, []);
 
-  // Fonction pour obtenir la classe de couleur basée sur le statut
-  const getStatusColorClass = (status: string) => {
-    switch (status) {
-      case 'Completed':
-        return 'text-green-500';
-      case 'Pending':
-        return 'text-amber-500';
-      case 'Failed':
-        return 'text-red-500';
-      default:
-        return 'text-gray-500';
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filter.category, filter.name]);
+
+    const fetchItems = async () => {
+        if (!selectedAssociation?.id) {
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const fetchedItems = await stockService.getStockItems(selectedAssociation.id);
+            setItems(fetchedItems);
+        } catch (error) {
+            // Erreur silencieuse
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const highlightNewItem = (itemName: string) => {
+        setTimeout(() => {
+            setHighlightedItemName(itemName);
+            setTimeout(() => setHighlightedItemName(null), 3000);
+        }, 100);
+    };
+
+    const onItemAdded = () => {
+        fetchItems().then(() => {
+            if (highlightedItemName) {
+                const newItem = items.find(item => item.name.toLowerCase() === highlightedItemName.toLowerCase());
+                if (newItem) {
+                    highlightNewItem(newItem.name);
+                }
+            }
+        });
+    };
+
+    // UseEffect pour gérer le highlight après que les items soient mis à jour
+    useEffect(() => {
+        if (highlightedItemName && items.length > 0) {
+            const newItem = items.find(item => item.name === highlightedItemName);
+            if (newItem) {
+                setHighlightedItemId(newItem.id);
+                setHighlightedItemName(null); // Reset le nom
+                // Supprimer le highlight après 3 secondes
+                setTimeout(() => {
+                    setHighlightedItemId(null);
+                }, 3000);
+            }
+        }
+    }, [items, highlightedItemName]);
+
+    const handleDeleteClick = (itemId: string) => {
+        setItemToDelete(itemId);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!selectedAssociation || !itemToDelete) return;
+
+        try {
+            await stockService.deleteItem(itemToDelete, selectedAssociation.id);
+            toast.success(t_stock('toast_deleted'));
+            await fetchItems();
+        } catch (error) {
+            toast.error(t_stock('error_delete_item'));
+        } finally {
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
+        }
+    };
+
+    const handleEditClick = (item: StockItem) => {
+        setEditingItem(item);
+        setShowEditModal(true);
+    };
+
+    const handleEditSubmit = async (updatedItem: StockItem) => {
+        if (!selectedAssociation) return;
+
+        try {
+            // Appel API pour mettre à jour l'item
+            await stockService.updateItem(updatedItem, selectedAssociation.id);
+            
+            // Mettre à jour la liste locale
+            const index = items.findIndex(item => item.id === updatedItem.id);
+            if (index !== -1) {
+                const newItems = [...items];
+                newItems[index] = updatedItem;
+                setItems(newItems);
+            }
+            
+            toast.success(t_stock('toast_item_updated'));
+            
+            // Déclencher l'effet de highlight pour l'item modifié
+            setHighlightedItemId(updatedItem.id);
+            setTimeout(() => {
+                setHighlightedItemId(null);
+            }, 3000);
+            
+            setShowEditModal(false);
+            setEditingItem(null);
+        } catch (error) {
+            toast.error(t_stock('error_update_item'));
+        }
+    };
+
+    const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        
+        setFilter(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+
+
+    // Appliquer les filtres aux items
+    const filteredItems = items.filter(item => {
+        // Filtre par nom
+        if (filter.name && !item.name.toLowerCase().includes(filter.name.toLowerCase())) {
+            return false;
+        }
+        
+        // Filtre par catégorie
+        if (filter.category && item.category !== parseInt(filter.category)) {
+            return false;
+        }
+        
+        return true;
+    });
+
+    // Calcul des items pour la page courante
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [totalPages, currentPage]);
+
+    const handlePageChange = (pageNumber: number) => {
+        if (pageNumber >= 1 && pageNumber <= totalPages) {
+            setCurrentPage(pageNumber);
+            window.scrollTo({
+                top: document.querySelector('table')?.offsetTop || 0,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    if (!selectedAssociation) {
+        return null;
     }
-  };
 
   return (
-    <div className="w-full">
-      {/* Cartes de statistiques */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <div 
-            key={index} 
-            className={`rounded-xl shadow-sm overflow-hidden ${index === 0 ? 'bg-indigo-600' : 'bg-white dark:bg-gray-800'}`}
-          >
-            <div className="p-5">
-              <div className="flex justify-between items-center mb-2">
-                <div className={`p-2 rounded-full ${stat.bgColor} ${index === 0 ? 'bg-opacity-20' : 'dark:bg-opacity-20'}`}>
-                  {stat.icon}
-                </div>
-                <button className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                  <EllipsisVerticalIcon className="h-5 w-5" />
-                </button>
-              </div>
-              <p className={`text-sm font-medium mb-1 ${index === 0 ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
-                {stat.title}
-              </p>
-              <p className={`text-3xl font-bold ${index === 0 ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                {stat.value}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+        <div className="min-h-screen">
+            <StockNavbar 
+                onItemAdded={onItemAdded} 
+                isAddButtonDisabled={false} 
+                onItemHighlight={highlightNewItem}
+            />
 
-      {/* Graphiques et carte */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-              {t('stock.finances', 'Finances')}
-            </h3>
-            <div className="flex items-center space-x-2 text-sm">
-              <div className="flex items-center">
-                <span className="h-2 w-2 bg-blue-500 rounded-full mr-1"></span>
-                <span className="text-gray-600 dark:text-gray-300">{t('stock.income', 'Income')}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="h-2 w-2 bg-red-400 rounded-full mr-1"></span>
-                <span className="text-gray-600 dark:text-gray-300">{t('stock.outcome', 'Outcome')}</span>
-              </div>
-              <div 
-                className="flex items-center ml-4 bg-gray-100 dark:bg-gray-700 rounded px-2 py-1 cursor-pointer"
-                onClick={() => {
-                  const newPeriod = selectedPeriod === 'monthly' ? 'weekly' : (selectedPeriod === 'weekly' ? 'daily' : 'monthly');
-                  handlePeriodChange(newPeriod);
-                }}
-              >
-                <span className="text-gray-700 dark:text-gray-300 mr-1">{t(`stock.${selectedPeriod}`, 'Monthly')}</span>
-                <ChevronDownIcon className="h-4 w-4 text-gray-500" />
-              </div>
-            </div>
-          </div>
+            <main className="pt-16">
+                {/* Section Stock Critique */}
+                {!isLoading && items.length > 0 && (
+                    <div className="mb-8">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            {(() => {
+                                const criticalItems = items.filter(item => item.quantity <= 10);
+                                // Trier par quantité croissante puis prendre les 3 plus bas
+                                const lowestCritical = [...criticalItems].sort((a, b) => a.quantity - b.quantity).slice(0, 3);
+                                const lowStockItems = items.filter(item => item.quantity > 10 && item.quantity <= 20);
+                                
+                                return (
+                                    <div className="space-y-4">
+                                        {/* Articles critiques (≤ 10) */}
+                                        {lowestCritical.length > 0 && (
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center">
+                                                    <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                                                    {t_stock('critical_10')} - {lowestCritical.length} {lowestCritical.length > 1 ? t_stock('article_plural') : t_stock('article')}
+                                                </h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {lowestCritical.map(item => (
+                                                        <div key={item.id} className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <h4 className="font-medium text-red-900 dark:text-red-200">{item.name}</h4>
+                                                                <span className="text-sm font-bold text-red-700 dark:text-red-400">
+                                                                    {item.quantity} {item.quantity > 1 ? t_stock('remaining_plural') : t_stock('remaining')}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-sm text-red-600 dark:text-red-300 mb-2">
+                                                                {t_stock('category')}: {getTranslatedCategoryName(item.category, t)}
+                                                            </p>
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-xs text-red-500 dark:text-red-400">
+                                                                    {t_stock('restock_urgent')}
+                                                                </span>
+                                                                <Button
+                                                                    onClick={() => {
+                                                                        setItemToReduce(item);
+                                                                        setShowReduceModal(true);
+                                                                        setReduceQuantity('');
+                                                                    }}
+                                                                    className="text-xs px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+                                                                >
+                                                                    {t_stock('restock')}
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Articles en stock faible (11-20) */}
+                                        {lowStockItems.length > 0 && (
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-orange-700 dark:text-orange-400 mb-3 flex items-center">
+                                                    <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                                                    {t_stock('low_11_20')} - {lowStockItems.length} {lowStockItems.length > 1 ? t_stock('article_plural') : t_stock('article')}
+                                                </h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {lowStockItems.map(item => (
+                                                        <div key={item.id} className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <h4 className="font-medium text-orange-900 dark:text-orange-200">{item.name}</h4>
+                                                                <span className="text-sm font-bold text-orange-700 dark:text-orange-400">
+                                                                    {item.quantity} {item.quantity > 1 ? t_stock('remaining_plural') : t_stock('remaining')}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-sm text-orange-600 dark:text-orange-300 mb-2">
+                                                                {t_stock('category')}: {getTranslatedCategoryName(item.category, t)}
+                                                            </p>
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-xs text-orange-500 dark:text-orange-400">
+                                                                    {t_stock('monitoring_recommended')}
+                                                                </span>
+                                                                <Button
+                                                                    onClick={() => {
+                                                                        setItemToReduce(item);
+                                                                        setShowReduceModal(true);
+                                                                        setReduceQuantity('');
+                                                                    }}
+                                                                    className="text-xs px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors"
+                                                                >
+                                                                    {t_stock('manage')}
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Message si tout va bien */}
+                                        {lowestCritical.length === 0 && lowStockItems.length === 0 && (
+                                            <div className="text-center py-8">
+                                                <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                                <h3 className="text-lg font-semibold text-green-700 dark:text-green-400 mb-2">
+                                                    {t_stock('all_good')}
+                                                </h3>
+                                                <p className="text-green-600 dark:text-green-300">
+                                                    {t_stock('no_restock_needed')}
+                                                </p>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Statistiques rapides */}
+                                        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{items.length}</div>
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400">{t_stock('total_items')}</div>
+                                                </div>
+                                                <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">{lowestCritical.length}</div>
+                                                    <div className="text-sm text-red-600 dark:text-red-400">{t_stock('critical')}</div>
+                                                </div>
+                                                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{lowStockItems.length}</div>
+                                                    <div className="text-sm text-orange-600 dark:text-orange-400">{t_stock('low')}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                )}
 
-          {/* Graphique de ligne - simplifié avec des div */}
-          <div className="relative h-64 w-full">
-            <div className="absolute inset-0 flex flex-col justify-between text-xs text-gray-500 dark:text-gray-400">
-              <div>4k</div>
-              <div>3k</div>
-              <div>2k</div>
-              <div>1k</div>
-              <div>0</div>
-            </div>
-            <div className="absolute bottom-0 left-6 right-0 top-0 flex flex-col justify-between border-t border-gray-200 dark:border-gray-700">
-              <div className="border-b border-dashed border-gray-200 dark:border-gray-700 h-1/4"></div>
-              <div className="border-b border-dashed border-gray-200 dark:border-gray-700 h-1/4"></div>
-              <div className="border-b border-dashed border-gray-200 dark:border-gray-700 h-1/4"></div>
-              <div className="border-b border-dashed border-gray-200 dark:border-gray-700 h-1/4"></div>
-            </div>
-            {/* Courbe rouge (dépenses) */}
-            <div className="absolute bottom-0 left-6 right-0 h-full bg-red-50 dark:bg-red-900 dark:bg-opacity-10 rounded-lg overflow-hidden">
-              <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
-                <path 
-                  d="M0,50 C20,30 40,70 60,50 C80,30 100,60 120,40 C140,20 160,60 180,40 C200,20 220,50 240,30 C260,20 280,40 300,20" 
-                  fill="none" 
-                  stroke="#FCA5A5" 
-                  strokeWidth="2"
-                  className="dark:stroke-red-400" 
-                />
-              </svg>
-            </div>
-            {/* Courbe bleue (revenus) */}
-            <div className="absolute bottom-0 left-6 right-0 h-full">
-              <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
-                <path 
-                  d="M0,90 C20,80 40,60 60,70 C80,80 100,60 120,50 C140,40 160,50 180,30 C200,20 220,40 240,20 C260,10 280,30 300,20" 
-                  fill="none" 
-                  stroke="#93C5FD" 
-                  strokeWidth="2"
-                  className="dark:stroke-blue-400" 
-                />
-              </svg>
-            </div>
-            {/* Légende axe X */}
-            <div className="absolute bottom-[-20px] left-6 right-0 flex justify-between text-xs text-gray-500 dark:text-gray-400">
-              <div>01</div>
-              <div>05</div>
-              <div>10</div>
-              <div>15</div>
-              <div>20</div>
-              <div>25</div>
-              <div>30</div>
-            </div>
-          </div>
-        </div>
+                {/* Graphique et Historique */}
+                {!isLoading && items.length > 0 && (
+                    <div className="mb-8">
+                        <StockChart items={items} />
+                    </div>
+                )}
 
-        <div className="grid grid-rows-2 gap-6">
-          {/* Graphique des dépenses */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-                {t('stock.allExpenses', 'All Expenses')}
-              </h3>
-              <div 
-                className="flex items-center bg-gray-100 dark:bg-gray-700 rounded px-2 py-1 text-sm cursor-pointer"
-                onClick={() => {
-                  const newPeriod = selectedExpensePeriod === 'monthly' ? 'weekly' : (selectedExpensePeriod === 'weekly' ? 'daily' : 'monthly');
-                  handleExpensePeriodChange(newPeriod);
-                }}
-              >
-                <span className="text-gray-700 dark:text-gray-300 mr-1">{t(`stock.${selectedExpensePeriod}`, 'Monthly')}</span>
-                <ChevronDownIcon className="h-4 w-4 text-gray-500" />
+                {/* Section Tableau avec Filtres - Toujours affichée */}
+                {!isLoading && (
+                    <div className="bg-white dark:bg-gray-800 shadow">
+                        {/* Filtres */}
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    type="text"
+                                    name="name"
+                                    value={filter.name}
+                                    onChange={handleFilterChange}
+                                    placeholder={t_stock('search_item')}
+                                />
+                                <div className="w-full">
+                                    <Select
+                                        name="category"
+                                        value={filter.category}
+                                        onChange={handleFilterChange}
+                                        placeholder={t_stock('allCategories') || 'Toutes les catégories'}
+                                        className="w-full"
+                                    >
+                                        <option value="">{t_stock('allCategories') || 'Toutes les catégories'}</option>
+                                        {getTranslatedCategories(t).map(category => (
+                                            <option key={category.value} value={category.value}>
+                                                {category.label}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
+                            </div>
+
+                        {/* Tableau */}
+                        <div className="overflow-x-auto">
+                            {isLoading ? (
+                                <div className="w-full flex items-center justify-center min-h-96">
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                                        <p className="text-gray-600 dark:text-gray-400 text-lg">
+                                            {t_stock('loading_stock')}
+                                        </p>
+                                        <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                                            {t_stock('fetching_items')}
+                                        </p>
+                                    </div>
+                                </div>
+                        ) : (
+                            <>
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead className="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {t_stock('name')}
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {t_stock('description')}
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {t_stock('category')}
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {t_stock('quantity')}
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {t_stock('entry_date')}
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {t_stock('barcode')}
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {t_stock('actions')}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        {filteredItems.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} className="px-6 py-12 text-center">
+                                                    <div className="flex flex-col items-center space-y-3">
+                                                        <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                        </svg>
+                                                        <div>
+                                                            <p className="text-lg font-medium text-gray-900 dark:text-white">
+                                                                {items.length === 0 ? t_stock('noItemsInStock') : t_stock('noSearchResults')}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                                {items.length === 0 ? t_stock('noItemsInStockMessage') : t_stock('noSearchResultsMessage')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            currentItems.map((item, index) => {
+                                                const isHighlighted = highlightedItemId === item.id;
+                                                const baseRowClass = index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700';
+                                                const highlightClass = isHighlighted 
+                                                    ? 'bg-gradient-to-r from-green-50 via-orange-100 to-blue-50 dark:from-green-900/20 dark:via-orange-900/30 dark:to-blue-900/20 animate-pulse border-l-4 border-green-300' 
+                                                    : '';
+                                                
+                                                return (
+                                                <tr key={item.id} className={`${baseRowClass} ${highlightClass} transition-all duration-500`}>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-medium text-maraudr-darkText dark:text-maraudr-lightText">
+                                                            {item.name}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {item.description || '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {getTranslatedCategoryName(item.category, t)}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {item.quantity}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {new Date(item.entryDate).toLocaleDateString()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {item.barCode || '-'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex justify-end space-x-2">
+                                                            {editingItem?.id === item.id ? (
+                                                                <>
+                                                                    <Button
+                                                                        onClick={() => handleEditSubmit(item)}
+                                                                        className="text-green-500 hover:text-green-600 p-2"
+                                                                    >
+                                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                    <Button
+                                                                        onClick={() => setShowEditModal(false)}
+                                                                        className="text-red-500 hover:text-red-600 p-2"
+                                                                    >
+                                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Button
+                                                                        onClick={() => {
+                                                                            setItemToReduce(item);
+                                                                            setShowReduceModal(true);
+                                                                            setReduceQuantity('');
+                                                                        }}
+                                                                        className="text-blue-500 hover:text-blue-600 p-2"
+                                                                    >
+                                                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                    <Button
+                                                                        onClick={() => handleDeleteClick(item.id)}
+                                                                        className="text-red-500 hover:text-red-600 p-2"
+                                                                    >
+                                                                        <FaTrash className="h-4 w-4" />
+                                                                    </Button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                                
+                                {/* Pagination - déplacée en dehors du overflow-x-auto */}
+                                {totalPages > 1 && filteredItems.length > 0 && (
+                                    <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
+                                        <div className="flex-1 flex justify-between sm:hidden">
+                                            <Button
+                                                onClick={() => handlePageChange(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {t_stock('previous')}
+                                            </Button>
+                                            <Button
+                                                onClick={() => handlePageChange(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {t_stock('next')}
+                                            </Button>
               </div>
+                                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                            <div>
+                                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                    {`${indexOfFirstItem + 1} - ${Math.min(indexOfLastItem, filteredItems.length)} / ${filteredItems.length} ${t_stock('total_items')}`}
+                                                </p>
             </div>
-
-            <div className="flex items-center space-x-4">
-              {/* Graphique circulaire */}
-              <div className="w-32 h-32 relative">
-                <svg viewBox="0 0 36 36" className="w-full h-full">
-                  {expenseCategories.map((category, index) => {
-                    const offset = expenseCategories
-                      .slice(0, index)
-                      .reduce((acc, curr) => acc + curr.value, 0);
-                    const percentage = category.value;
+                                            <div>
+                                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                                    <Button
+                                                        onClick={() => handlePageChange(currentPage - 1)}
+                                                        disabled={currentPage === 1}
+                                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <span className="sr-only">{t_stock('previous')}</span>
+                                                        &laquo;
+                                                    </Button>
+                                                    {[...Array(totalPages)].map((_, index) => {
+                                                        const pageNumber = index + 1;
+                                                        if (
+                                                            pageNumber === 1 ||
+                                                            pageNumber === totalPages ||
+                                                            (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                                                        ) {
                     return (
-                      <circle
-                        key={index}
-                        cx="18"
-                        cy="18"
-                        r="15.91549430918954"
-                        fill="transparent"
-                        stroke={`url(#gradient-${index})`}
-                        strokeWidth="3"
-                        strokeDasharray={`${percentage} ${100 - percentage}`}
-                        strokeDashoffset={`${100 - offset + 25}`}
-                        className={category.color}
-                      />
-                    );
-                  })}
-                  <circle cx="18" cy="18" r="12" fill="white" className="dark:fill-gray-800" />
-                </svg>
-              </div>
-
-              {/* Légende */}
-              <div className="flex flex-col space-y-2 flex-1">
-                {expenseCategories.map((category, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className={`h-3 w-3 rounded-full ${category.color} mr-2`}></div>
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{category.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Périodes */}
-            <div className="mt-6 grid grid-cols-3 gap-2 text-sm">
-              <div 
-                className="text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded" 
-                onClick={() => handleExpensePeriodChange('daily')}
-              >
-                <p className="text-gray-500 dark:text-gray-400">{t('stock.daily', 'Daily')}</p>
-                <p className="font-semibold text-gray-800 dark:text-white">$573.12</p>
-              </div>
-              <div 
-                className="text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded" 
-                onClick={() => handleExpensePeriodChange('weekly')}
-              >
-                <p className="text-gray-500 dark:text-gray-400">{t('stock.weekly', 'Weekly')}</p>
-                <p className="font-semibold text-gray-800 dark:text-white">$4,791</p>
-              </div>
-              <div 
-                className="text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded" 
-                onClick={() => handleExpensePeriodChange('monthly')}
-              >
-                <p className="text-gray-500 dark:text-gray-400">{t('stock.monthly', 'Monthly')}</p>
-                <p className="font-semibold text-gray-800 dark:text-white">$19,112</p>
+                                                                <Button
+                                                                    key={pageNumber}
+                                                                    onClick={() => handlePageChange(pageNumber)}
+                                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                                                        currentPage === pageNumber
+                                                                            ? 'z-10 bg-maraudr-blue border-maraudr-blue text-white'
+                                                                            : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                                                    }`}
+                                                                >
+                                                                    {pageNumber}
+                                                                </Button>
+                                                            );
+                                                        } else if (
+                                                            pageNumber === currentPage - 2 ||
+                                                            pageNumber === currentPage + 2
+                                                        ) {
+                                                            return <span key={pageNumber} className="px-4 py-2">...</span>;
+                                                        }
+                                                        return null;
+                                                    })}
+                                                    <Button
+                                                        onClick={() => handlePageChange(currentPage + 1)}
+                                                        disabled={currentPage === totalPages}
+                                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <span className="sr-only">{t_stock('next')}</span>
+                                                        &raquo;
+                                                    </Button>
+                                                </nav>
               </div>
             </div>
           </div>
+                                )}
+                            </>
+                        )}
+                        </div>
+                    </div>
+                )}
 
-          {/* Carte bancaire */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-                {t('stock.myCards', 'My Cards')}
-              </h3>
-              <button className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                <EllipsisVerticalIcon className="h-5 w-5" />
-              </button>
-            </div>
+                {/* Loading state */}
+                {isLoading && (
+                    <div className="bg-white dark:bg-gray-800 shadow">
+                        <div className="overflow-x-auto">
+                            <div className="w-full flex items-center justify-center min-h-96">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                                    <p className="text-gray-600 dark:text-gray-400 text-lg">
+                                        {t_stock('loading_stock')}
+                                    </p>
+                                    <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">
+                                        {t_stock('fetching_items')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </main>
 
-            {/* Carte */}
-            <div className="bg-indigo-600 rounded-xl p-4 text-white">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-6 bg-yellow-300 rounded opacity-70"></div>
-                <div className="text-right">
-                  <p>{cardInfo.cardType}</p>
-                </div>
-              </div>
-              <p className="font-mono text-lg mb-2">{cardInfo.number}</p>
-              <div className="flex justify-between">
-                <p className="text-xs">{cardInfo.expiryDate}</p>
-                <p className="text-lg font-semibold">{cardInfo.type}</p>
-              </div>
-            </div>
+            {/* Modal de modification */}
+            <EditItemModal
+                isOpen={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setEditingItem(null);
+                }}
+                onItemUpdated={handleEditSubmit}
+                item={editingItem}
+            />
 
-            {/* Informations de balance */}
-            <div className="mt-4">
-              <div className="flex justify-between mb-2">
-                <p className="text-gray-500 dark:text-gray-400">{t('stock.yourBalance', 'Your Balance')}</p>
-                <div>
-                  <span className="text-green-500 mr-2"><ArrowUpIcon className="inline-block h-3 w-3" /> 9.14%</span>
-                  <span className="text-red-500"><ArrowDownIcon className="inline-block h-3 w-3" /> 8.39%</span>
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{cardInfo.balance}</p>
+            {/* Modal de confirmation de suppression */}
+            <Dialog
+                open={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                className="fixed inset-0 z-50 overflow-y-auto"
+            >
+                <div className="flex items-center justify-center min-h-screen px-4">
+                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
 
-              <div className="flex justify-between text-sm mb-4">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">{t('stock.currency', 'Currency')}</p>
-                  <p className="font-medium text-gray-800 dark:text-white">USD / US Dollar</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">{t('stock.status', 'Status')}</p>
-                  <p className="font-medium text-gray-800 dark:text-white">{t('stock.active', 'Active')}</p>
-                </div>
-              </div>
-
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center">
-                <PlusIcon className="h-4 w-4 mr-2" />
-                {t('stock.addNewCard', 'Add New Card')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Transactions & Transferts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-          <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-              {t('stock.transactions', 'Transactions')}
-            </h3>
-            <div className="flex items-center space-x-2 text-sm">
-              <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded px-2 py-1">
-                <span className="text-gray-700 dark:text-gray-300 mr-1">{t('stock.recent', 'Recent')}</span>
-                <ChevronDownIcon className="h-4 w-4 text-gray-500" />
-              </div>
-            </div>
-          </div>
-
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
-            {transactions.map(transaction => (
-              <div key={transaction.id} className="flex justify-between items-center p-6">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden mr-4">
-                    <img src={transaction.avatar} alt={transaction.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800 dark:text-white">{transaction.name}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{transaction.category}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {transaction.date} {transaction.time}
-                  </p>
-                  <p className="font-medium text-gray-800 dark:text-white">{transaction.amount}</p>
-                </div>
-                <div className="flex items-center">
-                  <p className={`mr-4 text-sm ${getStatusColorClass(transaction.status)}`}>
-                    {transaction.status}
-                  </p>
-                  <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <ChevronDownIcon className="h-5 w-5" />
+                    <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-auto p-6 space-y-6">
+                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
+                            <Dialog.Title className="text-xl font-semibold text-maraudr-darkText dark:text-maraudr-lightText">
+                                {t_stock('confirm_delete_title')}
+                            </Dialog.Title>
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                            >
+                                <XMarkIcon className="h-6 w-6" />
                   </button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-          <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-6">
-            {t('stock.quickTransfer', 'Quick Transfer')}
-          </h3>
+                        <p className="text-gray-500 dark:text-gray-400">
+                            {t_stock('confirm_delete_message')}
+                        </p>
 
-          {/* Contacts pour transferts rapides */}
-          <div className="flex items-center space-x-3 overflow-x-auto pb-4 mb-6">
-            {contacts.map(contact => (
-              <div key={contact.id} className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden mb-1 flex-shrink-0">
-                  <img src={contact.avatar} alt={contact.name} className="w-full h-full object-cover" />
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{contact.name}</p>
-              </div>
-            ))}
-            <div className="flex-shrink-0">
-              <button className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                <ChevronRightIcon className="h-5 w-5 text-gray-500" />
-              </button>
+                        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <Button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                            >
+                                {t_stock('cancel')}
+                            </Button>
+                            <Button
+                                onClick={handleDeleteConfirm}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                            >
+                                {t_stock('delete')}
+                            </Button>
             </div>
           </div>
-
-          {/* Formulaire de transfert */}
-          <div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('stock.cardNumber', 'Card Number')}
-              </label>
-              <div className="flex">
-                <input 
-                  type="text" 
-                  value={cardInfo.number}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-white"
-                />
-                <div className="bg-gray-100 dark:bg-gray-600 px-3 py-2 border border-l-0 border-gray-300 dark:border-gray-600 rounded-r-lg flex items-center">
-                  <span className="text-gray-500 dark:text-gray-400">VISA</span>
                 </div>
-              </div>
-            </div>
+            </Dialog>
+            
+            {showReduceModal && itemToReduce && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
+                        <h2 className="text-xl font-bold mb-4">{t_stock('update_quantity')}</h2>
+                        <div className="mb-4">
+                            <div className="mb-2 text-gray-700 dark:text-gray-200">
+                                <strong>{t_stock('item')}:</strong> {itemToReduce.name}
+                            </div>
+                            <div className="mb-2 text-gray-700 dark:text-gray-200">
+                                <strong>{t_stock('current_quantity')}:</strong> {itemToReduce.quantity}
+                            </div>
+                            <Input
+                                type="number"
+                                value={reduceQuantity}
+                                onChange={e => setReduceQuantity(e.target.value)}
+                                placeholder={t_stock('update_quantity')}
+                                className="w-full"
+                            />
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                {t_stock('quantity_restock_hint')}
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                onClick={() => {
+                                    setShowReduceModal(false);
+                                    setReduceQuantity('');
+                                    setItemToReduce(null);
+                                }}
+                                className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                            >
+                                {t_stock('cancel')}
+                            </Button>
+                            <Button
+                                disabled={
+                                    loadingReduce ||
+                                    !reduceQuantity ||
+                                    isNaN(Number(reduceQuantity)) ||
+                                    Number(reduceQuantity) === 0
+                                }
+                                onClick={async () => {
+                                    setLoadingReduce(true);
+                                    try {
+                                        await stockService.updateItemQuantityById(itemToReduce.id, {
+                                            associationId: selectedAssociation.id,
+                                            quantity: Number(reduceQuantity),
+                                        });
+                                        const isNegative = Number(reduceQuantity) < 0;
+                                        toast.success(isNegative ? t_stock('toast_stock_reduced') : t_stock('toast_stock_increased'));
+                                        setShowReduceModal(false);
+                                        setReduceQuantity('');
+                                        setItemToReduce(null);
+                                        await fetchItems();
+                                    } catch (err) {
+                                        toast.error(t_stock('error_update_stock'));
+                                    } finally {
+                                        setLoadingReduce(false);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded bg-orange-600 text-white font-semibold hover:bg-orange-700 disabled:opacity-50"
+                            >
+                                {loadingReduce ? t_stock('processing') : t_stock('validate')}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            <div className="flex space-x-3">
-              <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">
-                {t('stock.sendMoney', 'Send Money')}
-              </button>
-              <button className="flex-1 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white font-medium py-2 px-4 rounded-lg border border-gray-300 dark:border-gray-600">
-                {t('stock.saveAsDraft', 'Save as Draft')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
-
-export default Stock; 

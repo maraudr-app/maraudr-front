@@ -24,6 +24,16 @@ export default {
           200: '#E1E3C1', // Utilisable avec: bg-olive-200, text-olive-200, etc.
           500: '#9A9D4D',
           600: '#7D8040',
+        },
+        // Couleurs Maraudr
+        maraudr: {
+          blue: '#3B82F6', // rgb(59, 130, 246)
+          orange: '#F97316', // rgb(249, 115, 22)
+          darkText: '#1F2937', // gray-800
+          lightText: '#F9FAFB', // gray-50
+          darkBg: '#111827', // gray-900
+          lightBg: '#FFFFFF', // white
+          red: '#EF4444', // red-500
         }
       },
     },

@@ -1,16 +1,23 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
-// https://vite.dev/config/
-export default defineConfig({
+// https://vitejs.dev/config/
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './vitest.setup.ts',
+  server: {
+    port: 3000,
+    // Optionnel: forcer HTTPS en développement (génère un certificat auto-signé)
+    // https: true
   },
-  css: {
-    postcss: './postcss.config.js'
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
   },
-
-})
+  // S'assurer que le mode production est bien défini
+  define: {
+    'import.meta.env.MODE': JSON.stringify(mode),
+    'import.meta.env.PROD': mode === 'production'
+  }
+}))
